@@ -1,0 +1,583 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────────
+   DESIGN TOKENS
+   Change the six colour values below and the whole site follows.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-paper: #f8f6f0; /* page background — warm ivory          */
+  --color-surface: #f0ede5; /* secondary surface                     */
+  --color-ink: #242320; /* primary text — near black             */
+  --color-ink-soft: #6e6a62; /* secondary text (AA on paper)          */
+  --color-ink-muted: #8c877e; /* tertiary / decorative text            */
+  --color-accent: #702f3b; /* muted wine                            */
+  --color-accent-soft: #8e4a55; /* wine, lightened for hairlines         */
+  --color-rule: #d9d4ca; /* dividers                              */
+  --color-rule-soft: #e7e2d9; /* faintest dividers                     */
+
+  --font-serif: var(--font-garamond), "EB Garamond", "Iowan Old Style",
+    "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "Roboto Mono",
+    Menlo, Consolas, monospace;
+
+  --text-hero: clamp(2.5rem, 6.2vw, 4.25rem);
+  --text-display: clamp(1.9rem, 4.2vw, 2.9rem);
+
+  --measure: 36rem; /* long-form reading width */
+
+  --ease-editorial: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   BASE
+   ─────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --nav-h: 3.75rem;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--nav-h) + 1.5rem);
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-accent) 16%, transparent);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 1.5px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    text-wrap: balance;
+  }
+
+  /* Numerals that line up in CVs, dates and notebook indices. */
+  time,
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   EDITORIAL PRIMITIVES
+   ─────────────────────────────────────────────────────────────────────── */
+
+@utility shell {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (width >= 40rem) {
+    padding-inline: 2.5rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 3.5rem;
+  }
+}
+
+/* Small-caps sans label used for section titles and metadata. */
+@utility label {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+@utility link-quiet {
+  text-decoration: underline;
+  text-decoration-color: var(--color-rule);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 240ms var(--ease-editorial),
+    color 240ms var(--ease-editorial);
+  &:hover {
+    text-decoration-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/* A line that draws itself in on hover — used on index rows. */
+@utility link-rule {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.1em;
+    height: 1px;
+    background-color: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 420ms var(--ease-editorial);
+  }
+  &:hover::after,
+  &:focus-visible::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   LONG-FORM PROSE
+   Applied by <Prose> to all MDX content.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.prose {
+  font-family: var(--font-serif);
+  font-size: 1.1875rem;
+  line-height: 1.72;
+  color: var(--color-ink);
+  font-feature-settings: "liga" 1, "onum" 1;
+}
+
+@media (width >= 40rem) {
+  .prose {
+    font-size: 1.25rem;
+    line-height: 1.74;
+  }
+}
+
+.prose > * + * {
+  margin-block-start: 1.35em;
+}
+
+.prose p {
+  text-wrap: pretty;
+}
+
+/* Opening paragraph gets a slightly larger setting. */
+.prose > p:first-of-type {
+  font-size: 1.08em;
+  color: var(--color-ink);
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-family: var(--font-serif);
+  line-height: 1.22;
+  letter-spacing: -0.005em;
+}
+
+.prose h2 {
+  font-size: 1.6em;
+  margin-block-start: 2.4em;
+  margin-block-end: 0.7em;
+}
+
+.prose h3 {
+  font-size: 1.25em;
+  margin-block-start: 2em;
+  margin-block-end: 0.5em;
+}
+
+.prose h4 {
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  margin-block-start: 2em;
+  margin-block-end: 0.6em;
+}
+
+/* Anchors added by rehype-autolink-headings. */
+.prose :is(h2, h3) {
+  position: relative;
+}
+.prose .heading-anchor {
+  position: absolute;
+  left: -1.15em;
+  top: 0.08em;
+  font-family: var(--font-sans);
+  font-size: 0.62em;
+  line-height: 1.9;
+  color: var(--color-rule);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-editorial);
+}
+.prose :is(h2, h3):hover .heading-anchor,
+.prose .heading-anchor:focus-visible {
+  opacity: 1;
+}
+.prose .heading-anchor:hover {
+  color: var(--color-accent);
+}
+@media (width < 64rem) {
+  .prose .heading-anchor {
+    display: none;
+  }
+}
+
+.prose a:not(.heading-anchor):not(.data-footnote-backref) {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--color-accent-soft);
+  text-underline-offset: 0.17em;
+  transition: color 200ms var(--ease-editorial),
+    text-decoration-color 200ms var(--ease-editorial);
+}
+.prose a:not(.heading-anchor):not(.data-footnote-backref):hover {
+  color: var(--color-accent);
+  text-decoration-color: var(--color-accent);
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose blockquote {
+  margin-inline: 0;
+  padding-inline-start: 1.4em;
+  border-inline-start: 1px solid var(--color-accent-soft);
+  font-style: italic;
+  color: var(--color-ink-soft);
+}
+.prose blockquote p {
+  margin: 0;
+}
+.prose blockquote > * + * {
+  margin-block-start: 0.8em;
+}
+
+.prose :is(ul, ol) {
+  padding-inline-start: 1.3em;
+}
+.prose ul {
+  list-style-type: none; /* the marker content below replaces it */
+}
+.prose ol {
+  list-style-type: decimal;
+}
+.prose li + li {
+  margin-block-start: 0.4em;
+}
+.prose ul > li::marker {
+  color: var(--color-ink-muted);
+  content: "— ";
+}
+.prose ol > li::marker {
+  color: var(--color-ink-muted);
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+}
+.prose li > p {
+  margin: 0;
+}
+
+/* Ornamental divider instead of a plain rule. */
+.prose hr {
+  border: 0;
+  margin-block: 2.8em;
+  text-align: center;
+  &::before {
+    content: "❖";
+    font-family: var(--font-serif);
+    font-size: 0.7em;
+    color: var(--color-rule);
+    letter-spacing: 0.6em;
+  }
+}
+
+.prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  padding: 0.12em 0.34em;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-rule-soft);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.prose pre {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-left: 2px solid var(--color-accent-soft);
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  tab-size: 2;
+}
+.prose pre code {
+  all: unset;
+  font: inherit;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.prose :is(th, td) {
+  padding: 0.6em 0.8em 0.6em 0;
+  text-align: left;
+  vertical-align: baseline;
+  border-bottom: 1px solid var(--color-rule-soft);
+}
+.prose th {
+  font-weight: 500;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.prose img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── Footnotes (GitHub-flavoured markdown) ──────────────────────────────── */
+.prose .footnotes {
+  margin-block-start: 3.5em;
+  padding-block-start: 1.5em;
+  border-block-start: 1px solid var(--color-rule);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--color-ink-soft);
+}
+.prose .footnotes h2 {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  margin: 0 0 1.1em;
+}
+.prose .footnotes ol {
+  padding-inline-start: 1.4em;
+}
+.prose .footnotes li {
+  margin-block-start: 0.65em;
+}
+.prose .footnotes li:target {
+  color: var(--color-ink);
+}
+.prose .data-footnote-backref {
+  font-family: var(--font-serif);
+  text-decoration: none;
+  color: var(--color-accent-soft);
+  margin-inline-start: 0.35em;
+}
+.prose sup a {
+  font-family: var(--font-sans);
+  font-size: 0.66em;
+  font-weight: 500;
+  text-decoration: none !important;
+  color: var(--color-accent) !important;
+  padding-inline: 0.12em;
+}
+
+/* remark-gfm marks the footnote heading sr-only; this page wants it visible. */
+.prose .footnotes h2.sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0 0 1.1em;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+}
+
+/* ── Mathematics ────────────────────────────────────────────────────────── */
+.prose .katex {
+  font-size: 1.03em;
+  /* Keep inline maths from breaking between its atoms. */
+  white-space: nowrap;
+}
+.prose .katex-display > .katex {
+  white-space: normal;
+}
+.prose .katex-display {
+  margin-block: 1.6em;
+  padding-block: 0.3em;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-rule) transparent;
+}
+.prose .katex-display > .katex {
+  text-align: center;
+}
+/* Tagged equations keep their number pinned to the margin. */
+.prose .katex-display .tag {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  color: var(--color-ink-muted);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   PAGE TRANSITION
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Opacity only: a transform here would create a containing block and break
+   the sticky table of contents and the fixed reading indicator. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-enter {
+  animation: page-enter 420ms var(--ease-editorial) both;
+}
+
+/* Used on isolated hero elements, which have no fixed or sticky children. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 760ms var(--ease-editorial) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .rise {
+    animation: none;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   PRINT — article pages and the CV
+   ─────────────────────────────────────────────────────────────────────── */
+
+@page {
+  margin: 18mm 16mm;
+}
+
+@media print {
+  :root {
+    --nav-h: 0rem;
+  }
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 10.5pt;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .shell {
+    max-width: none;
+    padding: 0;
+  }
+  .prose {
+    font-size: 10.5pt;
+    line-height: 1.5;
+    max-width: none;
+  }
+  .prose :is(h2, h3),
+  .print-avoid-break {
+    break-inside: avoid;
+    break-after: avoid;
+  }
+  .prose a {
+    text-decoration: none;
+    color: #000;
+  }
+  .prose pre {
+    white-space: pre-wrap;
+    border-color: #999;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #555;
+    word-break: break-all;
+  }
+  .footnotes a[href^="http"]::after {
+    content: "";
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   INDEX ROWS — the underline draws itself in when the row is hovered
+   ─────────────────────────────────────────────────────────────────────── */
+
+.entry-title {
+  background-image: linear-gradient(var(--color-accent), var(--color-accent));
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  transition: background-size 460ms var(--ease-editorial),
+    color 260ms var(--ease-editorial);
+}
+
+.entry-row:hover .entry-title,
+.entry-row:focus-within .entry-title {
+  background-size: 100% 1px;
+  color: var(--color-accent);
+}

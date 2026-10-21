@@ -1,0 +1,97 @@
+---
+title: "The Mathematical Representation of Perception and Artistic Expression"
+subtitle: "Towards a geometry of what is seen and what is made"
+summary: "A sample entry outlining a question rather than a result: whether perceptual spaces and the spaces of artistic choice can be described by the same geometric language, and what would be needed to test such a claim."
+status: idea
+area: "Geometry & Perception"
+date: 2026-09-14
+keywords: [perceptual metric, Riemannian geometry, colour space, aesthetics]
+tags: [geometry, perception, aesthetics, mathematics]
+related:
+  - notebook/003-a-metric-on-attention
+  - writings/on-the-silence-of-proofs
+references:
+  - "Riemann, B. (1868). *Über die Hypothesen, welche der Geometrie zu Grunde liegen.* Abhandlungen der Königlichen Gesellschaft der Wissenschaften zu Göttingen."
+  - "Helmholtz, H. von (1868). *Über die Tatsachen, die der Geometrie zugrunde liegen.* Nachrichten von der Königl. Gesellschaft der Wissenschaften zu Göttingen."
+  - "Resnikoff, H. L. (1974). Differential geometry and colour perception. *Journal of Mathematical Biology*, 1(2), 97–131."
+---
+
+*Placeholder entry — it exists to show how a research page is laid out. Replace or delete `content/research/perception-and-geometry.mdx`.*
+
+Perception is not a list of measurements. Two colours can differ by the same
+physical amount and yet feel differently far apart; two intervals can be equally
+spaced in frequency and unequally spaced in hearing. Wherever a *difference* is
+felt more strongly in one region than another, there is something that behaves
+like a metric — and the natural question is which geometry it belongs to.
+
+## The question
+
+Suppose perceptual states form a smooth manifold $M$, and that the smallest
+noticeable difference at a state $p$ defines a positive definite form $g_p$ on
+the tangent space $T_pM$. Then perceived dissimilarity between two states is a
+length, and the shortest paths are geodesics:
+
+$$
+d(p, q) \;=\; \inf_{\gamma:\,p \rightsquigarrow q}\;
+\int_0^1 \sqrt{\,g_{\gamma(t)}\!\left(\dot\gamma(t), \dot\gamma(t)\right)}\, \dd t .
+$$
+
+<Theorem kind="definition" name="Perceptual metric" number="1">
+  A *perceptual metric* on a space of states $M$ is a Riemannian metric $g$ for
+  which the just-noticeable difference at every $p \in M$ is realised by the unit
+  sphere of $g_p$ in $T_pM$.
+</Theorem>
+
+This much is old; Helmholtz and Riemann are both standing behind it. What is not
+settled is the second half of the question.
+
+## The part that interests me
+
+An artist choosing a colour, a word, or an interval is not measuring distances —
+they are selecting a point from a space of possibilities under constraint. If the
+space of perceptual states carries a metric, the space of expressive *choices*
+carries something weaker: a partial order, a set of admissible moves, perhaps a
+connection rather than a metric.
+
+<Aside>
+  The asymmetry is the interesting part: perception compares, expression commits.
+</Aside>
+
+So the conjecture to be made precise is not "art is geometry" — it is that the
+map from expressive choice to perceptual effect is a smooth map between two
+differently-structured spaces, and that what we call style is a property of that
+map rather than of either space alone.
+
+<Figure caption="Two states at equal physical separation but unequal perceived separation: the metric stretches in one region and contracts in another." number="1">
+  <svg viewBox="0 0 420 150" width="420" height="150">
+    <g fill="none" stroke="#D9D4CA" strokeWidth="1">
+      <line x1="20" y1="118" x2="400" y2="118" />
+    </g>
+    <g fill="none" stroke="#B9B2A6" strokeWidth="0.75">
+      <path d="M20 100 C 110 100, 110 34, 210 34 S 310 100, 400 100" />
+    </g>
+    <g stroke="#702F3B" strokeWidth="1">
+      <line x1="90" y1="112" x2="90" y2="124" />
+      <line x1="150" y1="112" x2="150" y2="124" />
+      <line x1="270" y1="112" x2="270" y2="124" />
+      <line x1="330" y1="112" x2="330" y2="124" />
+    </g>
+    <g fill="#6E6A62" fontSize="10" fontFamily="system-ui, sans-serif">
+      <text x="104" y="140">equal in stimulus</text>
+      <text x="284" y="140">equal in stimulus</text>
+      <text x="196" y="24" textAnchor="middle" fill="#702F3B">g</text>
+    </g>
+  </svg>
+</Figure>
+
+## What would have to be true
+
+- A perceptual metric would have to be *measurable* on some small, honest
+  domain — a few dimensions of colour or pitch, not "experience".
+- The expressive space would need a structure that is not borrowed from the
+  perceptual one by assumption.
+- The map between them would need to fail to be an isometry in a way that can be
+  stated, not merely asserted.
+
+Until those three are in place, this is a question and not a project. The
+reading notes behind it are in <Ref to="notebook/003-a-metric-on-attention" />.

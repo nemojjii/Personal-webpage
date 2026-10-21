@@ -1,0 +1,39 @@
+---
+title: "Harmonic Structure of Quasiperiodic Plane-Wave Fields"
+summary: "A sample in-progress entry. Notes and small computations on the level sets of sums of finitely many plane waves — the construction behind the field drawn on the homepage."
+status: in-progress
+area: "Mathematical Physics"
+date: 2026-10-02
+updated: 2026-10-18
+keywords: [quasiperiodic functions, plane waves, level sets, almost periodicity]
+tags: [mathematics, waves, geometry]
+related:
+  - notebook/002-on-the-five-fold-field
+---
+
+*Placeholder entry — replace or delete `content/research/harmonic-structure-of-quasiperiodic-fields.mdx`.*
+
+Consider the field obtained by superposing $N$ plane waves of equal magnitude,
+with directions evenly spaced over a half turn:
+
+$$
+\psi_N(\mathbf{p}) \;=\; \frac{1}{N} \sum_{j=0}^{N-1}
+\cos\!\left(\kappa\,\mathbf{e}(\theta_j)\cdot \mathbf{p} + \varphi_j\right),
+\qquad \theta_j = \frac{\pi j}{N}.
+$$
+
+For $N = 2, 3, 4, 6$ the result is periodic. For $N = 5$ it is not: the
+directions generate a rank-four module over $\Z$, and $\psi_5$ is quasiperiodic,
+with local five-fold symmetry and no translation symmetry at all.
+
+## Current state
+
+Working notes only. The questions I am actually able to ask at the moment
+concern the level sets $\psi_N^{-1}(c)$ — how their topology changes with $c$,
+and how the phases $\varphi_j$ move the critical points around.
+
+## Next
+
+- Count critical points of $\psi_5$ per unit area numerically, and compare with
+  the periodic cases.
+- Write down what happens to the level sets as $c \to 0$.
