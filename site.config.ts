@@ -17,7 +17,7 @@ export const site = {
   /** A short academic position line. Leave empty to hide. */
   position: "Undergraduate, Chemical Physics & Mathematics",
   /** Where the site is deployed. Used for metadata, sitemap and Open Graph. */
-  url: "https://academic-site-rho.vercel.app",
+  url: "https://www.itsmeiris.com",
   /** Browser tab / metadata title suffix. */
   titleSuffix: "Iris (Jieun) Kim",
 
