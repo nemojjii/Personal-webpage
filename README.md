@@ -75,7 +75,7 @@ components/
   content/                MDX renderer, Prose, Figure, Aside, Theorem, Ref, Reflection
   collection/             WorkCover, WorkCard, WorkArchive (search), WorkHeader, WorkPage
   ui/                     EntryRow, ConnectedIdeas, TableOfContents, …
-  viz/                    WaveField (the homepage field), Mark
+  viz/                    HeroField (the homepage field), Mark
 
 lib/
   content.ts              reads content/, builds the index and the relations
@@ -558,41 +558,45 @@ same `@theme` block; long-form sizes live in the `.prose` section below it.
 
 ## 11. The mathematical visualisation
 
-[`components/viz/WaveField.tsx`](components/viz/WaveField.tsx) draws the
-interference pattern of two coherent circular sources. At a point $p$ at
-distances $r_1, r_2$ from the sources,
+[`components/viz/HeroField.tsx`](components/viz/HeroField.tsx) draws the
+homepage field: three families of streamlines of prescribed planar
+incompressible flows, each family the level sets of its own stream function
 
-$$\psi(p,t) = \cos(kr_1 - \omega t) + \cos(kr_2 - \omega t)
-            = 2\cos\!\Big(\tfrac{k(r_1+r_2)}{2} - \omega t\Big)
-              \cos\!\Big(\tfrac{k(r_1-r_2)}{2}\Big).$$
+$$H(\mathbf r,t) = \frac{V(x,t)\,s(\mathbf r,t)}{L}
+  + E(\mathbf r,t)\sum_i A_i\cos(\mathbf k_i\!\cdot\mathbf r - \omega_i t + \varphi_i),
+  \qquad \omega_i = c\,|\mathbf k_i|.$$
 
-The second factor has no $t$ in it. The field therefore vanishes permanently
-wherever $r_1 - r_2$ is an odd multiple of half a wavelength — the points whose
-distances to the two sources differ by a constant, which is a family of confocal
-**hyperbolas** with the sources as foci. Those are the charcoal curves, and they
-never move; the only thing travelling is the crest pattern sweeping across them
-along the confocal ellipses. It is Young's two-slit geometry, drawn rather than
-measured.
+Here $s = y\cos\alpha - x\sin\alpha + B\sin(\kappa u)$ is the across-stream
+coordinate of a bent axis tilted by a slowly turning angle $\alpha(t)$;
+$V(x,t) = 1 + m_1\cos(q_1 x - \Omega_1 t) + m_2\cos(q_2 x - \Omega_2 t + \varphi)$
+is a drift that breathes along the flow, gathering the lines into ribbons where
+it is large and spreading them where it is small; and $E$ is a slow travelling
+envelope under which the waves are strong in some regions and faint in others.
+The waves are scaled so that $\partial H/\partial y > 0$ everywhere, so every
+level set is the graph of a function $y(x)$ — no closed loops, no cells, no
+singular points — and each is traced column by column with two Newton steps,
+warm-started from the previous column. $L$ is the canvas's shorter edge, or
+$0.88\,w$ on a wide band, so the pattern keeps its character at every size.
 
-The level curves are extracted with marching squares on a coarse grid (a few
-thousand cosines per frame, canvas 2D, no WebGL, capped at ~30fps) and stroked
-as hairlines — the nodal set in charcoal, the levels either side of it in muted
-burgundy. The pointer displaces one source, which bends the whole family; the
-canvas never receives pointer events, so text above it stays selectable.
+Depth is weight and opacity; nothing is shaded. The front family is drawn
+heaviest; the far charcoal family shows only where the front family opens; the
+wine family gathers in one soft, slowly wandering region; and a soft focal
+ellipse multiplies the whole drawing, densest at its centre and calm towards
+the edges. The drawing fades into the page rather than sitting in a frame.
 
-It pauses when scrolled out of view or the tab is hidden, and under
+Canvas 2D, no WebGL, capped at ~30fps, a few milliseconds per frame. It pauses
+when scrolled out of view or the tab is hidden, and under
 `prefers-reduced-motion` it draws a single still frame — the same mathematics,
-no motion.
+no motion. The canvas never receives pointer events and is hidden from
+assistive technology.
 
-Props: `separation`, `frequency`, `cell`, `opacity`. Use it anywhere:
+Props: `fade` (the fraction of the width or height over which the drawing
+fades at each edge), `opacity`, `className`.
 
-```tsx
-<div className="aspect-square"><WaveField frequency={9} separation={0.25} /></div>
-```
-
-[`components/viz/Mark.tsx`](components/viz/Mark.tsx) is the same geometry
-reduced to a static SVG skeleton: two sources, the straight nodal line between
-them, and the first hyperbola either side.
+[`components/viz/Mark.tsx`](components/viz/Mark.tsx) is the site's mark: the
+geometry of two interfering circular sources reduced to a static SVG skeleton —
+two sources, the straight nodal line between them, and the first hyperbola
+either side.
 
 ---
 

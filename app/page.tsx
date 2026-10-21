@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 import { WorkGrid } from "@/components/collection/WorkGrid";
-import { WaveField } from "@/components/viz/WaveField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EntryList } from "@/components/ui/EntryRow";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { HeroField } from "@/components/viz/HeroField";
 import { allEntries, getEntries, splitFeatured } from "@/lib/content";
 import { isWork } from "@/lib/types";
 import { toWorkCard } from "@/lib/works";
@@ -22,61 +22,80 @@ export default function HomePage() {
     .map(toWorkCard);
 
   return (
-    <div className="shell">
+    <>
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="grid gap-12 pt-16 pb-14 sm:pt-24 lg:grid-cols-[1fr_minmax(0,20rem)] lg:items-start lg:gap-16 lg:pt-28 lg:pb-16">
-        <div className="rise max-w-[36rem]">
-          <p className="label">
-            {site.name}
-            {site.affiliation ? (
-              <>
-                <span aria-hidden="true" className="mx-2 text-rule">
-                  /
-                </span>
-                {site.affiliation}
-              </>
-            ) : null}
-          </p>
+      <section className="relative overflow-x-clip">
+        <div className="shell relative pt-16 pb-14 sm:pt-24 lg:pt-28 lg:pb-16">
+          <div className="rise max-w-[36rem]">
+            <p className="label">
+              {site.name}
+              {site.affiliation ? (
+                <>
+                  <span aria-hidden="true" className="mx-2 text-rule">
+                    /
+                  </span>
+                  {site.affiliation}
+                </>
+              ) : null}
+            </p>
 
-          <h1 className="mt-6 font-serif text-hero leading-[1.02] tracking-[-0.025em] text-balance">
-            {site.headline}
-          </h1>
+            <h1 className="mt-6 font-serif text-hero leading-[1.02] tracking-[-0.025em] text-balance">
+              {site.headline}
+            </h1>
 
-          <div className="mt-7 flex max-w-[32rem] flex-col gap-y-4 font-serif text-[1.1875rem] leading-[1.68] text-ink-soft sm:text-[1.25rem]">
-            {site.intro.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
+            <div className="mt-7 flex max-w-[32rem] flex-col gap-y-4 font-serif text-[1.1875rem] leading-[1.68] text-ink-soft sm:text-[1.25rem]">
+              {site.intro.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+
+            <p className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 font-sans text-[0.8125rem]">
+              <Link href="/about" className="link-quiet text-ink">
+                More in About
+              </Link>
+              <Link href="/research" className="link-quiet text-ink">
+                Research
+              </Link>
+              <Link href="/cv" className="link-quiet text-ink">
+                CV
+              </Link>
+            </p>
           </div>
 
-          <p className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 font-sans text-[0.8125rem]">
-            <Link href="/about" className="link-quiet text-ink">
-              More in About
-            </Link>
-            <Link href="/research" className="link-quiet text-ink">
-              Research
-            </Link>
-            <Link href="/cv" className="link-quiet text-ink">
-              CV
-            </Link>
-          </p>
-        </div>
-
-        {/* Two-source interference — see components/viz/WaveField.tsx */}
-        <figure className="rise lg:pt-2" style={{ animationDelay: "160ms" }}>
-          <div className="aspect-4/3 w-full border border-rule-soft bg-surface/30 sm:aspect-square lg:aspect-4/5">
-            <WaveField />
+          {/* Interwoven harmonic ribbons — see components/viz/HeroField.tsx.
+              No frame: from lg the field stands beside the text and runs to the
+              right edge of the viewport, fading towards the words; below lg it
+              is a full-bleed band beneath the introduction. Decorative, so it
+              is hidden from assistive technology. */}
+          <div
+            className="rise absolute -top-6 -bottom-4 left-[40.5rem] right-[calc(-1_*_max(0px,_(100vw_-_76rem)_/_2))] hidden lg:block"
+            style={{ animationDelay: "160ms" }}
+            aria-hidden="true"
+          >
+            <HeroField fade={{ left: 0.34, right: 0.04, top: 0.16, bottom: 0.18 }} />
           </div>
-          <figcaption className="mt-3 max-w-[22rem] font-sans text-[0.6875rem] leading-relaxed text-ink-muted">
+          <div
+            className="rise relative mt-12 ml-[calc(50%_-_50vw)] h-[clamp(13rem,54vw,22rem)] w-screen lg:hidden"
+            style={{ animationDelay: "160ms" }}
+            aria-hidden="true"
+          >
+            <HeroField fade={{ top: 0.2, bottom: 0.22, left: 0.05, right: 0.05 }} />
+          </div>
+
+          <p className="mt-3 max-w-[22rem] font-sans text-[0.6875rem] leading-relaxed text-ink-muted">
             <span className="font-mono text-ink-soft">
-              ψ = cos(kr₁ − ωt) + cos(kr₂ − ωt)
+              H = V·s/L + E·Σ Aᵢ cos(kᵢ·r − ωᵢt + φᵢ)
             </span>
             <br />
-            Two sources, interfering. The dark curves are the hyperbolas along
-            which the waves cancel exactly — they never move.
-          </figcaption>
-        </figure>
+            Three families of streamlines, each the level sets of its own stream
+            function: a bent, slowly turning drift that breathes along the flow,
+            with travelling waves under a slow envelope. Every line stays open;
+            where the families cross, weight and opacity give the depth.
+          </p>
+        </div>
       </section>
 
+      <div className="shell">
       {/* ── Research ────────────────────────────────────────────────────── */}
       <section className="pt-10 sm:pt-12">
         <SectionHeading
@@ -114,6 +133,7 @@ export default function HomePage() {
           <WorkGrid items={fromCollection} variant="strip" showKind className="mt-7" />
         </section>
       ) : null}
-    </div>
+      </div>
+    </>
   );
 }
