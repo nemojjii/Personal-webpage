@@ -14,6 +14,7 @@ import { ConsensusExplorer } from "@/components/viz/ConsensusExplorer";
 import { Aside } from "./Aside";
 import { Figure } from "./Figure";
 import { Ref } from "./Ref";
+import { OnForm, OnPeople, StayedWithMe } from "./Reflection";
 import { Theorem } from "./Theorem";
 
 /** Shorthands usable in any `$…$` or `$$…$$` block. Extend freely. */
@@ -49,6 +50,10 @@ const components = {
   Theorem,
   Ref,
   ConsensusExplorer,
+  // The Collection's reflection containers — see components/content/Reflection.tsx.
+  StayedWithMe,
+  OnForm,
+  OnPeople,
 };
 
 export function Mdx({ source }: { source: string }) {

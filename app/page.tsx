@@ -1,14 +1,18 @@
 import Link from "next/link";
 
+import { WorkGrid } from "@/components/collection/WorkGrid";
 import { WaveField } from "@/components/viz/WaveField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EntryList } from "@/components/ui/EntryRow";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import {
+  allEntries,
   getEntries,
   notebookBySequence,
   splitFeatured,
 } from "@/lib/content";
+import { isWork } from "@/lib/types";
+import { toWorkCard } from "@/lib/works";
 import { site } from "@/site.config";
 
 export default function HomePage() {
@@ -18,6 +22,11 @@ export default function HomePage() {
   const featuredProjects = [...projects.featured, ...projects.rest].slice(0, 2);
   const writings = getEntries("writings").slice(0, 3);
   const notes = notebookBySequence().slice(0, 4);
+  // Featured works first, then the most recently added, across books and films.
+  const works = allEntries().filter(isWork);
+  const fromCollection = [...works.filter((w) => w.featured), ...works.filter((w) => !w.featured)]
+    .slice(0, 6)
+    .map(toWorkCard);
 
   return (
     <div className="shell">
@@ -139,6 +148,16 @@ export default function HomePage() {
               </li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      {/* ── The Collection ─────────────────────────────────────────────── */}
+      {fromCollection.length ? (
+        <section className="pt-16 sm:pt-20">
+          <SectionHeading action={{ label: "The Collection", href: "/collection" }}>
+            From the collection
+          </SectionHeading>
+          <WorkGrid items={fromCollection} variant="strip" showKind className="mt-7" />
         </section>
       ) : null}
     </div>

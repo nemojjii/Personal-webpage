@@ -74,18 +74,39 @@ export const site = {
   footerNote: "",
 } as const;
 
+export interface NavItem {
+  label: string;
+  href: string;
+  /**
+   * Routes that also count as "here" for this item — the Bookshelf and the
+   * Screening Room live under Collection without crowding the header.
+   */
+  includes?: readonly string[];
+  /** Listed beneath the item in the mobile menu and the footer. */
+  children?: readonly { label: string; href: string }[];
+}
+
 /** Primary navigation. Order here is the order in the header. */
-export const navigation = [
+export const navigation: readonly NavItem[] = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Research", href: "/research" },
   { label: "Projects", href: "/projects" },
   { label: "Writings", href: "/writings" },
   { label: "Notebook", href: "/notebook" },
+  {
+    label: "Collection",
+    href: "/collection",
+    includes: ["/bookshelf", "/films"],
+    children: [
+      { label: "The Bookshelf", href: "/bookshelf" },
+      { label: "The Screening Room", href: "/films" },
+    ],
+  },
   { label: "CV", href: "/cv" },
-] as const;
+];
 
 /** Shown after the primary navigation, separated by a hairline. */
-export const secondaryNavigation = [{ label: "Contact", href: "/contact" }] as const;
+export const secondaryNavigation: readonly NavItem[] = [{ label: "Contact", href: "/contact" }];
 
 export type SiteConfig = typeof site;

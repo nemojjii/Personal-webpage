@@ -1,0 +1,79 @@
+---
+# ─────────────────────────────────────────────────────────────────────────────
+# FILM TEMPLATE — the Screening Room
+# Copy to content/films/<your-slug>.mdx and edit. Files beginning with "_"
+# are ignored. Every field except `title` and `added` may be left out; the
+# page simply shows what is known. Never guess a value to fill a line.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# The display title — the Korean title as you keep it.
+title: "영화 제목"
+# Original-language title, when it differs from the display title.
+titleOriginal: ""
+# English title, when there is one and the original is not English.
+titleEn: ""
+subtitle: ""
+summary: ""
+
+director: "Director Name"
+# The director's name in its own script, e.g. "濱口竜介" or "윤단비".
+directorOriginal: ""
+# Release year. Leave blank rather than estimate.
+year:
+# Country or countries of production, e.g. "France" or "Canada / France".
+country: ""
+# ISO 639-1 code of the original language.
+language: ""
+
+# Standard genres, e.g. [Drama], [Drama, Romance], [Thriller].
+genres: []
+# Themes are yours to assign — "On Love & Loss", "On Identity" … Never automatic.
+themes: []
+# Slugs of thematic collections in content/collections/ this film belongs to.
+collections: []
+
+# unspecified | watched | rewatched | to-watch
+viewingStatus: unspecified
+dateWatched: ""
+
+# Put the file in public/posters/ and point at it, e.g. "/posters/magnolia.jpg".
+# Without an image the archive sets a typographic title card instead.
+image: ""
+imageCredit: ""
+
+tags: []
+# Refs such as books/demian or notebook/003-a-note. The reverse link is derived.
+related: []
+references: []
+
+# The day the film was added to the archive, YYYY-MM-DD.
+added: 2026-01-01
+featured: false
+# public | draft | private — only public films are built, listed, searched or
+# put in the sitemap. draft and private exist only in `npm run dev`.
+visibility: draft
+# Set to true once you have checked title, director and year yourself.
+verified: false
+# What still needs checking. Shown only in development, never published.
+verifyNote: ""
+---
+
+{/*
+  Everything below the frontmatter is optional. Notes written here are set as
+  prose under the masthead. The two sections below have fixed titles and each
+  appears only when it contains something — delete them, or keep them for later.
+*/}
+
+{/*
+<OnForm>
+
+Cinematography, colour, composition, editing, music and sound, mise-en-scène.
+
+</OnForm>
+
+<OnPeople>
+
+Character, relationships, desire, identity, conflict, moral ambiguity.
+
+</OnPeople>
+*/}

@@ -5,12 +5,17 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
-import { navigation, secondaryNavigation, site } from "@/site.config";
+import { type NavItem, navigation, secondaryNavigation, site } from "@/site.config";
 
 const allLinks = [...navigation, ...secondaryNavigation];
 
-function isActive(pathname: string, href: string) {
+function isUnder(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** An item is "here" on its own route and on any route it declares as its own. */
+function isActive(pathname: string, item: NavItem) {
+  return isUnder(pathname, item.href) || (item.includes ?? []).some((h) => isUnder(pathname, h));
 }
 
 export function Header() {
@@ -63,7 +68,7 @@ export function Header() {
         <nav aria-label="Primary" className="hidden md:block">
           <ul className="flex items-center gap-x-7">
             {navigation.map((item) => {
-              const active = isActive(pathname, item.href);
+              const active = isActive(pathname, item);
               return (
                 <li key={item.href}>
                   <Link
@@ -89,9 +94,9 @@ export function Header() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                  aria-current={isActive(pathname, item) ? "page" : undefined}
                   className={`block py-1 font-sans text-[0.8125rem] transition-colors duration-200 ${
-                    isActive(pathname, item.href)
+                    isActive(pathname, item)
                       ? "text-accent"
                       : "text-ink-soft hover:text-ink"
                   }`}
@@ -146,7 +151,7 @@ export function Header() {
           >
             <ul className="shell flex flex-col py-4">
               {allLinks.map((item) => {
-                const active = isActive(pathname, item.href);
+                const active = isUnder(pathname, item.href);
                 return (
                   <li key={item.href} className="border-b border-rule-soft last:border-b-0">
                     <Link
@@ -163,6 +168,31 @@ export function Header() {
                         </span>
                       ) : null}
                     </Link>
+                    {item.children?.length ? (
+                      <ul className="-mt-1 mb-3 flex flex-col">
+                        {item.children.map((child) => {
+                          const childActive = isUnder(pathname, child.href);
+                          return (
+                            <li key={child.href}>
+                              <Link
+                                href={child.href}
+                                aria-current={childActive ? "page" : undefined}
+                                className={`flex items-baseline justify-between py-2 pl-5 font-serif text-[1.125rem] leading-none ${
+                                  childActive ? "text-accent" : "text-ink-soft"
+                                }`}
+                              >
+                                {child.label}
+                                {childActive ? (
+                                  <span aria-hidden="true" className="font-sans text-[0.625rem] tracking-[0.2em] uppercase">
+                                    here
+                                  </span>
+                                ) : null}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : null}
                   </li>
                 );
               })}

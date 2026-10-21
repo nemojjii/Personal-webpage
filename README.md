@@ -18,13 +18,14 @@ Nothing in `app/` or `components/` has to be touched.
 5. [Adding a project](#5-adding-a-project)
 6. [Publishing an essay](#6-publishing-an-essay)
 7. [Creating a notebook entry](#7-creating-a-notebook-entry)
-8. [Linking related content](#8-linking-related-content)
-9. [Writing with mathematics, figures and footnotes](#9-writing-with-mathematics-figures-and-footnotes)
-10. [The CV, and adding a PDF](#10-the-cv-and-adding-a-pdf)
-11. [Changing typography and colours](#11-changing-typography-and-colours)
-12. [The mathematical visualisation](#12-the-mathematical-visualisation)
-13. [Deploying to Vercel](#13-deploying-to-vercel)
-14. [Design and architecture notes](#14-design-and-architecture-notes)
+8. [The Collection — the Bookshelf and the Screening Room](#8-the-collection-the-bookshelf-and-the-screening-room)
+9. [Linking related content](#9-linking-related-content)
+10. [Writing with mathematics, figures and footnotes](#10-writing-with-mathematics-figures-and-footnotes)
+11. [The CV, and adding a PDF](#11-the-cv-and-adding-a-pdf)
+12. [Changing typography and colours](#12-changing-typography-and-colours)
+13. [The mathematical visualisation](#13-the-mathematical-visualisation)
+14. [Deploying to Vercel](#14-deploying-to-vercel)
+15. [Design and architecture notes](#15-design-and-architecture-notes)
 
 ---
 
@@ -51,6 +52,9 @@ content/                ← EVERYTHING YOU WRITE LIVES HERE
   projects/*.mdx          one file per exploration
   writings/*.mdx          one file per essay
   notebook/NNN-*.mdx      one file per note, numbered
+  books/*.mdx             the Bookshelf — one file per book
+  films/*.mdx             the Screening Room — one file per film
+  collections/*.mdx       thematic collections across books and films
   pages/about.mdx         the About page
   cv.ts                   CV data (structured, not prose)
   */_template.mdx         copy these to start something new
@@ -62,6 +66,9 @@ app/                    ← routes; you will rarely edit these
   projects/               /projects  + /projects/[slug]
   writings/               /writings  + /writings/[slug]
   notebook/               /notebook  + /notebook/[slug]
+  collection/             /collection + /collection/[slug]  (thematic collections)
+  bookshelf/              /bookshelf + /bookshelf/[slug]
+  films/                  /films     + /films/[slug]
   cv/ contact/ tags/      /cv /contact /tags + /tags/[tag]
   layout.tsx              fonts, metadata, header and footer
   globals.css             the whole design system
@@ -69,17 +76,20 @@ app/                    ← routes; you will rarely edit these
 
 components/
   site/                   Header, Footer
-  content/                MDX renderer, Prose, Figure, Aside, Theorem, Ref
+  content/                MDX renderer, Prose, Figure, Aside, Theorem, Ref, Reflection
+  collection/             WorkCover, WorkCard, WorkArchive (search), WorkHeader, WorkPage
   ui/                     EntryRow, ConnectedIdeas, TableOfContents, …
   viz/                    WaveField (the homepage field), Mark
 
 lib/
   content.ts              reads content/, builds the index and the relations
+  works.ts                the Collection's search, filter and sort — pure, runs in the browser too
   types.ts                statuses, categories, collections
   toc.ts  links.ts  pages.ts
 
 public/
   cv/                     put your CV PDF here
+  covers/ posters/        book covers and film posters, once you have them
   figures/ papers/        images and attachments
 ```
 
@@ -224,7 +234,168 @@ Notes need nothing but a `title` and a `date`. They can be two sentences.
 
 ---
 
-## 8. Linking related content
+## 8. The Collection — the Bookshelf and the Screening Room
+
+The Collection is the personal cultural archive: **the Bookshelf** at
+`/bookshelf` (books) and **the Screening Room** at `/films` (films), introduced
+together at `/collection`. In the header it is one item, *Collection*; the two
+spaces are listed beneath it in the mobile menu and the footer.
+
+Books and films are entries like everything else — one MDX file each, in
+`content/books/` and `content/films/` — so tags, `related:` links, `<Ref>`
+cross-references and the Connected Ideas panel all work for them unchanged.
+
+### Adding a book
+
+```bash
+cp content/books/_template.mdx content/books/the-plague.mdx
+```
+
+```yaml
+---
+title: "페스트"                 # the display title — the Korean title as you keep it
+titleOriginal: "La Peste"       # original-language title, when different
+titleEn: "The Plague"           # English title, when the original is not English
+author: "Albert Camus"
+authorOriginal: ""              # the name in its own script, e.g. "村上春樹"
+year: 1947
+language: fr                    # ISO 639-1 code of the original
+edition: ""
+isbn: ""
+genres: [Novel]
+themes: []                      # yours to assign — never automatic
+collections: []                 # slugs from content/collections/
+readingStatus: unspecified      # unspecified | reading | finished | to-read | abandoned
+dateFinished: ""
+image: ""                       # "/covers/the-plague.jpg", once you have one
+imageCredit: ""
+tags: []
+related: []
+added: "2026-10-21"             # the day it joined the archive
+featured: false                 # lifts it to the front of /collection and the homepage
+visibility: public              # public | draft | private
+verified: false                 # true once you have checked the metadata yourself
+verifyNote: ""                  # what still needs checking; never published
+---
+```
+
+**Leave a field out rather than guess it.** The page shows what is known and
+nothing else: a book with no year has no year line, a film whose director is
+not yet confirmed has no director. Dates may be written quoted or bare.
+
+### Adding a film
+
+```bash
+cp content/films/_template.mdx content/films/happy-hour.mdx
+```
+
+The film template has `director`, `directorOriginal`, `country`,
+`viewingStatus` (`unspecified | watched | rewatched | to-watch`) and
+`dateWatched` in place of the book-specific fields. Everything else is shared.
+
+### Correcting bibliographic metadata
+
+Every entry in the initial catalogue starts with `verified: false`. The ones
+that genuinely need your eye carry a `verifyNote` — a title shared by two
+works, a year taken from a premiere rather than a release, a book that could
+not be identified from its Korean title alone. In `npm run dev` the note is
+shown beneath the masthead of the entry, marked *Development only*; in
+production it does not exist. Fix the fields, set `verified: true`, delete the
+note.
+
+### Covers and posters
+
+Put the file in `public/covers/` or `public/posters/` and point `image` at it.
+Add `imageCredit` when the source asks for attribution. Until then the shelf
+sets a typographic cover — a spine and a title for a book, a dark title card
+for a film — so nothing is ever shown that could be mistaken for an official
+cover. Only use images you have the right to publish; nothing on the site
+fetches imagery from anywhere.
+
+> Everything under `public/` is served to anyone who knows the URL, whatever
+> the entry's visibility. Keep the covers of private entries out of `public/`;
+> the loader warns in development if one is named.
+
+### Visibility
+
+```yaml
+visibility: public    # built, listed, searchable, in the sitemap
+visibility: draft     # exists only in `npm run dev`
+visibility: private   # as draft; kept distinct so the file records your intent
+```
+
+The filter runs once, in `lib/content.ts`, at build time. A non-public entry
+produces no page, no route, no search data, no related-content link and no
+sitemap line — there is nothing to hide in the browser because nothing was
+built. The older `draft: true` still works and means `visibility: draft`.
+
+### Reflections
+
+The body of the file, below the frontmatter, is set as prose beneath the
+masthead — notes, in whatever form. Three titled sections are available as
+components and appear only when they contain something:
+
+```mdx
+<StayedWithMe>          {/* books */}
+Prose, with everything MDX allows.
+</StayedWithMe>
+
+<OnForm>                {/* films: cinematography, colour, composition, editing, sound */}
+…
+</OnForm>
+
+<OnPeople>              {/* films: character, relationships, identity, moral ambiguity */}
+…
+</OnPeople>
+```
+
+The templates carry them commented out. A file with an empty body ends at its
+masthead; nothing invites you to fill a section you have not written.
+
+### Thematic collections
+
+```bash
+cp content/collections/_template.mdx content/collections/on-solitude.mdx
+```
+
+```yaml
+---
+title: "On Solitude"
+subtitle: ""
+items:                  # books and films, in the order you want them shown
+  - books/demian
+  - films/magnolia
+visibility: draft
+---
+An optional introduction, set above the works.
+```
+
+The file's name is its address, `/collection/on-solitude`. A work may also
+declare itself a member with `collections: [on-solitude]`; the two directions
+are merged, and collections appear on `/collection` and on every member's page.
+Nothing is ever placed in a collection automatically.
+
+### Connecting books, films, essays and notes
+
+Use `related:` exactly as elsewhere on the site — `films/magnolia`,
+`books/demian`, `writings/an-essay`, `notebook/003-a-note` — in either entry.
+The reverse direction is derived. Shared `tags:` give the weaker, automatic
+"elsewhere under the same tags" connection; `themes:` and `collections:` are
+the Collection's own, and are never inferred.
+
+### Searching, filtering and sorting
+
+`/bookshelf` and `/films` search every title (display, original, English),
+the creator in either script, year, genres and themes — Korean with or without
+spaces, Latin with or without accents. Filters are offered only for values
+actually in use; sorting is by date added, date updated, title, creator or
+year; *By author* and *By director* group the results. The view is kept in the
+address bar, so a filtered shelf can be linked to. Without JavaScript the full
+shelf is shown.
+
+---
+
+## 9. Linking related content
 
 This is the part of the site designed to grow into a network.
 
@@ -271,7 +442,7 @@ An unresolved `<Ref>` degrades to plain grey text rather than a broken link.
 
 ---
 
-## 9. Writing with mathematics, figures and footnotes
+## 10. Writing with mathematics, figures and footnotes
 
 All content files are MDX, so the following work everywhere.
 
@@ -332,7 +503,7 @@ in the right margin on wide screens, folded under the masthead on small ones.
 
 ---
 
-## 10. The CV, and adding a PDF
+## 11. The CV, and adding a PDF
 
 The CV is structured data, not prose: [`content/cv.ts`](content/cv.ts). Add
 items to any section:
@@ -370,7 +541,7 @@ on its own (`Print this page`), so a PDF is optional.
 
 ---
 
-## 11. Changing typography and colours
+## 12. Changing typography and colours
 
 **Colours** — the top of [`app/globals.css`](app/globals.css):
 
@@ -406,7 +577,7 @@ same `@theme` block; long-form sizes live in the `.prose` section below it.
 
 ---
 
-## 12. The mathematical visualisation
+## 13. The mathematical visualisation
 
 [`components/viz/WaveField.tsx`](components/viz/WaveField.tsx) draws the
 interference pattern of two coherent circular sources. At a point $p$ at
@@ -446,7 +617,7 @@ them, and the first hyperbola either side.
 
 ---
 
-## 13. Deploying to Vercel
+## 14. Deploying to Vercel
 
 ```bash
 npm i -g vercel        # once
@@ -463,12 +634,14 @@ domain; `sitemap.xml`, `robots.txt`, canonical URLs and Open Graph tags are all
 generated from it.
 
 Every route is prerendered at build time except `/writings`, which reads
-`?category=` on the server so the filter works without JavaScript. New content
+`?category=` on the server so the filter works without JavaScript. The
+Bookshelf and the Screening Room are prerendered too; their search and filters
+run in the browser over the public catalogue. New content
 appears after a rebuild, which a `git push` triggers automatically.
 
 ---
 
-## 14. Design and architecture notes
+## 15. Design and architecture notes
 
 **Stack** — Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4,
 MDX via `next-mdx-remote/rsc`, KaTeX, Motion. No database, no CMS, no auth,
@@ -502,7 +675,8 @@ after their link text, and headings avoid breaking away from their sections.
 
 - Files beginning with `_` in `content/` are ignored — that is how the templates
   stay out of the site.
-- `draft: true` hides an entry in production but shows it in `npm run dev`.
+- `visibility: draft` or `private` (or the older `draft: true`) keeps an entry
+  out of production entirely; `npm run dev` shows it with a marker.
 - A missing `date` or an unknown `status`/`category` logs a warning in
   development naming the file, and falls back to something sensible rather than
   failing the build.

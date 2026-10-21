@@ -23,16 +23,23 @@ export function Footer() {
         <nav aria-label="Footer">
           <h2 className="label mb-3">Sections</h2>
           <ul className="flex flex-col gap-y-1.5">
-            {[...navigation.slice(1), ...secondaryNavigation].map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="font-sans text-[0.8125rem] text-ink-soft transition-colors duration-200 hover:text-accent"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+            {[...navigation.slice(1), ...secondaryNavigation]
+              .flatMap((item) => [
+                { ...item, nested: false },
+                ...(item.children ?? []).map((child) => ({ ...child, nested: true })),
+              ])
+              .map((item) => (
+                <li key={item.href} className={item.nested ? "pl-3" : ""}>
+                  <Link
+                    href={item.href}
+                    className={`font-sans text-[0.8125rem] transition-colors duration-200 hover:text-accent ${
+                      item.nested ? "text-ink-muted" : "text-ink-soft"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
           </ul>
         </nav>
 

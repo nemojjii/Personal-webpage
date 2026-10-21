@@ -5,6 +5,7 @@ import { type Entry, projectStages, writingCategories } from "@/lib/types";
 
 import { StatusBadge } from "./StatusBadge";
 import { TagList } from "./TagList";
+import { VisibilityMark } from "./VisibilityMark";
 
 /** The per-collection marker shown in the left column of an index row. */
 function Marker({ entry }: { entry: Entry }) {
@@ -19,6 +20,20 @@ function Marker({ entry }: { entry: Entry }) {
     return (
       <span className="font-sans text-[0.6875rem] font-medium tracking-[0.12em] uppercase text-accent">
         {writingCategories[entry.category].label}
+      </span>
+    );
+  if (entry.collection === "books")
+    return (
+      <span className="font-sans text-[0.75rem] text-ink-soft">
+        {entry.author}
+        {entry.year ? <span className="text-ink-muted"> · {entry.year}</span> : null}
+      </span>
+    );
+  if (entry.collection === "films")
+    return (
+      <span className="font-sans text-[0.75rem] text-ink-soft">
+        {entry.director}
+        {entry.year ? <span className="text-ink-muted"> · {entry.year}</span> : null}
       </span>
     );
   return (
@@ -51,6 +66,7 @@ export function EntryRow({
       <article className="grid gap-x-8 py-6 sm:grid-cols-[9rem_1fr] sm:py-7">
         <div className="mb-2 flex items-baseline gap-x-3 sm:mb-0 sm:flex-col sm:items-start sm:gap-y-2 sm:pt-[0.45rem]">
           <Marker entry={entry} />
+          <VisibilityMark visibility={entry.visibility} />
           {entry.date ? (
             <time
               dateTime={entry.date}

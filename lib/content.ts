@@ -5,19 +5,30 @@ import path from "node:path";
 import matter from "gray-matter";
 
 import {
+  type BookEntry,
   type Collection,
   type Entry,
   type EntryRef,
+  type FilmEntry,
   type NotebookEntry,
   type ProjectEntry,
   type ProjectStage,
+  type ReadingStatus,
   type ResearchEntry,
   type ResearchStatus,
+  type ThemeCollection,
+  type ViewingStatus,
+  type Visibility,
   type WritingCategory,
   type WritingEntry,
+  collectionMeta,
   collections,
+  isWork,
   projectStages,
+  readingStatuses,
   researchStatuses,
+  viewingStatuses,
+  visibilities,
   writingCategories,
 } from "./types";
 
@@ -47,6 +58,7 @@ function asArray(value: unknown): string[] {
 
 function countWords(markdown: string): number {
   return markdown
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, " ")
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/\$\$[\s\S]*?\$\$/g, " ")
     .replace(/<[^>]+>/g, " ")
@@ -60,6 +72,45 @@ function warn(file: string, message: string) {
   }
 }
 
+function readVisibility(data: Record<string, unknown>, where: string): Visibility {
+  if (data.visibility !== undefined) {
+    const v = String(data.visibility);
+    if ((visibilities as readonly string[]).includes(v)) return v as Visibility;
+    warn(where, `unknown visibility "${v}" — treating as "draft"`);
+    return "draft";
+  }
+  return data.draft === true ? "draft" : "public";
+}
+
+function optionalString(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  const s = String(value).trim();
+  return s.length ? s : undefined;
+}
+
+/**
+ * YAML reads an unquoted `2026-10-21` as a Date, and `String(date)` of that
+ * is a long English sentence that sorts by weekday. Dates are kept as the
+ * ISO day they were written as, whether or not the author quoted them.
+ */
+function dateString(value: unknown): string {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? "" : value.toISOString().slice(0, 10);
+  }
+  return value === undefined || value === null ? "" : String(value).trim();
+}
+
+function optionalDate(value: unknown): string | undefined {
+  const s = dateString(value);
+  return s.length ? s : undefined;
+}
+
+function optionalYear(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : undefined;
+}
+
 /* ───────────────────────────── parsing ────────────────────────────────── */
 
 function parseEntry(collection: Collection, filename: string): Entry {
@@ -71,18 +122,20 @@ function parseEntry(collection: Collection, filename: string): Entry {
   const where = `${collection}/${filename}`;
   const wordCount = countWords(content);
 
+  const visibility = readVisibility(data, where);
   const base = {
     collection,
     slug,
     ref: `${collection}/${slug}`,
-    href: `/${collection}/${slug}`,
+    href: `${collectionMeta[collection].base}/${slug}`,
     title: String(data.title ?? slug),
     subtitle: data.subtitle ? String(data.subtitle) : undefined,
     summary: data.summary ? String(data.summary) : undefined,
-    date: String(data.date ?? ""),
-    updated: data.updated ? String(data.updated) : undefined,
+    date: dateString(data.date),
+    updated: optionalDate(data.updated),
     tags: asArray(data.tags),
-    draft: data.draft === true,
+    draft: visibility !== "public",
+    visibility,
     featured: data.featured === true,
     order: typeof data.order === "number" ? data.order : undefined,
     related: asArray(data.related),
@@ -129,6 +182,67 @@ function parseEntry(collection: Collection, filename: string): Entry {
     } as ProjectEntry;
   }
 
+  if (collection === "books" || collection === "films") {
+    const added = optionalDate(data.added) ?? optionalDate(data.date) ?? "";
+    if (!added) warn(where, "missing `added` date");
+    if (visibility !== "public" && optionalString(data.image)) {
+      warn(
+        where,
+        "a non-public entry names an image under public/ — anything there is served to whoever knows the URL",
+      );
+    }
+    const work = {
+      ...base,
+      // For works, `date` doubles as the archive date so global ordering is sane.
+      date: added,
+      titleOriginal: optionalString(data.titleOriginal),
+      titleEn: optionalString(data.titleEn),
+      year: optionalYear(data.year),
+      language: optionalString(data.language),
+      genres: asArray(data.genres),
+      themes: asArray(data.themes),
+      inCollections: asArray(data.collections),
+      image: optionalString(data.image),
+      imageCredit: optionalString(data.imageCredit),
+      added,
+      verified: data.verified === true,
+      verifyNote: optionalString(data.verifyNote),
+    };
+
+    if (collection === "books") {
+      let readingStatus = String(data.readingStatus ?? "unspecified") as ReadingStatus;
+      if (!(readingStatus in readingStatuses)) {
+        warn(where, `unknown readingStatus "${readingStatus}" — using "unspecified"`);
+        readingStatus = "unspecified";
+      }
+      return {
+        ...work,
+        collection: "books",
+        author: String(data.author ?? "").trim(),
+        authorOriginal: optionalString(data.authorOriginal),
+        edition: optionalString(data.edition),
+        isbn: optionalString(data.isbn),
+        readingStatus,
+        dateFinished: optionalDate(data.dateFinished),
+      } as BookEntry;
+    }
+
+    let viewingStatus = String(data.viewingStatus ?? "unspecified") as ViewingStatus;
+    if (!(viewingStatus in viewingStatuses)) {
+      warn(where, `unknown viewingStatus "${viewingStatus}" — using "unspecified"`);
+      viewingStatus = "unspecified";
+    }
+    return {
+      ...work,
+      collection: "films",
+      director: String(data.director ?? "").trim(),
+      directorOriginal: optionalString(data.directorOriginal),
+      country: optionalString(data.country),
+      viewingStatus,
+      dateWatched: optionalDate(data.dateWatched),
+    } as FilmEntry;
+  }
+
   if (collection === "writings") {
     let category = String(data.category ?? "reflections") as WritingCategory;
     if (!(category in writingCategories)) {
@@ -148,7 +262,15 @@ function parseEntry(collection: Collection, filename: string): Entry {
 
 /* ───────────────────────────── the index ──────────────────────────────── */
 
-const includeDrafts = process.env.NODE_ENV !== "production";
+/**
+ * In production only `public` entries exist as far as the site is concerned.
+ * In development everything is loaded so you can preview drafts and private
+ * entries; the UI marks them. This is the single gate for every page, route,
+ * search index, related-content panel and sitemap line.
+ */
+export const isProduction = process.env.NODE_ENV === "production";
+export const isPubliclyVisible = (e: { visibility: Visibility }) =>
+  !isProduction || e.visibility === "public";
 
 let cache: Entry[] | null = null;
 
@@ -159,7 +281,7 @@ export function allEntries(): Entry[] {
     readCollectionFiles(collection).map((file) => parseEntry(collection, file)),
   );
   cache = entries
-    .filter((e) => includeDrafts || !e.draft)
+    .filter(isPubliclyVisible)
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.title.localeCompare(b.title)));
   return cache;
 }
@@ -257,12 +379,9 @@ export function connections(entry: Entry): {
   for (const e of [...outgoing(entry), ...incoming(entry)]) map.set(e.ref, e);
   const all = [...map.values()].sort((a, b) => (a.date < b.date ? 1 : -1));
 
-  const byCollection = {
-    research: all.filter((e) => e.collection === "research"),
-    projects: all.filter((e) => e.collection === "projects"),
-    writings: all.filter((e) => e.collection === "writings"),
-    notebook: all.filter((e) => e.collection === "notebook"),
-  } as Record<Collection, Entry[]>;
+  const byCollection = Object.fromEntries(
+    collections.map((c) => [c, all.filter((e) => e.collection === c)]),
+  ) as Record<Collection, Entry[]>;
 
   const tags = new Set(entry.tags.map(normalizeTag));
   const sharedTags = allEntries().filter(
@@ -310,6 +429,66 @@ export function allTags(): TagRecord[] {
 
 export function getTag(slug: string): TagRecord | undefined {
   return allTags().find((t) => t.slug === slug);
+}
+
+/* ─────────────────────── thematic collections ─────────────────────────── */
+
+let themeCache: ThemeCollection[] | null = null;
+
+/** Hand-curated collections from content/collections/, public ones only in production. */
+export function themeCollections(): ThemeCollection[] {
+  if (themeCache) return themeCache;
+  const dir = path.join(CONTENT_ROOT, "collections");
+  if (!fs.existsSync(dir)) return (themeCache = []);
+  themeCache = fs
+    .readdirSync(dir)
+    .filter((f) => /\.mdx?$/.test(f) && !f.startsWith("_") && !f.startsWith("."))
+    .map((file) => {
+      const { data, content } = matter(fs.readFileSync(path.join(dir, file), "utf8"));
+      const slug = file.replace(/\.mdx?$/, "");
+      return {
+        slug,
+        title: String(data.title ?? slug),
+        subtitle: optionalString(data.subtitle),
+        items: asArray(data.items),
+        visibility: readVisibility(data, `collections/${file}`),
+        body: content,
+      } satisfies ThemeCollection;
+    })
+    .filter(isPubliclyVisible)
+    .sort((a, b) => a.title.localeCompare(b.title));
+  return themeCache;
+}
+
+export function getThemeCollection(slug: string): ThemeCollection | undefined {
+  return themeCollections().find((c) => c.slug === slug);
+}
+
+/**
+ * Membership is declared on either side — `items:` in the collection file or
+ * `collections:` in the work's frontmatter — and the two are merged here, so
+ * nothing has to be kept in sync by hand. The collection's own `items` order
+ * comes first; works that only declare themselves follow, newest first.
+ */
+export function themeCollectionItems(collection: ThemeCollection): Entry[] {
+  const explicit = collection.items
+    .map((ref) => {
+      const entry = getEntryByRef(ref);
+      if (!entry) warn(`collections/${collection.slug}`, `item "${ref}" does not resolve to a public entry`);
+      return entry;
+    })
+    .filter((e): e is Entry => Boolean(e));
+  const declared = allEntries().filter(
+    (e) => isWork(e) && e.inCollections.includes(collection.slug) && !collection.items.includes(e.ref),
+  );
+  return [...explicit, ...declared];
+}
+
+/** Thematic collections that include the given entry, by either declaration. */
+export function themeCollectionsFor(entry: Entry): ThemeCollection[] {
+  return themeCollections().filter(
+    (c) => c.items.includes(entry.ref) || (isWork(entry) && entry.inCollections.includes(c.slug)),
+  );
 }
 
 /* ───────────────────────────── formatting ─────────────────────────────── */

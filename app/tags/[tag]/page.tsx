@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-const ORDER: Collection[] = ["research", "writings", "notebook"];
+const ORDER: Collection[] = ["research", "projects", "writings", "notebook", "books", "films"];
 
 export default async function TagPage({ params }: Params) {
   const { tag } = await params;
