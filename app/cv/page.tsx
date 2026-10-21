@@ -122,14 +122,6 @@ export default function CvPage() {
             </ul>
           ) : null}
 
-          {!site.cv.pdf ? (
-            <p className="no-print mt-6 font-sans text-[0.75rem] text-ink-muted">
-              A PDF version is not available yet. Add the file to{" "}
-              <code className="font-mono">public/cv/</code> and set{" "}
-              <code className="font-mono">cv.pdf</code> in{" "}
-              <code className="font-mono">site.config.ts</code>.
-            </p>
-          ) : null}
         </header>
 
         {/* ── Sections ───────────────────────────────────────────────────── */}

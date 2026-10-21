@@ -83,8 +83,8 @@ export default async function WritingsPage({
         <EntryList entries={entries} className="mt-12 border-t-0" />
       ) : (
         <div className="mt-12">
-          <EmptyState hint="Copy content/writings/_template.mdx to publish an essay.">
-            No essays here yet.
+          <EmptyState>
+            Essays will appear here as they are finished.
           </EmptyState>
         </div>
       )}

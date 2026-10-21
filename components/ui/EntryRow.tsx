@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { formatDate } from "@/lib/content";
-import { type Entry, writingCategories } from "@/lib/types";
+import { type Entry, projectStages, writingCategories } from "@/lib/types";
 
 import { StatusBadge } from "./StatusBadge";
 import { TagList } from "./TagList";
@@ -9,6 +9,12 @@ import { TagList } from "./TagList";
 /** The per-collection marker shown in the left column of an index row. */
 function Marker({ entry }: { entry: Entry }) {
   if (entry.collection === "research") return <StatusBadge status={entry.status} />;
+  if (entry.collection === "projects")
+    return (
+      <span className="font-sans text-[0.6875rem] font-medium tracking-[0.12em] uppercase text-ink-soft">
+        {projectStages[entry.stage].label}
+      </span>
+    );
   if (entry.collection === "writings")
     return (
       <span className="font-sans text-[0.6875rem] font-medium tracking-[0.12em] uppercase text-accent">
@@ -35,6 +41,11 @@ export function EntryRow({
   entry: Entry;
   compact?: boolean;
 }) {
+  const hasArea =
+    (entry.collection === "research" || entry.collection === "projects") && Boolean(entry.area);
+  const hasMeta =
+    hasArea || entry.collection === "writings" || (!compact && entry.tags.length > 0);
+
   return (
     <li className="entry-row border-b border-rule-soft last:border-b-0">
       <article className="grid gap-x-8 py-6 sm:grid-cols-[9rem_1fr] sm:py-7">
@@ -69,17 +80,21 @@ export function EntryRow({
             </p>
           ) : null}
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-            {entry.collection === "research" && entry.area ? (
-              <span className="font-sans text-[0.75rem] text-ink-muted">{entry.area}</span>
-            ) : null}
-            {entry.collection === "writings" ? (
-              <span className="font-sans text-[0.75rem] text-ink-muted">
-                {entry.readingMinutes} min read
-              </span>
-            ) : null}
-            {!compact ? <TagList tags={entry.tags} size="xs" /> : null}
-          </div>
+          {hasMeta ? (
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+              {hasArea ? (
+                <span className="font-sans text-[0.75rem] text-ink-muted">
+                  {(entry as { area?: string }).area}
+                </span>
+              ) : null}
+              {entry.collection === "writings" ? (
+                <span className="font-sans text-[0.75rem] text-ink-muted">
+                  {entry.readingMinutes} min read
+                </span>
+              ) : null}
+              {!compact ? <TagList tags={entry.tags} size="xs" /> : null}
+            </div>
+          ) : null}
         </div>
       </article>
     </li>

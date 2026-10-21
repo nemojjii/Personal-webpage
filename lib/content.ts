@@ -9,11 +9,14 @@ import {
   type Entry,
   type EntryRef,
   type NotebookEntry,
+  type ProjectEntry,
+  type ProjectStage,
   type ResearchEntry,
   type ResearchStatus,
   type WritingCategory,
   type WritingEntry,
   collections,
+  projectStages,
   researchStatuses,
   writingCategories,
 } from "./types";
@@ -80,6 +83,8 @@ function parseEntry(collection: Collection, filename: string): Entry {
     updated: data.updated ? String(data.updated) : undefined,
     tags: asArray(data.tags),
     draft: data.draft === true,
+    featured: data.featured === true,
+    order: typeof data.order === "number" ? data.order : undefined,
     related: asArray(data.related),
     body: content,
     wordCount,
@@ -88,7 +93,11 @@ function parseEntry(collection: Collection, filename: string): Entry {
     references: asArray(data.references),
   } satisfies Omit<Entry, "collection"> & { collection: Collection };
 
-  if (!data.date) warn(where, "missing `date` in frontmatter");
+  // Research and projects are allowed to have no date yet — an entry whose
+  // materials are still being assembled is still part of the archive.
+  if (!data.date && (collection === "writings" || collection === "notebook")) {
+    warn(where, "missing `date` in frontmatter");
+  }
 
   if (collection === "research") {
     let status = String(data.status ?? "idea") as ResearchStatus;
@@ -103,6 +112,21 @@ function parseEntry(collection: Collection, filename: string): Entry {
       area: data.area ? String(data.area) : undefined,
       keywords: asArray(data.keywords),
     } as ResearchEntry;
+  }
+
+  if (collection === "projects") {
+    let stage = String(data.stage ?? "exploration") as ProjectStage;
+    if (!(stage in projectStages)) {
+      warn(where, `unknown stage "${stage}" — falling back to "exploration"`);
+      stage = "exploration";
+    }
+    return {
+      ...base,
+      collection: "projects",
+      stage,
+      area: data.area ? String(data.area) : undefined,
+      keywords: asArray(data.keywords),
+    } as ProjectEntry;
   }
 
   if (collection === "writings") {
@@ -147,6 +171,30 @@ export function getEntries<C extends Collection>(collection: C): Extract<Entry, 
   >[];
 }
 
+/**
+ * Ordering within an index group: an explicit `order` first (ascending),
+ * then newest date, then title. Entries without either keep a stable place.
+ */
+export function byOrderThenDate(a: Entry, b: Entry): number {
+  if (a.order !== undefined || b.order !== undefined) {
+    return (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER);
+  }
+  if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+  return a.title.localeCompare(b.title);
+}
+
+/** Splits a collection into its featured entries and the rest. */
+export function splitFeatured<T extends Entry>(entries: T[]): {
+  featured: T[];
+  rest: T[];
+} {
+  const sorted = entries.slice().sort(byOrderThenDate);
+  return {
+    featured: sorted.filter((e) => e.featured),
+    rest: sorted.filter((e) => !e.featured),
+  };
+}
+
 export function getEntry(collection: Collection, slug: string): Entry | undefined {
   return allEntries().find((e) => e.collection === collection && e.slug === slug);
 }
@@ -155,12 +203,14 @@ export function getEntryByRef(ref: EntryRef): Entry | undefined {
   return allEntries().find((e) => e.ref === ref);
 }
 
-/** Research sorted by status (publications first) and then by date. */
+/** Research sorted by status (publications first), then by order or date. */
 export function researchByStatus(): ResearchEntry[] {
-  return getEntries("research").slice().sort((a, b) => {
-    const d = researchStatuses[a.status].order - researchStatuses[b.status].order;
-    return d !== 0 ? d : a.date < b.date ? 1 : -1;
-  });
+  return getEntries("research")
+    .slice()
+    .sort((a, b) => {
+      const d = researchStatuses[a.status].order - researchStatuses[b.status].order;
+      return d !== 0 ? d : byOrderThenDate(a, b);
+    });
 }
 
 /** Notebook entries ordered by their sequential number, highest first. */
@@ -209,6 +259,7 @@ export function connections(entry: Entry): {
 
   const byCollection = {
     research: all.filter((e) => e.collection === "research"),
+    projects: all.filter((e) => e.collection === "projects"),
     writings: all.filter((e) => e.collection === "writings"),
     notebook: all.filter((e) => e.collection === "notebook"),
   } as Record<Collection, Entry[]>;

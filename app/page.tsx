@@ -4,11 +4,18 @@ import { WaveField } from "@/components/viz/WaveField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EntryList } from "@/components/ui/EntryRow";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { getEntries, notebookBySequence, researchByStatus } from "@/lib/content";
+import {
+  getEntries,
+  notebookBySequence,
+  splitFeatured,
+} from "@/lib/content";
 import { site } from "@/site.config";
 
 export default function HomePage() {
-  const research = researchByStatus().slice(0, 3);
+  const research = splitFeatured(getEntries("research"));
+  const featuredResearch = [...research.featured, ...research.rest].slice(0, 3);
+  const projects = splitFeatured(getEntries("projects"));
+  const featuredProjects = [...projects.featured, ...projects.rest].slice(0, 2);
   const writings = getEntries("writings").slice(0, 3);
   const notes = notebookBySequence().slice(0, 4);
 
@@ -44,67 +51,72 @@ export default function HomePage() {
             <Link href="/research" className="link-quiet text-ink">
               Research
             </Link>
-            <Link href="/notebook" className="link-quiet text-ink">
-              Notebook
+            <Link href="/cv" className="link-quiet text-ink">
+              CV
             </Link>
           </p>
         </div>
 
-        {/* The field. Decorative, but the mathematics is real — see
-            components/viz/WaveField.tsx. */}
+        {/* Two-source interference — see components/viz/WaveField.tsx */}
         <figure className="rise lg:pt-2" style={{ animationDelay: "160ms" }}>
           <div className="aspect-4/3 w-full border border-rule-soft bg-surface/30 sm:aspect-square lg:aspect-4/5">
             <WaveField />
           </div>
-          <figcaption className="mt-3 font-sans text-[0.6875rem] leading-relaxed text-ink-muted">
-            Level curves of{" "}
-            <span className="font-mono">
-              ψ(p,t) = ⅕ Σ cos(k<sub>j</sub>·p + ω<sub>j</sub>t)
+          <figcaption className="mt-3 max-w-[22rem] font-sans text-[0.6875rem] leading-relaxed text-ink-muted">
+            <span className="font-mono text-ink-soft">
+              ψ = cos(kr₁ − ωt) + cos(kr₂ − ωt)
             </span>
-            {" — "}five interfering plane waves. Five-fold symmetric about a
-            point, periodic under no translation at all.
+            <br />
+            Two sources, interfering. The dark curves are the hyperbolas along
+            which the waves cancel exactly — they never move.
           </figcaption>
         </figure>
       </section>
 
       {/* ── Research ────────────────────────────────────────────────────── */}
       <section className="pt-10 sm:pt-12">
-        <SectionHeading action={research.length ? { label: "All research", href: "/research" } : undefined}>
+        <SectionHeading
+          action={
+            featuredResearch.length ? { label: "All research", href: "/research" } : undefined
+          }
+        >
           Research
         </SectionHeading>
-        {research.length ? (
-          <EntryList entries={research} className="mt-2 border-t-0" />
+        {featuredResearch.length ? (
+          <EntryList entries={featuredResearch} className="mt-2 border-t-0" />
         ) : (
           <div className="mt-6">
-            <EmptyState hint="Add a file to content/research/ to begin.">
-              Projects and questions in progress will appear here.
-            </EmptyState>
+            <EmptyState>Research will be listed here.</EmptyState>
           </div>
         )}
       </section>
+
+      {/* ── Projects ───────────────────────────────────────────────────── */}
+      {featuredProjects.length ? (
+        <section className="pt-16 sm:pt-20">
+          <SectionHeading action={{ label: "All projects", href: "/projects" }}>
+            Projects
+          </SectionHeading>
+          <EntryList entries={featuredProjects} className="mt-2 border-t-0" />
+        </section>
+      ) : null}
 
       {/* ── Writings ────────────────────────────────────────────────────── */}
-      <section className="pt-16 sm:pt-20">
-        <SectionHeading action={writings.length ? { label: "All writings", href: "/writings" } : undefined}>
-          Selected writing
-        </SectionHeading>
-        {writings.length ? (
+      {writings.length ? (
+        <section className="pt-16 sm:pt-20">
+          <SectionHeading action={{ label: "All writings", href: "/writings" }}>
+            Selected writing
+          </SectionHeading>
           <EntryList entries={writings} className="mt-2 border-t-0" />
-        ) : (
-          <div className="mt-6">
-            <EmptyState hint="Add a file to content/writings/ to begin.">
-              Essays on philosophy, literature and the sciences will appear here.
-            </EmptyState>
-          </div>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       {/* ── Notebook ───────────────────────────────────────────────────── */}
-      <section className="pt-16 sm:pt-20">
-        <SectionHeading action={notes.length ? { label: "The notebook", href: "/notebook" } : undefined}>
-          From the notebook
-        </SectionHeading>
-        {notes.length ? (
+      {notes.length ? (
+        <section className="pt-16 sm:pt-20">
+          <SectionHeading action={{ label: "The notebook", href: "/notebook" }}>
+            From the notebook
+          </SectionHeading>
           <ul className="mt-5 grid gap-x-10 gap-y-5 sm:grid-cols-2">
             {notes.map((note) => (
               <li key={note.ref} className="entry-row border-t border-rule-soft pt-4">
@@ -125,14 +137,8 @@ export default function HomePage() {
               </li>
             ))}
           </ul>
-        ) : (
-          <div className="mt-6">
-            <EmptyState hint="Add a file to content/notebook/ to begin.">
-              Open questions, observations and reading notes will appear here.
-            </EmptyState>
-          </div>
-        )}
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }

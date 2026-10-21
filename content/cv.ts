@@ -50,11 +50,9 @@ export const cvSections: CvSection[] = [
     kind: "items",
     items: [
       {
-        title: "[Degree, e.g. B.S. in Mathematics]",
-        organisation: "[Institution]",
-        location: "[City, State]",
-        period: "[2025 – present]",
-        details: ["[Concentration, thesis title, or relevant coursework.]"],
+        // Add the degree title, dates and any honours once they are settled.
+        title: "Undergraduate, Chemical Physics & Mathematics",
+        organisation: "Rutgers University",
       },
     ],
   },
@@ -62,7 +60,24 @@ export const cvSections: CvSection[] = [
     id: "research-experience",
     label: "Research Experience",
     kind: "items",
-    items: [],
+    // Titles only for now. Add the institution, period, supervisor and a
+    // one-line description to each as you recover the details.
+    items: [
+      {
+        title:
+          "Study on Power Spectral Density by Improving Electroencephalography Signal Quality",
+      },
+      {
+        title:
+          "Predicting Chemical Biodegradability Using Molecular Spectrum Data Through Machine Learning Classification",
+      },
+      {
+        title:
+          "Solving Consensus Dynamics in Networks Using Mathematical and Computational Methods",
+      },
+      { title: "Modeling Gravitational Waves from Binary Black Hole Systems" },
+      { title: "Image Processing Using MRI Nuclear Physics and Computational Simulations" },
+    ],
   },
   {
     id: "projects",

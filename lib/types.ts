@@ -1,5 +1,5 @@
-/** The three content collections. Each maps to content/<collection>/ and /<collection>. */
-export const collections = ["research", "writings", "notebook"] as const;
+/** The content collections. Each maps to content/<collection>/ and /<collection>. */
+export const collections = ["research", "projects", "writings", "notebook"] as const;
 export type Collection = (typeof collections)[number];
 
 /** Research project lifecycle. The key is what you write in frontmatter. */
@@ -10,6 +10,18 @@ export const researchStatuses = {
   publication: { label: "Publication", order: 0 },
 } as const;
 export type ResearchStatus = keyof typeof researchStatuses;
+
+/**
+ * Where a project stands. Deliberately not the same vocabulary as research:
+ * these are explorations, and saying so is the point.
+ */
+export const projectStages = {
+  exploration: { label: "Early Exploration", order: 0 },
+  ongoing: { label: "Ongoing", order: 1 },
+  "set-aside": { label: "Set Aside", order: 3 },
+  finished: { label: "Finished", order: 2 },
+} as const;
+export type ProjectStage = keyof typeof projectStages;
 
 /** Essay categories for /writings. */
 export const writingCategories = {
@@ -33,10 +45,15 @@ export interface EntryBase {
   subtitle?: string;
   /** Short abstract / standfirst. Used on index pages and in link previews. */
   summary?: string;
+  /** May be empty: an entry whose date is not yet settled is still listed. */
   date: string;
   updated?: string;
   tags: string[];
   draft: boolean;
+  /** Lifts an entry into the featured group on its index, and onto the homepage. */
+  featured: boolean;
+  /** Manual sort key within a group, ascending. Falls back to date. */
+  order?: number;
   /** Explicit outgoing relations declared in frontmatter. */
   related: EntryRef[];
   /** Raw MDX body. */
@@ -52,7 +69,15 @@ export interface EntryBase {
 export interface ResearchEntry extends EntryBase {
   collection: "research";
   status: ResearchStatus;
-  /** Research area, e.g. "Differential Geometry". */
+  /** Research area, e.g. "Computational Physics". */
+  area?: string;
+  keywords: string[];
+}
+
+export interface ProjectEntry extends EntryBase {
+  collection: "projects";
+  stage: ProjectStage;
+  /** Free text, e.g. "Mathematics & Perception". */
   area?: string;
   keywords: string[];
 }
@@ -68,9 +93,10 @@ export interface NotebookEntry extends EntryBase {
   number: string;
 }
 
-export type Entry = ResearchEntry | WritingEntry | NotebookEntry;
+export type Entry = ResearchEntry | ProjectEntry | WritingEntry | NotebookEntry;
 
 export const isResearch = (e: Entry): e is ResearchEntry => e.collection === "research";
+export const isProject = (e: Entry): e is ProjectEntry => e.collection === "projects";
 export const isWriting = (e: Entry): e is WritingEntry => e.collection === "writings";
 export const isNotebook = (e: Entry): e is NotebookEntry => e.collection === "notebook";
 
@@ -79,6 +105,7 @@ export const collectionMeta: Record<
   { singular: string; plural: string; href: string }
 > = {
   research: { singular: "Research", plural: "Research", href: "/research" },
+  projects: { singular: "Project", plural: "Projects", href: "/projects" },
   writings: { singular: "Essay", plural: "Writings", href: "/writings" },
   notebook: { singular: "Note", plural: "Notebook", href: "/notebook" },
 };

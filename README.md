@@ -1,7 +1,8 @@
 # An Academic Website, A Personal Universe
 
-A personal academic homepage and intellectual archive — research, writings, a
-working notebook, and a CV — built to be added to for years, one file at a time.
+The personal academic homepage and intellectual archive of **Iris (Jieun) Kim** —
+research, projects, writings, a working notebook, and a CV — built to be added
+to for years, one file at a time.
 
 Adding an essay, a project, or a note means **creating one Markdown file**.
 Nothing in `app/` or `components/` has to be touched.
@@ -14,15 +15,16 @@ Nothing in `app/` or `components/` has to be touched.
 2. [Project structure](#2-project-structure)
 3. [Changing your name and academic information](#3-changing-your-name-and-academic-information)
 4. [Adding a research project](#4-adding-a-research-project)
-5. [Publishing an essay](#5-publishing-an-essay)
-6. [Creating a notebook entry](#6-creating-a-notebook-entry)
-7. [Linking related content](#7-linking-related-content)
-8. [Writing with mathematics, figures and footnotes](#8-writing-with-mathematics-figures-and-footnotes)
-9. [The CV, and adding a PDF](#9-the-cv-and-adding-a-pdf)
-10. [Changing typography and colours](#10-changing-typography-and-colours)
-11. [The mathematical visualisation](#11-the-mathematical-visualisation)
-12. [Deploying to Vercel](#12-deploying-to-vercel)
-13. [Design and architecture notes](#13-design-and-architecture-notes)
+5. [Adding a project](#5-adding-a-project)
+6. [Publishing an essay](#6-publishing-an-essay)
+7. [Creating a notebook entry](#7-creating-a-notebook-entry)
+8. [Linking related content](#8-linking-related-content)
+9. [Writing with mathematics, figures and footnotes](#9-writing-with-mathematics-figures-and-footnotes)
+10. [The CV, and adding a PDF](#10-the-cv-and-adding-a-pdf)
+11. [Changing typography and colours](#11-changing-typography-and-colours)
+12. [The mathematical visualisation](#12-the-mathematical-visualisation)
+13. [Deploying to Vercel](#13-deploying-to-vercel)
+14. [Design and architecture notes](#14-design-and-architecture-notes)
 
 ---
 
@@ -45,7 +47,8 @@ Requires Node 20 or newer.
 ```
 site.config.ts          ← your name, affiliation, intro, links, CV file
 content/                ← EVERYTHING YOU WRITE LIVES HERE
-  research/*.mdx          one file per project
+  research/*.mdx          one file per research project
+  projects/*.mdx          one file per exploration
   writings/*.mdx          one file per essay
   notebook/NNN-*.mdx      one file per note, numbered
   pages/about.mdx         the About page
@@ -56,6 +59,7 @@ app/                    ← routes; you will rarely edit these
   page.tsx                /            home
   about/                  /about
   research/               /research  + /research/[slug]
+  projects/               /projects  + /projects/[slug]
   writings/               /writings  + /writings/[slug]
   notebook/               /notebook  + /notebook/[slug]
   cv/ contact/ tags/      /cv /contact /tags + /tags/[tag]
@@ -89,14 +93,14 @@ The separation is deliberate: **content** in `content/`, **presentation** in
 Open [`site.config.ts`](site.config.ts). It is the only file with your identity in it.
 
 ```ts
-name: "Iris [Surname]",
+name: "Iris (Jieun) Kim",
 affiliation: "Rutgers University",
-position: "Undergraduate, Mathematics & Physical Sciences",
+position: "Undergraduate, Chemical Physics & Mathematics",
 url: "https://your-domain.com",      // used for metadata and the sitemap
 headline: "Between the abstract and the tangible.",
-intro: "Exploring mathematics and the physical sciences, …",
+intro: "I study chemical physics and mathematics at Rutgers, …",
 links: {
-  email: "",      // "you@rutgers.edu"
+  email: "",      // "jieun.kim@rutgers.edu"
   github: "",     // "https://github.com/you"
   scholar: "",
   orcid: "",
@@ -124,28 +128,65 @@ Edit the frontmatter, delete `draft: true`, and it appears at
 ```yaml
 ---
 title: "Full project title"
-subtitle: ""                     # optional, italic, under the title
+subtitle: ""                      # optional, italic, under the title
 summary: "One or two sentences."  # index pages and link previews
-status: in-progress              # idea | in-progress | completed | publication
-area: "Analytic Number Theory"
-date: 2026-03-04
-updated: 2026-05-20              # optional
-keywords: [sieve methods, large sieve]
-tags: [mathematics, number-theory]
-related: [notebook/004-a-small-identity]
-pdf: "/papers/preprint.pdf"      # optional; put the file in public/papers/
+status: completed                 # idea | in-progress | completed | publication
+area: "Computational Physics"
+date: 2025-06-01                  # may be left as "" until you know it
+updated: 2026-05-20               # optional
+featured: true                    # Featured research, rather than Additional
+order: 1                          # position within the group, ascending
+keywords: [power spectral density, EEG]
+tags: [signal-processing]
+related: [projects/mathematics-perception-and-expression]
+pdf: "/papers/write-up.pdf"       # optional; put the file in public/papers/
 references:
   - "Author, A. (2020). *Title*. Journal 12(3), 1–20."
 ---
 ```
 
-`status` controls which group the project appears under on `/research` —
-publications first, then in progress, completed, and ideas. `*asterisks*` in a
-reference line become italics.
+The research index has two groups: **Featured research** (`featured: true`) and
+**Additional research**. Within each, entries are ordered by `order` ascending
+if present, and otherwise by date, newest first — so you can arrange the
+featured list by hand without inventing dates.
+
+`status` sets the badge on the entry (completed, in progress, and so on).
+`*asterisks*` in a reference line become italics. An entry with `date: ""` is
+listed without a date rather than being hidden — useful while the details of
+older work are still being recovered.
+
+The five entries currently in `content/research/` hold titles only. Fill in the
+summary, area, dates and body of each from your original materials.
 
 ---
 
-## 5. Publishing an essay
+## 5. Adding a project
+
+Projects are the interdisciplinary and personal explorations — the things that
+are not research yet, and may never be.
+
+```bash
+cp content/projects/_template.mdx content/projects/my-exploration.mdx
+```
+
+```yaml
+---
+title: "Project title"
+stage: exploration   # exploration | ongoing | set-aside | finished
+area: "Mathematics & Perception"
+date: 2026-10-21
+featured: true       # appears under "Current" and on the homepage
+tags: [perception]
+---
+```
+
+`stage` is deliberately a different vocabulary from research `status`: an
+exploration is labelled as one, so nothing on the site reads as a finding before
+it is one.
+
+---
+
+## 6. Publishing an essay
 
 ```bash
 cp content/writings/_template.mdx content/writings/an-essay.mdx
@@ -169,7 +210,7 @@ not shown, so the filter row on `/writings` only ever offers real choices.
 
 ---
 
-## 6. Creating a notebook entry
+## 7. Creating a notebook entry
 
 ```bash
 cp content/notebook/_template.mdx content/notebook/004-a-small-identity.mdx
@@ -183,7 +224,7 @@ Notes need nothing but a `title` and a `date`. They can be two sentences.
 
 ---
 
-## 7. Linking related content
+## 8. Linking related content
 
 This is the part of the site designed to grow into a network.
 
@@ -230,7 +271,7 @@ An unresolved `<Ref>` degrades to plain grey text rather than a broken link.
 
 ---
 
-## 8. Writing with mathematics, figures and footnotes
+## 9. Writing with mathematics, figures and footnotes
 
 All content files are MDX, so the following work everywhere.
 
@@ -291,7 +332,7 @@ in the right margin on wide screens, folded under the masthead on small ones.
 
 ---
 
-## 9. The CV, and adding a PDF
+## 10. The CV, and adding a PDF
 
 The CV is structured data, not prose: [`content/cv.ts`](content/cv.ts). Add
 items to any section:
@@ -329,7 +370,7 @@ on its own (`Print this page`), so a PDF is optional.
 
 ---
 
-## 10. Changing typography and colours
+## 11. Changing typography and colours
 
 **Colours** — the top of [`app/globals.css`](app/globals.css):
 
@@ -365,38 +406,47 @@ same `@theme` block; long-form sizes live in the `.prose` section below it.
 
 ---
 
-## 11. The mathematical visualisation
+## 12. The mathematical visualisation
 
-[`components/viz/WaveField.tsx`](components/viz/WaveField.tsx) draws the level
-curves of
+[`components/viz/WaveField.tsx`](components/viz/WaveField.tsx) draws the
+interference pattern of two coherent circular sources. At a point $p$ at
+distances $r_1, r_2$ from the sources,
 
-$$\psi(\mathbf p, t) = \frac1N \sum_{j<N} \cos(\mathbf k_j \cdot \mathbf p + \omega_j t)$$
+$$\psi(p,t) = \cos(kr_1 - \omega t) + \cos(kr_2 - \omega t)
+            = 2\cos\!\Big(\tfrac{k(r_1+r_2)}{2} - \omega t\Big)
+              \cos\!\Big(\tfrac{k(r_1-r_2)}{2}\Big).$$
 
-for $N$ plane waves of equal magnitude, evenly spaced in direction over a half
-turn. For $N = 5$ the wave vectors generate a rank-four module in the plane, so
-the field is **quasiperiodic**: locally five-fold symmetric, invariant under no
-translation at all — the plane-wave construction behind Penrose-like tilings.
-Curves are extracted with marching squares on a coarse grid (a few thousand
-cosines per frame, canvas 2D, no WebGL, capped at ~30fps) and drawn as
-hairlines. The pointer leans the field's origin and rotates the wave vectors
-slightly; the canvas never receives pointer events, so text above it stays
-selectable.
+The second factor has no $t$ in it. The field therefore vanishes permanently
+wherever $r_1 - r_2$ is an odd multiple of half a wavelength — the points whose
+distances to the two sources differ by a constant, which is a family of confocal
+**hyperbolas** with the sources as foci. Those are the charcoal curves, and they
+never move; the only thing travelling is the crest pattern sweeping across them
+along the confocal ellipses. It is Young's two-slit geometry, drawn rather than
+measured.
+
+The level curves are extracted with marching squares on a coarse grid (a few
+thousand cosines per frame, canvas 2D, no WebGL, capped at ~30fps) and stroked
+as hairlines — the nodal set in charcoal, the levels either side of it in muted
+burgundy. The pointer displaces one source, which bends the whole family; the
+canvas never receives pointer events, so text above it stays selectable.
 
 It pauses when scrolled out of view or the tab is hidden, and under
 `prefers-reduced-motion` it draws a single still frame — the same mathematics,
 no motion.
 
-Props: `waves`, `frequency`, `cell`, `opacity`. Use it anywhere:
+Props: `separation`, `frequency`, `cell`, `opacity`. Use it anywhere:
 
 ```tsx
-<div className="aspect-square"><WaveField waves={7} frequency={5} /></div>
+<div className="aspect-square"><WaveField frequency={9} separation={0.25} /></div>
 ```
 
-`components/viz/Mark.tsx` is the static SVG of the same wave-vector star.
+[`components/viz/Mark.tsx`](components/viz/Mark.tsx) is the same geometry
+reduced to a static SVG skeleton: two sources, the straight nodal line between
+them, and the first hyperbola either side.
 
 ---
 
-## 12. Deploying to Vercel
+## 13. Deploying to Vercel
 
 ```bash
 npm i -g vercel        # once
@@ -418,7 +468,7 @@ appears after a rebuild, which a `git push` triggers automatically.
 
 ---
 
-## 13. Design and architecture notes
+## 14. Design and architecture notes
 
 **Stack** — Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4,
 MDX via `next-mdx-remote/rsc`, KaTeX, Motion. No database, no CMS, no auth,
@@ -428,7 +478,8 @@ no paid services.
 
 - *Content as files.* Frontmatter plus MDX means your archive is plain text you
   own, diffable in git, and readable in twenty years. Adding an entry touches no
-  application code.
+  application code. There are four collections — research, projects, writings,
+  notebook — and adding a fifth means a folder, a type, and a route.
 - *Relations declared once.* Backlinks are derived, not maintained.
 - *Animation where it earns its place.* Page transitions are a CSS opacity
   fade — deliberately not a transform, which would create a containing block and

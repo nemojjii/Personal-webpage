@@ -58,8 +58,8 @@ export default function NotebookPage() {
         <EntryList entries={entries} className="mt-12 border-t-0" />
       ) : (
         <div className="mt-12">
-          <EmptyState hint="Copy content/notebook/_template.mdx to 001-your-note.mdx.">
-            The notebook is empty.
+          <EmptyState>
+            The first entry has not been written yet.
           </EmptyState>
         </div>
       )}

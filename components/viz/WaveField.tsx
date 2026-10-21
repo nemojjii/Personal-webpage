@@ -4,28 +4,31 @@ import { useEffect, useRef } from "react";
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- *  WAVE FIELD — level curves of a quasiperiodic interference pattern
+ *  WAVE FIELD — the interference pattern of two coherent circular sources
  * ─────────────────────────────────────────────────────────────────────────────
  *
- *  The drawing is the set of level curves of the scalar field
+ *  Two sources at s1 and s2 emit circular waves of the same wavelength and
+ *  phase. At a point p the superposition is
  *
- *      psi(p, t) = (1/N) * SUM_{j<N} cos( k_j · p + omega_j · t )
+ *      psi(p, t) = cos(k*r1 - w*t) + cos(k*r2 - w*t),   ri = |p - si|,
  *
- *  where the wave vectors k_j are N plane waves of equal magnitude kappa,
- *  evenly spaced in direction over a half turn:
+ *  which factors, by the sum-to-product identity, into
  *
- *      k_j = kappa * ( cos(theta_j), sin(theta_j) ),   theta_j = pi*j/N + Theta.
+ *      psi(p, t) = 2 * cos( k*(r1 + r2)/2 - w*t ) * cos( k*(r1 - r2)/2 ).
  *
- *  For N = 5 the directions span a 10-fold symmetric star, and the sum is
- *  quasiperiodic: the pattern has local five-fold symmetry but never repeats —
- *  the standard construction of a Penrose-like tiling from a superposition of
- *  plane waves. The angular frequencies omega_j are mutually incommensurable,
- *  so the field never returns to a previous state.
+ *  The second factor carries no time: the field vanishes wherever
+ *  r1 - r2 is an odd multiple of half a wavelength. Those are exactly the
+ *  points whose distances to the two sources differ by a constant — a family
+ *  of confocal hyperbolas with the sources as foci. So the dark curves in the
+ *  drawing are conic sections, they do not move, and the only thing that
+ *  travels is the crest pattern sweeping across them along the confocal
+ *  ellipses. It is Young's two-slit geometry, drawn rather than measured.
  *
- *  Curves are extracted with marching squares on a coarse grid, which keeps the
- *  cost to a few thousand cosines per frame (no WebGL, no shaders, ~30fps),
- *  and drawn as hairlines. The canvas never receives pointer events; the
- *  pointer is read from the window, so text above it stays fully selectable.
+ *  The curves are extracted with marching squares on a coarse grid — a few
+ *  thousand cosines per frame, canvas 2D, no WebGL, capped at ~30fps. The
+ *  pointer displaces one source, which bends the whole hyperbolic family.
+ *  The canvas never receives pointer events, so text above it stays
+ *  selectable.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -49,13 +52,23 @@ const CASES: ReadonlyArray<readonly number[]> = [
   [],
 ];
 
-/** Level set values, and the weight of each — the zero set is drawn darkest. */
-const LEVELS = [-0.72, -0.48, -0.24, 0, 0.24, 0.48, 0.72] as const;
-const LEVEL_ALPHA = [0.12, 0.2, 0.3, 0.52, 0.3, 0.2, 0.12] as const;
+/**
+ * Level set values and the weight of each. The zero set — the nodal lines,
+ * where the waves cancel exactly — is drawn in charcoal and slightly heavier,
+ * so the structure of the field reads before its shading does. Everything
+ * either side of it is muted burgundy.
+ */
+const LEVELS = [-0.62, 0, 0.62] as const;
+const LEVEL_ALPHA = [0.24, 0.62, 0.24] as const;
+const NODAL_INDEX = 1;
+
+/** rgb triples: charcoal for the nodal set, wine for the rest. */
+const INK = "36, 35, 32";
+const WINE = "112, 47, 59";
 
 export interface WaveFieldProps {
-  /** Number of plane waves. 5 gives the quasiperiodic five-fold field. */
-  waves?: number;
+  /** Half-separation of the two sources, as a fraction of the shorter edge. */
+  separation?: number;
   /** Spatial frequency in cycles across the shorter edge. */
   frequency?: number;
   /** Grid spacing in CSS pixels. Larger is cheaper and more angular. */
@@ -66,9 +79,9 @@ export interface WaveFieldProps {
 }
 
 export function WaveField({
-  waves = 5,
-  frequency = 4.2,
-  cell = 11,
+  separation = 0.19,
+  frequency = 6.4,
+  cell = 9,
   opacity = 1,
   className = "",
 }: WaveFieldProps) {
@@ -116,38 +129,35 @@ export function WaveField({
     const draw = (t: number) => {
       if (!width || !height) return;
 
-      const scale = frequency * (2 * Math.PI) / Math.min(width, height);
-      const theta0 = 0.22 + 0.12 * Math.sin(t * 0.07) + eased.x * 0.28;
-      const kx: number[] = [];
-      const ky: number[] = [];
-      const phase: number[] = [];
+      const short = Math.min(width, height);
+      const k = (frequency * 2 * Math.PI) / short;
+      const omega = 1.15;
 
-      for (let j = 0; j < waves; j++) {
-        const theta = (Math.PI * j) / waves + theta0;
-        kx.push(Math.cos(theta) * scale);
-        ky.push(Math.sin(theta) * scale);
-        // Incommensurable rates: the field is never periodic in time.
-        phase.push(t * (0.1 + 0.031 * Math.SQRT2 * (j + 1)) + j * 1.7);
-      }
+      // The two sources sit either side of centre on the long axis, and the
+      // pointer nudges them — which bends the whole hyperbolic family.
+      const horizontal = width >= height;
+      const d = separation * short;
+      const cx = width / 2 + eased.x * short * 0.06;
+      const cy = height / 2 + eased.y * short * 0.06;
+      const s1x = horizontal ? cx - d : cx;
+      const s1y = horizontal ? cy : cy - d;
+      const s2x = horizontal ? cx + d + eased.x * short * 0.05 : cx + eased.x * short * 0.05;
+      const s2y = horizontal ? cy + eased.y * short * 0.05 : cy + d + eased.y * short * 0.05;
 
-      // Origin drifts slowly, and leans towards the pointer.
-      const ox = width * (0.5 + eased.x * 0.18);
-      const oy = height * (0.5 + eased.y * 0.18);
+      const phase = omega * t;
 
       for (let r = 0; r < rows; r++) {
-        const y = r * cell - oy;
+        const y = r * cell;
         for (let c = 0; c < cols; c++) {
-          const x = c * cell - ox;
-          let sum = 0;
-          for (let j = 0; j < waves; j++) {
-            sum += Math.cos(kx[j] * x + ky[j] * y + phase[j]);
-          }
-          field[r * cols + c] = sum / waves;
+          const x = c * cell;
+          const r1 = Math.hypot(x - s1x, y - s1y);
+          const r2 = Math.hypot(x - s2x, y - s2y);
+          field[r * cols + c] =
+            (Math.cos(k * r1 - phase) + Math.cos(k * r2 - phase)) / 2;
         }
       }
 
       ctx.clearRect(0, 0, width, height);
-      ctx.lineWidth = 0.75;
       ctx.lineCap = "round";
 
       for (let l = 0; l < LEVELS.length; l++) {
@@ -182,7 +192,9 @@ export function WaveField({
           }
         }
 
-        ctx.strokeStyle = `rgba(112, 47, 59, ${LEVEL_ALPHA[l] * opacity})`;
+        const nodal = l === NODAL_INDEX;
+        ctx.strokeStyle = `rgba(${nodal ? INK : WINE}, ${LEVEL_ALPHA[l] * opacity})`;
+        ctx.lineWidth = nodal ? 1 : 0.7;
         ctx.stroke();
       }
     };
@@ -244,7 +256,7 @@ export function WaveField({
       window.removeEventListener("pointermove", onPointerMove);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [waves, frequency, cell, opacity]);
+  }, [separation, frequency, cell, opacity]);
 
   return (
     <canvas

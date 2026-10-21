@@ -1,28 +1,16 @@
 /**
- * The wave-vector star: N directions evenly spaced over a half turn, the
- * generating set of the interference field drawn on the homepage.
- * A static SVG, safe to use anywhere, including in print.
+ * The interference mark: two sources, the straight nodal line between them,
+ * and the first pair of nodal hyperbolas either side. The same geometry the
+ * homepage field is drawn from, reduced to its skeleton.
+ * A static SVG, safe anywhere, including in print.
  */
 export function Mark({
-  waves = 5,
   size = 44,
   className = "",
 }: {
-  waves?: number;
   size?: number;
   className?: string;
 }) {
-  const r = 20;
-  const rays = Array.from({ length: waves }, (_, j) => {
-    const theta = (Math.PI * j) / waves;
-    return {
-      x1: 24 - Math.cos(theta) * r,
-      y1: 24 - Math.sin(theta) * r,
-      x2: 24 + Math.cos(theta) * r,
-      y2: 24 + Math.sin(theta) * r,
-    };
-  });
-
   return (
     <svg
       viewBox="0 0 48 48"
@@ -32,20 +20,16 @@ export function Mark({
       className={className}
       role="presentation"
     >
-      <circle cx="24" cy="24" r={r} fill="none" stroke="currentColor" strokeWidth="0.6" opacity="0.35" />
-      {rays.map((ray, i) => (
-        <line
-          key={i}
-          x1={ray.x1}
-          y1={ray.y1}
-          x2={ray.x2}
-          y2={ray.y2}
-          stroke="currentColor"
-          strokeWidth="0.6"
-          opacity="0.75"
-        />
-      ))}
-      <circle cx="24" cy="24" r="1.1" fill="currentColor" />
+      <g fill="none" stroke="currentColor" strokeWidth="0.7">
+        <circle cx="24" cy="24" r="20" opacity="0.3" />
+        {/* The central nodal line, and the first hyperbola on each side. */}
+        <line x1="24" y1="5" x2="24" y2="43" opacity="0.8" />
+        <path d="M11 7 C 17.5 16, 17.5 32, 11 41" opacity="0.5" />
+        <path d="M37 7 C 30.5 16, 30.5 32, 37 41" opacity="0.5" />
+      </g>
+      {/* The two sources. */}
+      <circle cx="17" cy="24" r="1.15" fill="currentColor" />
+      <circle cx="31" cy="24" r="1.15" fill="currentColor" />
     </svg>
   );
 }

@@ -41,9 +41,7 @@ export default function TagsPage() {
           </ul>
         ) : (
           <div className="mt-12">
-            <EmptyState hint="Add a `tags:` list to any content file.">
-              Nothing is tagged yet.
-            </EmptyState>
+            <EmptyState>Nothing is tagged yet.</EmptyState>
           </div>
         )}
       </div>

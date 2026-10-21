@@ -38,9 +38,7 @@ export default function AboutPage() {
               <Mdx source={page.body} />
             </Prose>
           ) : (
-            <EmptyState hint="Create content/pages/about.mdx to fill this page.">
-              This page has not been written yet.
-            </EmptyState>
+            <EmptyState>This page has not been written yet.</EmptyState>
           )}
 
           <footer className="no-print mt-20 flex items-center gap-5 border-t border-rule pt-7">

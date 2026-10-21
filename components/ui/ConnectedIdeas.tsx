@@ -5,9 +5,10 @@ import { type Collection, type Entry, collectionMeta } from "@/lib/types";
 
 import { SectionHeading } from "./SectionHeading";
 
-const GROUP_ORDER: Collection[] = ["research", "writings", "notebook"];
+const GROUP_ORDER: Collection[] = ["research", "projects", "writings", "notebook"];
 const GROUP_LABEL: Record<Collection, string> = {
   research: "Related research",
+  projects: "Related projects",
   writings: "Related writings",
   notebook: "Related notes",
 };

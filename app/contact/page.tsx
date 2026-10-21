@@ -80,13 +80,6 @@ export default function ContactPage() {
           ))}
         </dl>
 
-        {links.length === 0 ? (
-          <p className="mt-8 font-sans text-[0.75rem] leading-relaxed text-ink-muted">
-            Nothing is listed yet. Fill in the <code className="font-mono">links</code> block in{" "}
-            <code className="font-mono">site.config.ts</code> and each entry will appear here, in
-            the footer, and on the CV.
-          </p>
-        ) : null}
 
         <div className="mt-16 flex items-center gap-5 border-t border-rule pt-8">
           <Mark className="shrink-0 text-accent" size={36} />
