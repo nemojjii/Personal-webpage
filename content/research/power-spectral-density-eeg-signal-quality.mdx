@@ -1,35 +1,193 @@
 ---
 title: "Study on Power Spectral Density by Improving Electroencephalography Signal Quality"
-# Fill these in from your original materials.
-summary: ""
+subtitle: "Area of the alpha band in EEG as a measure of stability"
+summary: "Measuring the area under the alpha band of an EEG spectrum as a quantitative index of restfulness, with an autoencoder trained to denoise the signal before the spectrum is taken."
 status: completed
-area: ""
-# Add the period the work was carried out, e.g. 2025-06-01
+area: "Signal Processing & Neurophysics"
 date: ""
 featured: true
 order: 1
-keywords: []
-tags: []
-related: []
-# Put the write-up in public/papers/ and point to it here.
-pdf: ""
+keywords:
+  - electroencephalography
+  - power spectral density
+  - alpha band
+  - autoencoder denoising
+  - fast Fourier transform
+tags: [signal-processing, machine-learning, neurophysics, fourier-analysis]
+related:
+  - research/consensus-dynamics-in-networks
 references: []
 ---
 
-*An account of this project is being prepared from the original materials.*
+{/* VERIFY — this page is the most provisional of the five. See the notes at the
+    foot of this file; several titles and claims still need your confirmation. */}
 
-{/* A suggested structure — replace it with your own as you write:
+An electroencephalogram is a recording of voltages at the scalp, and most of
+what it contains is not brain activity: muscle tension, eye blinks and mains
+interference all arrive on the same wires. The rhythm of interest here is the
+alpha band, 8–13 Hz, long established as a marker of relaxed wakefulness, which
+appears most strongly over the back of the head when a subject is resting with
+their eyes closed.
 
-## Background
-What the question was, and why it was worth asking.
+The question this project asks is whether the *area* under the alpha band of
+the power spectrum can serve as a usable quantitative index of restfulness —
+and, because that area is only as trustworthy as the signal it is computed
+from, whether a neural network trained to reconstruct clean traces from noisy
+ones can make the measurement more reliable. The two halves are inseparable:
+the denoising exists to make the integral mean something.
 
-## Approach
-Data, instruments, models, code.
+## Research question
 
-## What I found
-Results, with figures. Use <Figure caption="…" number="1">…</Figure>.
+Can the power in the alpha band of an EEG spectrum, measured as the area under
+the spectral curve, give a quantitative measure of cognitive stability or
+relaxation — and does machine-learning-based denoising of the raw recording
+improve that measurement?
 
-## Where it led
-What you would do differently, and what it opened up.
+## Theoretical background
 
+An EEG trace is a voltage time series. Fourier analysis rewrites it as a
+superposition of sinusoids, so that a long and visually noisy recording can be
+summarised by how its power is distributed across frequency. The conventional
+bands are delta, theta, alpha, beta and gamma; the alpha band sits at 8–13 Hz.
+
+Writing $x(t)$ for the recorded signal, the discrete Fourier transform gives
+coefficients
+
+$$
+X_k = \sum_{n=0}^{N-1} x_n\, e^{-2\pi i k n / N},
+$$
+
+from which the power spectrum $P(f) = |X(f)|^2$ follows. The quantity of
+interest is the band-limited integral
+
+$$
+P_\alpha = \int_{8\,\mathrm{Hz}}^{13\,\mathrm{Hz}} P(f)\, \dd f,
+$$
+
+evaluated numerically as the area under the spectral curve. Reported in units of
+$\mu\mathrm{V}^2$, this is the number the project treats as an index of
+restfulness, computed channel by channel so that its spatial distribution across
+the scalp can be compared.
+
+Denoising is posed as a reconstruction problem. An autoencoder is trained to map
+a corrupted segment back to its clean counterpart by passing it through a
+narrow bottleneck, minimising the mean squared error
+
+$$
+\mathcal{L} = \frac{1}{N}\sum_{n=1}^{N} \left( \hat{x}_n - x_n \right)^2 ,
+$$
+
+so that the only way to reconstruct well is to learn the structure the signal
+has and the noise does not.
+
+## Methodology
+
+**Acquisition.** EEG was recorded from a subject on a 21-channel system placed
+according to the international 10–20 system, with conductive gel applied for
+signal quality and the participant instructed to minimise movement and external
+stimulation. The recorded REF data were converted to EDF for processing.
+
+**Preprocessing and noise injection.** Signals were loaded in Python with
+`pyedflib` and normalised. Gaussian noise was then added artificially to the
+clean recordings, producing a paired dataset — clean and corrupted versions of
+the same segments — on which a denoiser could be trained supervised.
+
+**Denoising.** An autoencoder was trained to separate neural signal from noise,
+with an encoder compressing the input and a decoder reconstructing it, on
+overlapping 256-sample segments, minimising mean squared error. The trained
+model was then applied to unseen segments.
+
+**Spectral analysis.** Denoised signals were transformed to the frequency domain
+by FFT, the 8–13 Hz band isolated, and its power computed as the area under the
+spectral curve by trapezoidal integration (`numpy.trapz`). Alpha power was
+calculated per channel, with occipital and parietal channels of particular
+interest.
+
+<Aside>
+  Note the shape of the experiment: the noise is synthetic and added on purpose,
+  which is what makes supervised training possible at all — the clean target
+  exists only because the corruption was manufactured.
+</Aside>
+
+## Results and observations
+
+Measured alpha power varied markedly across the scalp. The reported values were
+larger over the occipital and temporal channels — O1, O2, T5, T6 — than over
+frontal and central channels, which is the posterior-dominant distribution that
+alpha activity is expected to show during restful wakefulness.
+
+One channel is given numerically: **O1-AVG measured 2.2871 μV²**. The poster
+reports this as falling below a 20–50 μV² range described there as typical of
+relaxed healthy adults, and notes stress, cognitive activity, or occipital
+dysfunction among possible explanations. T6 and O2 are reported as showing
+higher alpha power than O1.
+
+Denoising is reported as improving waveform clarity and the separability of
+neural signal from artefact, and the per-channel alpha measurements were
+combined into a topographic map so that spatial distribution and outlying
+channels could be inspected alongside the numbers.
+
+## Challenges and limitations
+
+- **A single subject.** All measurements come from one recording session on one
+  participant. Nothing here supports a population claim, and the diagnostic
+  possibilities the poster raises are speculation about an individual trace, not
+  findings.
+- **The noise is synthetic.** The autoencoder was trained on Gaussian noise
+  added deliberately to clean recordings. Real EEG artefacts — blinks, EMG,
+  electrode drift — are structured, non-Gaussian and correlated with the signal,
+  so performance on this task does not establish performance on real artefacts.
+- **No quantified denoising benefit.** Improvement in clarity is reported
+  qualitatively. No reconstruction error, signal-to-noise ratio or
+  before-and-after comparison of $P_\alpha$ is given.
+- **The reference range is uncited.** The 20–50 μV² band the O1 value is
+  compared against is stated without a source, and absolute alpha power depends
+  strongly on montage, reference, epoch length and spectral normalisation —
+  which makes any comparison against a literature range fragile.
+- **Internally inconsistent direction.** The poster's abstract describes the
+  occipital channel O1 as showing the *lowest* alpha values while its results
+  section describes O1 among the *highest*. The two cannot both be right; this
+  page reports both the spatial pattern and the single numerical value without
+  resolving the contradiction.
+
+{/*
+  ── REFLECTIONS (unpublished) ────────────────────────────────────────────────
+  Yours to write. Add a "## Reflections" heading below and nothing else is
+  needed; nothing has been written on your behalf.
+
+  ── NOTES REQUIRING VERIFICATION ─────────────────────────────────────────────
+  1. TITLE. The title shown is the one from your résumé. The poster is titled
+     "Area of Alpha Band in EEG for Stability Analysis" and an early draft
+     introduction carries "EEG analysis and noise reduction using machine
+     learning". These are three different titles for related work. Confirm which
+     names the submitted paper; the subtitle currently carries the poster title.
+  2. SOURCES USED. Content on this page comes from the POSTER
+     ("Alpah band analysis poster.pdf") only — it is the single document that
+     contains your own data and results. Deliberately NOT used:
+       · "Iris Kim - Alpha band analysis.pdf" — a reading-notes compilation.
+         Most of it reproduces a 2002 MathWorks/g.tec article by Edlinger &
+         Guger. Its figures and its "3–5% classification error" belong to Guger
+         et al. (2001), not to you, and are not reported here.
+       · "Introduction - ASR - Jieun Kim.pdf" — a draft introduction. Its
+         "over 95% accuracy" is a cited external study (Frontiers in Physiology,
+         2022), not your result.
+       · "ASR initial proposal-2.pdf" — a proposal for a different project
+         (digital image processing and filter/window design).
+  3. ALPHA BAND BOUNDS. The poster says 8–13 Hz; the draft introduction says
+     8–12 Hz. 8–13 Hz is used here. Confirm.
+  4. METHOD CONFLICT. The draft introduction describes 1–2 s epochs and
+     SVM/neural-network classification. The poster describes 256-sample
+     segments and an autoencoder, with no classifier. The poster's account is
+     the one on this page; confirm the final paper matches it.
+  5. O1 CONTRADICTION. Abstract says O1 lowest, Results say O1 among the
+     highest. Needs resolving before this page can state a direction.
+  6. IEEE ISEC. Your résumé reports acceptance at IEEE ISEC. NOTHING in the
+     documents supplied mentions ISEC, IEEE, submission or acceptance, so no
+     publication or presentation claim appears anywhere on this site. Send the
+     acceptance email or the proceedings entry and I will add it properly.
+  7. CHANNEL COUNT. 21 channels per the poster. The notes document describes a
+     27-channel montage, but that belongs to the external g.tec article.
+  8. CROSS-LINK. The draft introduction states that the same paper also treated
+     consensus dynamics, with electrodes as the agents. That is why this entry
+     and the consensus project are linked as related work. Confirm it is right.
 */}

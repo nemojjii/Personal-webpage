@@ -1,35 +1,215 @@
 ---
-title: "Modeling Gravitational Waves from Binary Black Hole Systems"
-# Fill these in from your original materials.
-summary: ""
+title: "Calculations of Gravitational Waves from Binary Black Hole Systems"
+summary: "A deliberately classical model of a black-hole inspiral: Newtonian circular orbits losing energy at the Peters–Mathews rate, integrated until the event horizons meet, and the resulting frequency sweep compared with LIGO's observations."
 status: completed
-area: ""
-# Add the period the work was carried out, e.g. 2025-06-01
+area: "Computational Astrophysics"
 date: ""
 featured: false
 order: 4
-keywords: []
-tags: []
+keywords:
+  - gravitational waves
+  - binary black holes
+  - orbital dynamics
+  - Schwarzschild radius
+  - spectrogram
+tags: [astrophysics, simulation, fourier-analysis]
 related: []
-# Put the write-up in public/papers/ and point to it here.
-pdf: ""
-references: []
+references:
+  - "Peters, P. C., & Mathews, J. (1963). Gravitational radiation from point masses in a Keplerian orbit. *Physical Review*, 131(1), 435–440."
+  - "Abbott, B. P., et al. (2016). Observation of gravitational waves from a binary black hole merger. *Physical Review Letters*, 116(6), 061102."
 ---
 
-*An account of this project is being prepared from the original materials.*
+{/* VERIFY — see the notes at the foot of this file. One of them concerns a
+    factor of two in the derivation and should be read before anything else. */}
 
-{/* A suggested structure — replace it with your own as you write:
+Simulating a binary black hole merger properly means solving the Einstein field
+equations numerically, which is the work of large collaborations. This project
+asks a narrower and more tractable question: how much of the observed signal can
+be recovered from classical mechanics alone?
 
-## Background
-What the question was, and why it was worth asking.
+The strategy is to give up on computing the waveform propagating through space
+and compute only the *orbit*. Two masses circle each other; they lose energy at
+the rate general relativity predicts for gravitational radiation; the orbit
+therefore shrinks and the orbital frequency rises, until the two event horizons
+touch. If gravitational waves are emitted more strongly the faster the bodies
+move, then the frequency sweep of the orbit should resemble the frequency sweep
+of the signal — and that is something a laptop can integrate. The resulting
+"chirp" is then set beside the real spectrograms of GW150914 and GW190521.
 
-## Approach
-Data, instruments, models, code.
+## Research question
 
-## What I found
-Results, with figures. Use <Figure caption="…" number="1">…</Figure>.
+How far can the frequency evolution of a gravitational-wave signal from a binary
+black hole merger be reproduced using classical orbital mechanics together with
+the relativistic energy-loss rate, without solving the field equations?
 
-## Where it led
-What you would do differently, and what it opened up.
+## Theoretical background
 
+For two masses $m_1$ and $m_2$ in a circular orbit of separation $r$, Peters and
+Mathews (1963) give the rate at which the system radiates energy as
+gravitational waves:
+
+$$
+\frac{\dd E}{\dd t} = -\frac{32}{5}\,\frac{G^4}{c^5}\,\frac{(m_1 m_2)^2 (m_1 + m_2)}{r^5}.
+$$
+
+Energy loss shrinks the orbit. Relating $\dd E/\dd t$ to $\dd r/\dd t$ through
+the orbital energy gives a differential equation for the separation alone, of the
+form $\dd r/\dd t \propto -r^{-3}$, so the inspiral accelerates sharply as the
+bodies close.
+
+The orbit cannot shrink indefinitely, because black holes have a size. For mass
+$M$ the Schwarzschild radius — the event horizon, where escape velocity reaches
+the speed of light — is
+
+$$
+R_s = \frac{2GM}{c^2},
+$$
+
+and taking merger to occur when the two horizons meet fixes the end of the
+integration at
+
+$$
+r_{\min} = \frac{2G(m_1 + m_2)}{c^2}.
+$$
+
+The rotation rate follows from Kepler's third law: for a binary of total mass
+$M$ at separation $r$,
+
+$$
+\omega = \sqrt{\frac{G M}{r^3}},
+$$
+
+so as $r$ falls, $\omega$ rises — the chirp.
+
+## Methodology
+
+**Assumptions.** The model is explicitly a simplification, and the manuscript
+states its assumptions:
+
+1. The binary's orbital motion follows the same equations as a classical binary
+   star system.
+2. The black holes merge into one immediately on contact.
+3. Orbits are circular — eccentricity zero.
+4. Gravitational waves grow stronger as the black holes move faster.
+5. Each black hole emits a pulse once as it approaches Earth and once as it
+   recedes.
+
+Apart from the energy-loss rate and the Schwarzschild radius, nothing
+relativistic enters.
+
+**Procedure.** Given two masses and an initial separation, $\dd r/\dd t$ was
+integrated numerically until $r$ reached $r_{\min}$. From $r(t)$ the angular
+velocity followed by Kepler's law, and from that the trajectory of each body.
+With Earth taken to lie far away along the $x$-axis, the $x$-component of each
+body's velocity was extracted as the quantity standing in for wave amplitude.
+Because assumption 5 puts two pulses per body per revolution — four per
+revolution in total — the frequency axis was multiplied by four. A spectrogram
+of the summed $v_x$ was then computed with SciPy and compared against the
+published LIGO spectrograms.
+
+**Implementation.** Python 3.10 with NumPy and SciPy for computation, and
+Matplotlib for visualisation.
+
+## Results and observations
+
+**GW150914.** Initial conditions matched to the first detection — 36 and 29
+solar masses, initial separation 1000 km. The integration shows the separation
+contracting slowly and then collapsing, with a sharp acceleration late in the
+run. Against the observed event the manuscript reports three points of
+agreement: the strongest signal lasts about 0.2 s; the frequency rises from
+about 35 Hz to about 250 Hz; and the bodies reach 30–60% of the speed of light.
+
+**GW190521.** Masses of 85 and 66 solar masses, initial separation adjusted to
+1700 km. Both simulation and observation show a strong, rapidly rising signal
+within roughly 0.1 s. The simulated frequency rose through about 60–150 Hz
+against roughly 50–100 Hz observed. For the heavier pair, simulation and
+observation agree in direction: a shorter signal at lower frequency. Specific
+frequency values and spectrogram shape differ.
+
+The honest summary is the manuscript's own: that classical mechanics plus one
+relativistic energy-loss formula produces "quite plausible" frequency evolution,
+with the agreement being qualitative — duration, direction and rough band —
+rather than a reproduction of the waveform.
+
+## Challenges and limitations
+
+- **This is not a waveform.** The model computes orbital frequency, not strain.
+  It cannot produce the merger or ringdown that dominates the end of a real
+  signal, and the comparison is between a frequency sweep and a spectrogram, not
+  between two waveforms.
+- **The last orbits are the least trustworthy.** At 30–60% of the speed of light
+  and separations of a few hundred kilometres, post-Newtonian corrections are
+  large and a Newtonian orbit is well outside its domain of validity. The regime
+  the model is compared against is exactly the regime where it is weakest.
+- **Horizons touching is not merger.** Real binaries become dynamically unstable
+  at the innermost stable circular orbit, well before the horizons meet, so the
+  cut-off is a convenient stopping rule rather than a physical one.
+- **Circular orbits and no spin.** Eccentricity and spin are both set aside;
+  both matter for real systems.
+- **The factor of four is an assumption, not a derivation.** Quadrupole
+  radiation from a circular binary emerges at twice the orbital frequency. The
+  four-pulses-per-revolution rule is a modelling choice, and the agreement with
+  the observed band depends on it.
+
+{/*
+  ── REFLECTIONS (unpublished) ────────────────────────────────────────────────
+  Yours to write; nothing has been written on your behalf.
+
+  ── NOTES REQUIRING VERIFICATION ─────────────────────────────────────────────
+  1. *** LIKELY FACTOR-OF-TWO ERROR IN THE DERIVATION. ***
+     The manuscript writes the orbital energy as E = -G m1 m2 / r. For a
+     circular orbit the total mechanical energy is E = -G m1 m2 / (2r), because
+     the kinetic energy supplies +G m1 m2 / (2r). Using the manuscript's E gives
+         dr/dt = -(32/5)(G^3/c^5) m1 m2 (m1+m2) / r^3,
+     whereas the standard Peters-Mathews result is
+         dr/dt = -(64/5)(G^3/c^5) m1 m2 (m1+m2) / r^3,
+     exactly twice as fast. Integrating the correct rate for 36 + 29 solar
+     masses from r0 = 1000 km down to r_min = 192 km gives a merger time of
+     about 0.30 s; the manuscript reports about 0.6 s, which is what the halved
+     rate produces. The 0.6 s figure therefore looks like a direct consequence
+     of the energy expression rather than a coincidence.
+     This page deliberately does NOT print the E or dr/dt equations, and does
+     not repeat the 0.6 s figure, pending your decision. I have not altered your
+     research — only withheld the step that looks wrong.
+  2. FREQUENCY MATCH NEEDS RECHECKING. With the x4 convention and r0 = 1000 km,
+     four times the orbital frequency already starts near 59 Hz and passes
+     250 Hz at r = 382 km, reaching about 703 Hz at r_min. The quoted
+     "35 Hz to 250 Hz" does not fall out of the stated model and initial
+     conditions as written. With the physical factor of two instead, the sweep
+     from 1000 km runs about 30 Hz to 351 Hz, which brackets the observed
+     35-250 Hz rather well. Worth re-examining against your actual code.
+  3. CONFIRMED CORRECT. The 30-60% light-speed claim checks out: the relative
+     orbital speed sqrt(GM/r) at r0 = 1000 km is 0.310c, and reaches 0.60c near
+     r = 267 km. Schwarzschild radii of 106.3 km and 85.7 km give
+     r_min = 192.0 km as stated.
+  4. "Dr. Linus" in the Background should be **Rainer Weiss**. The 2017 Nobel
+     Prize in Physics went to Weiss, Barish and Thorne.
+  5. DISTANCE. "The observed gravitational waves were created by black holes
+     13 billion years ago." GW150914's source lies about 1.3 billion light-years
+     away, so roughly 1.3 billion years. Looks like a factor-of-ten slip.
+  6. GW190521 TERMINOLOGY. Described as "the first instance of observing the
+     formation of a supermassive black hole with a mass over a hundred times
+     that of the sun". A ~142 solar-mass remnant is INTERMEDIATE-mass;
+     supermassive means 10^5-10^10 solar masses. Your own Background section
+     uses "intermediate-mass" correctly for the same event.
+  7. HULSE-TAYLOR. "In 1974, astrophysicist Joseph Taylor confirmed their
+     existence by observing the shrinking orbit of two heavy stars." The binary
+     pulsar was discovered in 1974 (Hulse and Taylor); the orbital-decay
+     confirmation came 1978-1982. The bodies are neutron stars.
+  8. CITATION MISMATCH. Peters & Mathews (1963) is cited as [15] in the text,
+     but reference [15] is Baker et al. (2006); the Introduction cites it as
+     [10], which is the LIGO 2016 paper. Peters & Mathews is missing from the
+     reference list entirely. The two references in the frontmatter above are
+     the works the manuscript actually relies on - confirm before adding more.
+  9. VENUE. The filename says "JYEM Competition 2024". That is a COMPETITION
+     entry, not a publication or a conference paper, and this page claims no
+     venue. Your résumé separately reports an APS Mid-Atlantic presentation on
+     gravitational-wave modelling; nothing in the documents supplied mentions
+     APS, so no presentation is listed anywhere on the site. Send evidence and
+     I will add it under a clearly labelled Presentations heading.
+ 10. MENTORSHIP. The title page reads "Jieun Kim (Mentored by Dr. Richard
+     Kyung)". Not displayed; tell me if you want a credit line.
+ 11. ABSTRACT STYLE. The submitted abstract opens with Batman's Bat-Signal and
+     an ice-cream analogy. Charming for a competition, unusual for an academic
+     abstract - worth rewriting if this is ever submitted elsewhere.
 */}

@@ -60,8 +60,10 @@ export const cvSections: CvSection[] = [
     id: "research-experience",
     label: "Research Experience",
     kind: "items",
-    // Titles only for now. Add the institution, period, supervisor and a
-    // one-line description to each as you recover the details.
+    // Titles follow the manuscripts, not the résumé, where the two differ.
+    // Add the institution, period and dates as you recover them. No venue is
+    // claimed for any of these: see the verification notes in each
+    // content/research/*.mdx file.
     items: [
       {
         title:
@@ -69,13 +71,13 @@ export const cvSections: CvSection[] = [
       },
       {
         title:
-          "Predicting Chemical Biodegradability Using Molecular Spectrum Data Through Machine Learning Classification",
+          "Predicting Chemical Biodegradability Using Molecular Structure Data Through Machine Learning Classification",
       },
       {
         title:
-          "Solving Consensus Dynamics in Networks Using Mathematical and Computational Methods",
+          "Solving Consensus Dynamics in Networks Using Mathematical and Computational Method",
       },
-      { title: "Modeling Gravitational Waves from Binary Black Hole Systems" },
+      { title: "Calculations of Gravitational Waves from Binary Black Hole Systems" },
       { title: "Image Processing Using MRI Nuclear Physics and Computational Simulations" },
     ],
   },

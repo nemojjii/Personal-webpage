@@ -1,35 +1,236 @@
 ---
-title: "Solving Consensus Dynamics in Networks Using Mathematical and Computational Methods"
-# Fill these in from your original materials.
-summary: ""
+title: "Solving Consensus Dynamics in Networks Using Mathematical and Computational Method"
+summary: "How the structure of a network decides whether a group of agents can agree — worked through adjacency, degree and Laplacian matrices, and simulated on graphs from four nodes to a hundred."
 status: completed
-area: ""
-# Add the period the work was carried out, e.g. 2025-06-01
+area: "Graph Theory & Network Dynamics"
 date: ""
 featured: true
 order: 3
-keywords: []
-tags: []
-related: []
-# Put the write-up in public/papers/ and point to it here.
-pdf: ""
+keywords:
+  - consensus dynamics
+  - graph Laplacian
+  - algebraic connectivity
+  - network topology
+  - multi-agent systems
+tags: [graph-theory, networks, linear-algebra, simulation]
+related:
+  - research/power-spectral-density-eeg-signal-quality
+# The manuscript carries no bibliography. Add citations here as you recover
+# them; do not add any that the original work did not use.
 references: []
 ---
 
-*An account of this project is being prepared from the original materials.*
+{/* VERIFY — see the notes at the foot of this file before publishing changes. */}
 
-{/* A suggested structure — replace it with your own as you write:
+A network of agents that can only see their immediate neighbours is asked to
+agree on a single number. Nobody has a global view, there is no leader, and the
+only thing each agent can do is move a little towards the people it can hear.
+Whether that is enough — and how long it takes — turns out not to be a question
+about the agents at all. It is a question about the shape of the network.
 
-## Background
-What the question was, and why it was worth asking.
+This project works that claim out concretely. Each network is written down as
+three matrices, the consensus rule is written as one differential equation, and
+the equation is integrated numerically on graphs ranging from four nodes to a
+hundred. What emerges is that a single number extracted from the network's
+structure — the second-smallest eigenvalue of its Laplacian — predicts both
+whether agreement happens and how quickly.
 
-## Approach
-Data, instruments, models, code.
+## Research question
 
-## What I found
-Results, with figures. Use <Figure caption="…" number="1">…</Figure>.
+How do network topology, connection strength and the pattern of information
+flow determine the speed and stability with which a set of interacting agents
+reaches consensus?
 
-## Where it led
-What you would do differently, and what it opened up.
+## Theoretical background
 
+A network of $n$ agents is an undirected, unweighted graph. Its **adjacency
+matrix** $A$ records who can hear whom,
+
+$$
+A_{ij} = \begin{cases} 1 & \text{if } i \text{ and } j \text{ are connected},\\ 0 & \text{otherwise},\end{cases}
+$$
+
+and the **degree matrix** $D$ is the diagonal matrix of connection counts,
+$D_{ii} = \sum_j A_{ij}$. The object that does the real work is their
+difference, the **graph Laplacian**
+
+$$
+L = D - A .
+$$
+
+Each agent holds a state $x_i(t)$ and repeatedly moves towards its neighbours
+by the sum of its disagreements with them,
+
+$$
+\dot{x}_i = \sum_{j \in N(i)} (x_j - x_i),
+$$
+
+which for the whole system collapses into a single linear equation,
+
+$$
+\frac{\dd \mathbf{x}}{\dd t} = -L\,\mathbf{x}.
+$$
+
+Because every row of $L$ sums to zero, the all-ones vector $\mathbf{1}$ is
+always an eigenvector with eigenvalue $0$: a state in which everyone already
+agrees never changes. The rest of the spectrum decides what happens on the way
+there. $L$ is symmetric and positive semidefinite, so its eigenvalues are real
+and non-negative,
+
+$$
+0 = \lambda_1 \le \lambda_2 \le \cdots \le \lambda_n ,
+$$
+
+and the multiplicity of $0$ counts the connected components of the graph. The
+second-smallest, $\lambda_2$, is Fiedler's **algebraic connectivity**. It is
+strictly positive exactly when the graph is connected, and it sets the slowest
+rate at which disagreement decays.
+
+<Aside>
+  This is why the question stops being about the agents. Everything that matters
+  — whether agreement is reachable at all, and how fast — is already contained in
+  the spectrum of a matrix built from nothing but the wiring.
+</Aside>
+
+## Methodology
+
+**Network construction.** Networks were written as undirected graphs with each
+node an agent and each edge a communication link, and were varied systematically
+from sparse to dense. The worked example is a six-node graph given by the edge
+list
+
+$$
+s = [\,1\;1\;2\;2\;3\;2\;4\;4\;5\,], \qquad t = [\,2\;3\;3\;4\;5\;5\;5\;6\;6\,],
+$$
+
+that is, the nine edges $(1,2), (1,3), (2,3), (2,4), (3,5), (2,5), (4,5), (4,6),
+(5,6)$.
+
+**Matrix formulation.** For every structure, $A$, $D$ and $L = D - A$ were
+constructed explicitly. For the six-node graph above the degree sequence is
+$(2, 4, 3, 3, 4, 2)$, giving
+
+$$
+L =
+\begin{pmatrix}
+\;\;2 & -1 & -1 & \;\;0 & \;\;0 & \;\;0\\
+-1 & \;\;4 & -1 & -1 & -1 & \;\;0\\
+-1 & -1 & \;\;3 & \;\;0 & -1 & \;\;0\\
+\;\;0 & -1 & \;\;0 & \;\;3 & -1 & -1\\
+\;\;0 & -1 & -1 & -1 & \;\;4 & -1\\
+\;\;0 & \;\;0 & \;\;0 & -1 & -1 & \;\;2
+\end{pmatrix}.
+$$
+
+The four-node case analysed in detail is the subgraph induced on nodes $1$–$4$,
+with edges $(1,2), (1,3), (2,3), (2,4)$, degree sequence $(2, 3, 2, 1)$ and
+
+$$
+L_4 =
+\begin{pmatrix}
+\;\;2 & -1 & -1 & \;\;0\\
+-1 & \;\;3 & -1 & -1\\
+-1 & -1 & \;\;2 & \;\;0\\
+\;\;0 & -1 & \;\;0 & \;\;1
+\end{pmatrix}.
+$$
+
+**Numerical implementation.** The consensus equation was integrated in Python
+with `networkx`, `numpy` and `matplotlib`, using the explicit Euler method,
+
+$$
+\mathbf{x}_{k+1} = \mathbf{x}_k - \Delta t\, L\, \mathbf{x}_k ,
+$$
+
+with $\Delta t = 0.1$ over $50$ steps, from assorted initial states. Graphs were
+drawn with force-directed layouts; node trajectories were plotted against time;
+and the Laplacian spectrum was examined with attention to $\lambda_2$.
+
+**Cases simulated.** A four-node graph; a sparse six-node chain $1$–$2$–$3$–$4$–$5$
+with node $6$ attached to nothing; the nine-edge six-node graph above; the
+complete graph $K_6$; and sparse networks of $30$ and $100$ nodes.
+
+<ConsensusExplorer />
+
+## Results and observations
+
+**Connected graphs reach agreement; disconnected ones do not.** In every
+connected case the node states converged to a common value. In the sparse case
+the chain $1$–$2$–$3$–$4$–$5$ converged while node $6$, having no neighbours,
+stayed at its initial value for all time — its row of $L$ is identically zero,
+so the dynamics never touch it.
+
+**Density accelerates convergence.** The complete graph settled fastest and most
+smoothly; the nine-edge graph next; the chain slowest. Convergence in the
+moderately connected networks increased with algebraic connectivity, and across
+every topology tested the manuscript reports convergence speed tracking
+$\lambda_2$.
+
+**Scale slows it down.** The $30$- and $100$-node sparse networks still
+converged, but more slowly and with more variation than the small or dense
+cases.
+
+The table below gathers the spectra of the graphs whose matrices the manuscript
+writes out, computed from those matrices:
+
+| Graph | Edges | $\lambda_2$ | Zero eigenvalues | Behaviour reported |
+| --- | --- | --- | --- | --- |
+| Chain of 5, node 6 isolated | 4 | 0 | 2 | Chain agrees, node 6 never moves |
+| Four-node subgraph | 4 | 1.000 | 1 | Converges |
+| Six nodes, nine edges | 9 | 1.186 | 1 | Converges, faster |
+| Complete graph $K_6$ | 15 | 6.000 | 1 | Converges fastest |
+
+The disconnected case is the clean one. Its Laplacian has **two** zero
+eigenvalues rather than one, so $\lambda_2 = 0$ — and $\lambda_2 = 0$ is
+precisely the algebraic statement that the graph falls into more than one piece.
+The isolated node is not a numerical nuisance; it is the spectrum reporting a
+fact about the topology.
+
+## Challenges and limitations
+
+- The model is the simplest one available: undirected, unweighted, static
+  graphs, with identical agents, no delay, no noise and no external input. Real
+  social and infrastructural networks are directed, weighted and time-varying.
+- Convergence *rate* is governed by $\lambda_2$, but the apparent speed in a
+  plot also depends on how far apart the initial states were. The cases shown
+  use different initial vectors as well as different graphs, so visual
+  comparisons between plots conflate the two.
+- Explicit Euler is only conditionally stable, requiring $\Delta t < 2/\lambda_n$.
+  It holds comfortably for every graph above — $K_6$ is the tightest at
+  $\Delta t < 1/3$ — but it is a constraint the method inherits, not a property
+  of consensus.
+- The manuscript's applied claims about social media, public-health messaging
+  and smart grids are motivation drawn from the literature, not results of these
+  simulations. Nothing here was tested against real network data.
+- The $30$- and $100$-node networks are described qualitatively; their edge
+  lists and initial states are not recorded in the manuscript, so those two
+  results cannot be reproduced from it as written.
+
+{/*
+  ── REFLECTIONS (unpublished) ────────────────────────────────────────────────
+  A personal reflection belongs here, in Iris's own words. Add a
+  "## Reflections" heading and write below it; delete this comment.
+  Nothing has been written on your behalf.
+
+  ── NOTES REQUIRING VERIFICATION ─────────────────────────────────────────────
+  1. TITLE. The full manuscript and the poster both say "...Computational
+     Method" (singular). One slide deck says "Methods" (plural), as did this
+     site before. Singular is used here, following the manuscript. Confirm.
+  2. STATUS. Set to "completed". The work exists as a manuscript and a poster;
+     no journal or conference venue is claimed anywhere on this page.
+  3. AFFILIATION. The poster gives "The Stony Brook School". No institution is
+     displayed on this page — tell me if you want it shown.
+  4. 30- AND 100-NODE CASES. Reported qualitatively only; no edge list,
+     generation rule or initial state is given in the manuscript.
+  5. EIGENVALUES. The λ₂ column and the explorer's figures are computed from
+     the manuscript's own matrices; the manuscript states that λ₂ governs
+     convergence but prints no numerical spectrum.
+  6. MANUSCRIPT PDF. Not attached. To publish it, put the file in
+     public/papers/ and set `pdf:` in the frontmatter above.
+  7. MENTORSHIP. The poster acknowledges Dr. Richard Kyung as mentor and
+     Mr. Noah Bakker (Advanced Scientific Research, SBS). Nothing is displayed
+     on this page — say the word and I will add a credit line.
+  8. REFERENCES. Left empty on purpose: the manuscript has no bibliography, and
+     nothing has been cited on your behalf. Fiedler (1973) is the standard
+     source for algebraic connectivity if you want to add one.
 */}

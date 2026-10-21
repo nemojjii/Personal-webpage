@@ -9,6 +9,8 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import smartypants from "remark-smartypants";
 
+import { ConsensusExplorer } from "@/components/viz/ConsensusExplorer";
+
 import { Aside } from "./Aside";
 import { Figure } from "./Figure";
 import { Ref } from "./Ref";
@@ -46,6 +48,7 @@ const components = {
   Aside,
   Theorem,
   Ref,
+  ConsensusExplorer,
 };
 
 export function Mdx({ source }: { source: string }) {

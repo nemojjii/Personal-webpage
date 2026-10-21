@@ -1,0 +1,177 @@
+---
+title: "Predicting Chemical Biodegradability Using Molecular Structure Data Through Machine Learning Classification"
+summary: "A QSAR classification study on 1055 compounds: whether 41 molecular descriptors, computed from structure alone, are enough to tell a readily biodegradable chemical from one that persists."
+status: completed
+area: "Cheminformatics & Machine Learning"
+date: ""
+featured: true
+order: 2
+keywords:
+  - QSAR
+  - molecular descriptors
+  - binary classification
+  - biodegradability
+  - UCI repository
+tags: [machine-learning, chemistry, qsar, statistics]
+related: []
+references:
+  - "Dataset: *QSAR biodegradation*, UC Irvine Machine Learning Repository. 1055 instances, 41 molecular descriptors and one experimental class."
+---
+
+{/* VERIFY — see the notes at the foot of this file. */}
+
+Whether a chemical breaks down in the environment or stays there for decades is,
+in the end, a fact about its molecular structure. The practical difficulty is
+that establishing it experimentally is slow and expensive: a ready
+biodegradability assay runs for 28 days per compound. If structure determines
+fate, then descriptors computed from structure alone ought to carry enough
+information to predict that fate in advance — which is the premise of
+Quantitative Structure–Activity Relationship modelling.
+
+This project tests that premise on 1055 chemicals. Each is described by 41
+numerical descriptors — electronic, topological and steric properties derived
+from the molecular graph — and labelled by experiment as readily biodegradable
+or not. The work is a classification problem, but the more interesting part is
+the exploratory analysis that precedes it: finding out which descriptors are
+carrying real information and which are simply restating each other.
+
+## Research question
+
+Can molecular descriptors computed from structure alone classify a chemical as
+readily or not readily biodegradable, and which descriptors carry that
+information?
+
+## Theoretical background
+
+A QSAR model is a mapping from the structural and physicochemical properties of
+a compound to a property or activity of interest. Developing one follows a fixed
+sequence: assemble compounds with known outcomes, compute molecular descriptors,
+fit a statistical or machine-learning model relating descriptors to outcome,
+validate it on data held out from fitting, interpret which features matter, and
+only then apply it to new molecules.
+
+The outcome here is binary. Under the OECD convention a substance counts as
+**readily biodegradable (RB)** when it reaches roughly 60% biodegradation within
+28 days; anything slower or requiring special conditions is **not readily
+biodegradable (NRB)**. So the task is binary classification: given a descriptor
+vector $\mathbf{d} \in \mathbb{R}^{41}$, predict a label in
+$\{\mathrm{RB}, \mathrm{NRB}\}$.
+
+The descriptors themselves are a mixture of counts and graph-spectral
+quantities — the number of heavy atoms, the percentage of carbon atoms, the
+frequency of C–N pairs at a given topological distance, alongside eigenvalue
+quantities such as `SpMax_L` (leading eigenvalue of the Laplace matrix) and
+`SM6_L` (spectral moment of order 6). Several are therefore different functions
+of the same molecular graph, which matters when their correlations are examined.
+
+## Methodology
+
+**Data.** Experimental biodegradation values for 1055 chemicals were taken from
+the *QSAR biodegradation* dataset in the UC Irvine Machine Learning Repository:
+41 molecular descriptors and one experimental class per compound.
+
+**Exploratory data analysis.** Descriptive statistics — minimum, maximum, mean
+and standard deviation — were computed for every variable. Univariate
+histograms were examined across all 41 descriptors and the class variable,
+showing a mixture of approximately normal, right-skewed, multimodal and sparse
+distributions. A correlation matrix was computed over all descriptors and then
+over a focused subset of 15, and pairwise relationships were visualised with
+`seaborn` pair plots and joint regression plots, separated by class.
+
+**Modelling.** The data were partitioned 60% training, 20% validation and 20%
+testing. Five classifiers were then fitted and compared: logistic regression, a
+decision tree, a support vector machine, a random forest, and k-nearest
+neighbours.
+
+**Tools.** Python for the modelling and plotting, with Google Sheets and Excel
+used alongside for tabulation.
+
+## Results and observations
+
+**Descriptor correlations.** The strongest relationship found was between
+`SpMax_A` and `SM6_L` at $r = 0.9226$ — the leading eigenvalue of the adjacency
+matrix against the sixth spectral moment of the Laplace matrix, which is to say
+two summaries of the same graph spectrum tracking each other closely. A further
+strong pair was `SM6_B(m)` and `SpMax_B(m)` at $r = 0.9174$, again two
+functions of one Burden matrix. The most negative relationship reported was
+between `SpPosA_B(p)` and `Mi` at $r = -0.7870$.
+
+**Classification.** Of the five models tested, the support vector machine was
+the most accurate at **86.7%**, with random forest close behind at **86.3%**.
+
+| Model | Reported accuracy |
+| --- | --- |
+| Support vector machine | 86.7% |
+| Random forest | 86.3% |
+| Logistic regression | see note below |
+| Decision tree | not reported individually |
+| k-nearest neighbours | not reported individually |
+
+The manuscript's overall conclusion is a methodological one rather than a
+performance claim: that a QSAR model's usefulness depends on the quality of the
+training data and on whether the chosen descriptors actually capture the
+chemistry that governs the outcome.
+
+## Challenges and limitations
+
+- **Redundant descriptors.** The highest correlations are between pairs that are
+  different spectral summaries of the same molecular graph. Highly collinear
+  features inflate apparent information and destabilise coefficient estimates in
+  linear models.
+- **Accuracy alone is the wrong measure.** Only accuracy is reported. On a task
+  where the two classes are not balanced, accuracy can be high while the
+  minority class is badly handled; precision, recall, F1 and a confusion matrix
+  per class would be needed to know whether the models are useful.
+- **A validation split that is not used.** Twenty percent of the data was set
+  aside for validation, but no hyperparameter selection or model-selection
+  procedure using it is described.
+- **No feature selection was carried out.** The correlation analysis identifies
+  redundancy but the models appear to have been fitted on the full descriptor
+  set regardless.
+- **Dataset-bounded conclusions.** Every result is a statement about this one
+  curated dataset. Generalisation to chemicals outside its applicability domain
+  is not established, and the manuscript notes the OECD compound data as a
+  larger resource not yet used.
+
+{/*
+  ── REFLECTIONS (unpublished) ────────────────────────────────────────────────
+  Yours to write; nothing has been written on your behalf.
+
+  ── NOTES REQUIRING VERIFICATION ─────────────────────────────────────────────
+  1. TITLE RESOLVED. The manuscript reads "Molecular Structure Data". Your
+     résumé and this site previously read "Molecular Spectrum Data". The
+     manuscript wins; the page URL changed to
+     /research/chemical-biodegradability-molecular-structure-ml to match.
+     Fix the résumé too, or tell me if the résumé is the correct one.
+  2. LOGISTIC REGRESSION FIGURE. Early in the manuscript: "the biodegradability
+     of compounds can be categorized with the use of a Logistic Regression Model
+     at a precision of 86 %". Later, the model comparison names SVM best at
+     86.7%. Two problems: (a) "precision" and "accuracy" are different metrics
+     and the manuscript uses them interchangeably; (b) it is unclear whether 86%
+     is logistic regression's accuracy or something else. The table above
+     therefore leaves logistic regression's number out. Please confirm.
+  3. DESCRIPTOR COUNT. The attribute list enumerates 41 descriptors plus a
+     42nd entry for the experimental class, which matches the UCI dataset. But
+     the body states "Each file has 41 inputs, one of which is a binary target",
+     implying 40 descriptors. The 41+1 reading is used here.
+  4. "LEAST CORRELATED". The manuscript calls SpPosA_B(p) and Mi the "least
+     correlated factors" at r = -0.787. A coefficient of -0.787 is a STRONG
+     negative correlation; least-correlated should mean nearest zero. This page
+     describes it as "most negative" instead. Worth correcting in the
+     manuscript.
+  5. SECOND-MOST-CORRELATED PAIR. The text names the first and the third most
+     correlated pairs but never the second.
+  6. DUPLICATE TABLE NUMBER. "Table 3" labels both the top-four-most-correlated
+     and the top-three-least-correlated tables.
+  7. FIGURE 11 CAPTION. Caption says "between Mi and C%" while the code beneath
+     it plots Mi against SpPosA_B(p).
+  8. POSSIBLE UNCREDITED SENTENCE. "The proposed models and the derived
+     consensus analysis demonstrated good classification performances with
+     respect to already published QSAR models on biodegradation" reads as though
+     it describes the dataset authors' own work (Mansouri et al., who published
+     the UCI set) rather than yours. Check attribution.
+  9. THIRD-PARTY FIGURES. Figures 1, 2-1 and 2-2 in the manuscript are taken
+     from protoqsar.com, ACS and ResearchGate. None are reproduced here; they
+     would need permission.
+ 10. MANUSCRIPT PDF. Not attached — see the consensus page note for how.
+*/}
