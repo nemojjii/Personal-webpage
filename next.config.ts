@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
         destination: `https://${CANONICAL_HOST}/:path*`,
         permanent: true,
       },
+      // The biodegradability entry was renamed when its title was corrected to
+      // the manuscript's wording ("Molecular Structure Data"). Query strings are
+      // carried over automatically.
+      {
+        source: "/research/chemical-biodegradability-molecular-spectrum-ml",
+        destination: "/research/chemical-biodegradability-molecular-structure-ml",
+        permanent: true,
+      },
     ];
   },
   turbopack: {
