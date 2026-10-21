@@ -37,7 +37,7 @@ export const site = {
    * contact page, the footer, and structured metadata.
    */
   links: {
-    email: "",
+    email: "jk2575@scarletmail.rutgers.edu",
     github: "",
     scholar: "",
     orcid: "",
