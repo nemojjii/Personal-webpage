@@ -17,7 +17,7 @@ export const site = {
   /** A short academic position line. Leave empty to hide. */
   position: "Undergraduate, Mathematics & Physical Sciences",
   /** Where the site is deployed. Used for metadata, sitemap and Open Graph. */
-  url: "https://example.com",
+  url: "https://academic-site-rho.vercel.app",
   /** Browser tab / metadata title suffix. */
   titleSuffix: "Iris [Surname]",
 
