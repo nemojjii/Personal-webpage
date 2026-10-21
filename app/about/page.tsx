@@ -34,7 +34,7 @@ export default function AboutPage() {
       <div className="mt-12">
         <ArticleLayout toc={toc}>
           {page ? (
-            <Prose>
+            <Prose className="prose-sections">
               <Mdx source={page.body} />
             </Prose>
           ) : (

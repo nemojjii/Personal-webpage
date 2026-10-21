@@ -6,6 +6,7 @@ import "./globals.css";
 
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
+import { professionalLinks } from "@/lib/links";
 import { site } from "@/site.config";
 
 const garamond = EB_Garamond({
@@ -44,10 +45,41 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+/**
+ * schema.org Person, assembled from site.config so it can never disagree with
+ * what the pages say. Fields that are not filled in are left out entirely
+ * rather than published empty.
+ */
+function personSchema() {
+  const profiles = professionalLinks()
+    .filter((link) => !link.href.startsWith("mailto:"))
+    .map((link) => link.href);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: site.name,
+    url: site.url,
+    description: site.description,
+    ...(site.links.email ? { email: `mailto:${site.links.email}` } : {}),
+    ...(site.position ? { jobTitle: site.position } : {}),
+    ...(site.affiliation
+      ? { affiliation: { "@type": "CollegeOrUniversity", name: site.affiliation } }
+      : {}),
+    knowsAbout: ["Chemical physics", "Mathematics", "Mathematical modeling"],
+    ...(profiles.length ? { sameAs: profiles } : {}),
+  };
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${garamond.variable} ${inter.variable}`}>
       <body className="min-h-dvh antialiased">
+        <script
+          type="application/ld+json"
+          // Serialised once at build time from site.config.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema()) }}
+        />
         <a
           href="#main"
           className="no-print sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60]

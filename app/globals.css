@@ -563,6 +563,24 @@
   }
 }
 
+/* A longer, essay-like page: each section opens with a hairline and a little
+   more air above its heading, so the parts read as parts. */
+.prose-sections h2 {
+  margin-block-start: 3.2em;
+  padding-block-start: 1.4em;
+  border-block-start: 1px solid var(--color-rule);
+}
+
+.prose-sections h2::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 3.5rem;
+  height: 1px;
+  background-color: var(--color-accent);
+}
+
 /* ───────────────────────────────────────────────────────────────────────────
    INDEX ROWS — the underline draws itself in when the row is hovered
    ─────────────────────────────────────────────────────────────────────── */

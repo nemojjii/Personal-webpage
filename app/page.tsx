@@ -40,13 +40,15 @@ export default function HomePage() {
             {site.headline}
           </h1>
 
-          <p className="mt-7 max-w-[32rem] font-serif text-[1.1875rem] leading-[1.68] text-ink-soft sm:text-[1.25rem]">
-            {site.intro}
-          </p>
+          <div className="mt-7 flex max-w-[32rem] flex-col gap-y-4 font-serif text-[1.1875rem] leading-[1.68] text-ink-soft sm:text-[1.25rem]">
+            {site.intro.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
 
           <p className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 font-sans text-[0.8125rem]">
             <Link href="/about" className="link-quiet text-ink">
-              About
+              More in About
             </Link>
             <Link href="/research" className="link-quiet text-ink">
               Research

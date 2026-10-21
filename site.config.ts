@@ -24,9 +24,14 @@ export const site = {
   /** Homepage headline. Kept short on purpose. */
   headline: "Between the abstract and the tangible.",
 
-  /** Homepage introductory statement. One or two sentences. */
-  intro:
-    "I study chemical physics and mathematics at Rutgers, drawn to the structures that hold underneath physical things — and, just as persistently, to philosophy, literature, and the ways we perceive and express the world.",
+  /**
+   * Homepage introduction. One paragraph per entry — kept short on purpose,
+   * since the About page is where the longer account lives.
+   */
+  intro: [
+    "I’m an undergraduate student studying Chemical Physics and Mathematics at Rutgers University.",
+    "I’m interested in the mathematical structures underlying the physical world, the questions that emerge when we try to understand it, and the unexpected connections between science, philosophy, literature, and art.",
+  ],
 
   /** One-line description used for search engines and link previews. */
   description:
