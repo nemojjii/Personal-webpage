@@ -53,8 +53,23 @@ export const projectStages = {
 } as const;
 export type ProjectStage = keyof typeof projectStages;
 
-/** A reference to another entry, written in frontmatter as "collection/slug". */
+/**
+ * A reference to another entry, written in frontmatter as "collection/slug".
+ * "laboratory/<slug>" refers to an experiment in lib/laboratory.ts.
+ */
 export type EntryRef = string;
+
+/**
+ * How an experiment and an entry are related — an editorial judgement,
+ * written by hand, never inferred from tags or keywords.
+ *   mathematical — the same mathematics, read in two places.
+ *   conceptual   — one gives intuition for the other; not the same object.
+ */
+export const relationKinds = {
+  mathematical: { label: "Mathematical connection" },
+  conceptual: { label: "Conceptual connection" },
+} as const;
+export type RelationKind = keyof typeof relationKinds;
 
 export interface EntryBase {
   collection: Collection;

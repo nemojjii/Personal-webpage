@@ -5,6 +5,13 @@ import path from "node:path";
 import matter from "gray-matter";
 
 import {
+  type Experiment,
+  type ExperimentRelation,
+  experimentForRef,
+  experiments,
+  isLaboratoryRef,
+} from "./laboratory";
+import {
   type BookEntry,
   type Collection,
   type Entry,
@@ -337,10 +344,75 @@ export function incoming(entry: Entry): Entry[] {
   );
 }
 
+/**
+ * An experiment connected to an entry. `kind` and `note` come from the
+ * experiment's own declaration when it has one; a relation declared only in
+ * frontmatter is listed without them.
+ */
+export interface ExperimentLink {
+  experiment: Experiment;
+  kind?: ExperimentRelation["kind"];
+  note?: string;
+}
+
+/**
+ * Experiments connected to an entry, from either side: the experiment's
+ * `related` list (which carries the kind and the note), or a
+ * "laboratory/<slug>" ref in the entry's own frontmatter. Unknown slugs are
+ * dropped, with a warning in development.
+ */
+export function relatedExperiments(entry: Entry): ExperimentLink[] {
+  const map = new Map<string, ExperimentLink>();
+  for (const experiment of experiments) {
+    const relation = experiment.related.find((r) => r.ref === entry.ref);
+    if (relation) map.set(experiment.slug, { experiment, kind: relation.kind, note: relation.note });
+  }
+  for (const ref of entry.related) {
+    if (!isLaboratoryRef(ref)) continue;
+    const experiment = experimentForRef(ref);
+    if (!experiment) {
+      warn(entry.ref, `related "${ref}" does not match any experiment`);
+      continue;
+    }
+    if (!map.has(experiment.slug)) map.set(experiment.slug, { experiment });
+  }
+  return [...map.values()];
+}
+
+/** An entry connected to an experiment, with the experiment's own account of why. */
+export interface EntryLink {
+  entry: Entry;
+  kind?: ExperimentRelation["kind"];
+  note?: string;
+}
+
+/**
+ * Entries connected to an experiment, from either side. Only public entries
+ * can appear, because allEntries() has already applied the visibility gate.
+ */
+export function experimentConnections(experiment: Experiment): EntryLink[] {
+  const map = new Map<string, EntryLink>();
+  for (const relation of experiment.related) {
+    const entry = getEntryByRef(relation.ref);
+    if (!entry) {
+      warn(`laboratory/${experiment.slug}`, `related "${relation.ref}" does not resolve to a public entry`);
+      continue;
+    }
+    map.set(entry.ref, { entry, kind: relation.kind, note: relation.note });
+  }
+  for (const entry of allEntries()) {
+    if (entry.related.includes(`laboratory/${experiment.slug}`) && !map.has(entry.ref)) {
+      map.set(entry.ref, { entry });
+    }
+  }
+  return [...map.values()];
+}
+
 /** Union of outgoing and incoming relations, grouped by collection. */
 export function connections(entry: Entry): {
   all: Entry[];
   byCollection: Record<Collection, Entry[]>;
+  experiments: ExperimentLink[];
   sharedTags: Entry[];
 } {
   const map = new Map<string, Entry>();
@@ -359,7 +431,7 @@ export function connections(entry: Entry): {
       e.tags.some((t) => tags.has(normalizeTag(t))),
   );
 
-  return { all, byCollection, sharedTags };
+  return { all, byCollection, experiments: relatedExperiments(entry), sharedTags };
 }
 
 /* ──────────────────────────────── tags ────────────────────────────────── */

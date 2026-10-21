@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getEntryByRef } from "@/lib/content";
+import { experimentForRef } from "@/lib/laboratory";
 import { collectionMeta } from "@/lib/types";
 
 /**
@@ -10,10 +11,20 @@ import { collectionMeta } from "@/lib/types";
  *   earlier version of this argument.
  *
  * Renders the referenced entry's real title, so a renamed title stays
- * correct everywhere. If the target does not exist the reference degrades
- * to plain text rather than a broken link.
+ * correct everywhere. "laboratory/<slug>" points at an experiment. If the
+ * target does not exist the reference degrades to plain text rather than a
+ * broken link.
  */
 export function Ref({ to, children }: { to: string; children?: React.ReactNode }) {
+  const experiment = experimentForRef(to);
+  if (experiment) {
+    return (
+      <Link href={experiment.href} title={`Experiment: ${experiment.title}`}>
+        {children ?? experiment.title}
+      </Link>
+    );
+  }
+
   const entry = getEntryByRef(to);
 
   if (!entry) {

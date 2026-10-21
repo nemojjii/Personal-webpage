@@ -1,8 +1,23 @@
+import type { EntryRef, RelationKind } from "./types";
+
 /**
  * The Little Laboratory's three experiments: what the landing page lists,
  * what the sitemap includes, and the model notes each page sets beneath its
  * instrument. The mathematics itself lives in lib/laboratory/*.ts.
  */
+
+/**
+ * An editorial link from an experiment to an entry elsewhere on the site.
+ * The reverse direction is derived (lib/content.ts), so each relation is
+ * written once, here, with its kind and a sentence saying why.
+ */
+export interface ExperimentRelation {
+  /** "research/<slug>", "projects/<slug>", "books/<slug>" or "films/<slug>". */
+  ref: EntryRef;
+  kind: RelationKind;
+  /** One or two sentences, shown beside the link. Say what the connection is, and what it is not. */
+  note: string;
+}
 
 export interface Experiment {
   slug: string;
@@ -17,6 +32,8 @@ export interface Experiment {
   summary: string;
   /** MDX: the model, its assumptions, and things worth trying. */
   notes: string;
+  /** Hand-written relations to entries. Empty is the honest default. */
+  related: ExperimentRelation[];
 }
 
 export const experiments: Experiment[] = [
@@ -70,6 +87,13 @@ of waves, equal wavelength or not.
 
 Units are arbitrary. Nothing here is measured; it is the equations, drawn.
 `,
+    related: [
+      {
+        ref: "research/power-spectral-density-eeg-signal-quality",
+        kind: "conceptual",
+        note: "Fourier analysis treats a recorded signal as a superposition of sinusoids; this instrument shows two of them adding. The EEG work used that analysis on real recordings — it did not study this demonstration.",
+      },
+    ],
   },
   {
     slug: "gradient-descent",
@@ -120,6 +144,13 @@ Everything above is true of this quadratic. For a general non-convex
 function gradient descent is only guaranteed, at best, a local minimum, and
 whether it reaches even that depends on the function and the learning rate.
 `,
+    related: [
+      {
+        ref: "research/consensus-dynamics-in-networks",
+        kind: "mathematical",
+        note: "Under its assumptions, the consensus iteration x ← x − dt·Lx is gradient descent on the graph-Laplacian energy ½xᵀLx, with the same kind of bound on the step size. The same mathematics read in two places, not the same demonstration.",
+      },
+    ],
   },
   {
     slug: "reaction-kinetics",
@@ -168,7 +199,13 @@ for $k$ — and no particular real reaction is meant. The particles in the
 lower panel are a tally, not a simulation: at each instant the number shown
 is the fraction of A remaining, rounded to one in a hundred.
 `,
+    related: [],
   },
 ];
+
+export const LABORATORY_PREFIX = "laboratory/";
+export const isLaboratoryRef = (ref: string) => ref.startsWith(LABORATORY_PREFIX);
+export const experimentForRef = (ref: string) =>
+  isLaboratoryRef(ref) ? getExperiment(ref.slice(LABORATORY_PREFIX.length)) : undefined;
 
 export const getExperiment = (slug: string) => experiments.find((e) => e.slug === slug);

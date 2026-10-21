@@ -592,7 +592,26 @@ app/laboratory/             the landing page and one page per experiment
 ```
 
 The mathematics lives in `lib/laboratory/*.ts` as pure functions with no
-rendering in them, so it can be checked on its own. Every instrument starts
+rendering in them, so it can be checked on its own.
+
+An experiment can be connected to an entry. Write the relation once, on the
+experiment, in `lib/laboratory.ts`, with its kind and a sentence saying why:
+
+```ts
+related: [
+  { ref: "research/consensus-dynamics-in-networks", kind: "mathematical", note: "…" },
+]
+```
+
+`kind` is `mathematical` (the same mathematics, read in two places) or
+`conceptual` (one gives intuition for the other). The research page then
+lists the experiment under *Related experiments*, and the experiment page
+lists the research under *Related research*, each with the kind and the note.
+An entry may also point the other way with `related: [laboratory/<slug>]` in
+its frontmatter, and `<Ref to="laboratory/<slug>" />` works in prose; a slug
+that matches no experiment is dropped with a warning in development. Shared
+tags never create one of these links — the *Elsewhere under the same tags*
+list is a suggestion and is labelled as such. Every instrument starts
 its animation only after first paint and not at all for a visitor who prefers
 reduced motion; play, pause, step and reset are ordinary buttons and the
 sliders are ordinary range inputs, so everything works from the keyboard.
