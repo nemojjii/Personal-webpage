@@ -103,9 +103,9 @@ the most accurate at **86.7%**, with random forest close behind at **86.3%**.
 | --- | --- |
 | Support vector machine | 86.7% |
 | Random forest | 86.3% |
-| Logistic regression | see note below |
+| k-nearest neighbours | 85.4% |
+| Logistic regression | 85.4% |
 | Decision tree | not reported individually |
-| k-nearest neighbours | not reported individually |
 
 The manuscript's overall conclusion is a methodological one rather than a
 performance claim: that a QSAR model's usefulness depends on the quality of the
@@ -148,8 +148,13 @@ chemistry that governs the outcome.
      at a precision of 86 %". Later, the model comparison names SVM best at
      86.7%. Two problems: (a) "precision" and "accuracy" are different metrics
      and the manuscript uses them interchangeably; (b) it is unclear whether 86%
-     is logistic regression's accuracy or something else. The table above
-     therefore leaves logistic regression's number out. Please confirm.
+     is logistic regression's accuracy or something else. Table 4 (p. 15,
+     "Models used for accuracy calculations") settles the accuracy: logistic
+     regression 0.853604 and k-nearest neighbours 0.853641, both 85.4% at the
+     table's own rounding, and the table above now shows them. The "86 %"
+     precision sentence matches nothing in Table 4. Decision tree is the one
+     classifier absent from Table 4, so it stays "not reported individually".
+     Please confirm the 86% sentence is simply an early misstatement.
   3. DESCRIPTOR COUNT. The attribute list enumerates 41 descriptors plus a
      42nd entry for the experimental class, which matches the UCI dataset. But
      the body states "Each file has 41 inputs, one of which is a binary target",

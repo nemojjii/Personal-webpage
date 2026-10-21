@@ -110,7 +110,7 @@ url: "https://your-domain.com",      // used for metadata and the sitemap
 headline: "Between the abstract and the tangible.",
 intro: "I study chemical physics and mathematics at Rutgers, …",
 links: {
-  email: "",      // "jieun.kim@rutgers.edu"
+  email: "",      // "jk2575@scarletmail.rutgers.edu"
   github: "",     // "https://github.com/you"
   scholar: "",
   orcid: "",

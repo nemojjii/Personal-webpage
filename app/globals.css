@@ -88,6 +88,14 @@
     border-top: 1px solid var(--color-rule);
   }
 
+  /* Korean titles break between words, not between syllables; a single word
+     too long for its line still breaks rather than overflowing. Japanese and
+     Chinese keep their per-character wrapping. */
+  [lang="ko"] {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
