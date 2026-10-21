@@ -54,11 +54,16 @@ export function EntryRow({
         <div className="mb-2 flex items-baseline gap-x-3 sm:mb-0 sm:flex-col sm:items-start sm:gap-y-2 sm:pt-[0.45rem]">
           <Marker entry={entry} />
           <VisibilityMark visibility={entry.visibility} />
-          {entry.date ? (
+          {entry.collection === "projects" && entry.period ? (
+            // When the work happened, in the author's words.
+            <span className="font-sans text-[0.75rem] text-ink-muted">{entry.period}</span>
+          ) : entry.date ? (
             <time
               dateTime={entry.date}
               className="font-sans text-[0.75rem] text-ink-muted"
             >
+              {/* A project's date is the day its entry joined the site, and says so. */}
+              {entry.collection === "projects" ? "Added " : ""}
               {formatDate(entry.date, "short")}
             </time>
           ) : null}

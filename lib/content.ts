@@ -18,6 +18,7 @@ import {
   type EntryRef,
   type FilmEntry,
   type ProjectEntry,
+  type ProjectLink,
   type ProjectStage,
   type ReadingStatus,
   type ResearchEntry,
@@ -114,6 +115,42 @@ function optionalYear(value: unknown): number | undefined {
   return Number.isInteger(n) && n > 0 ? n : undefined;
 }
 
+/**
+ * A project's `links:`. Each needs a label and an absolute http(s) URL;
+ * anything else is left out, with a warning in development, so a typo can
+ * never become a broken or unsafe link on the page.
+ */
+function parseLinks(value: unknown, where: string): ProjectLink[] {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) {
+    warn(where, "`links` must be a list of { label, href } items");
+    return [];
+  }
+  const links: ProjectLink[] = [];
+  for (const item of value) {
+    const record = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+    const label = optionalString(record.label);
+    const href = optionalString(record.href);
+    if (!label || !href) {
+      warn(where, "a link needs both `label` and `href`");
+      continue;
+    }
+    let url: URL;
+    try {
+      url = new URL(href);
+    } catch {
+      warn(where, `link "${label}" is not an absolute URL: ${href}`);
+      continue;
+    }
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      warn(where, `link "${label}" must use http or https: ${href}`);
+      continue;
+    }
+    links.push({ label, href: url.toString() });
+  }
+  return links;
+}
+
 /* ───────────────────────────── parsing ────────────────────────────────── */
 
 function parseEntry(collection: Collection, filename: string): Entry {
@@ -176,6 +213,9 @@ function parseEntry(collection: Collection, filename: string): Entry {
       stage,
       area: data.area ? String(data.area) : undefined,
       keywords: asArray(data.keywords),
+      role: optionalString(data.role),
+      period: optionalString(data.period),
+      links: parseLinks(data.links, where),
     } as ProjectEntry;
   }
 

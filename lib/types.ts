@@ -112,12 +112,28 @@ export interface ResearchEntry extends EntryBase {
   keywords: string[];
 }
 
+/** An explicitly provided external resource for a project. */
+export interface ProjectLink {
+  label: string;
+  /** An absolute http(s) URL; anything else is dropped by the loader. */
+  href: string;
+}
+
 export interface ProjectEntry extends EntryBase {
   collection: "projects";
   stage: ProjectStage;
   /** Free text, e.g. "Mathematics & Perception". */
   area?: string;
   keywords: string[];
+  /** Your part in it, in a few words. Shown only when given. */
+  role?: string;
+  /**
+   * When the work happened, in your own words — "2025–2026", "Ongoing since
+   * 2025". Distinct from `date`, which is the day the entry joined the site.
+   */
+  period?: string;
+  /** Explicit external resources. Empty unless you add them. */
+  links: ProjectLink[];
 }
 
 /** Fields the Bookshelf and the Screening Room share. */

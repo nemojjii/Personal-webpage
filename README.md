@@ -168,8 +168,10 @@ summary, area, dates and body of each from your original materials.
 
 ## 5. Adding a project
 
-Projects are the interdisciplinary and personal explorations — the things that
-are not research yet, and may never be.
+Projects are experiments across disciplines — mathematics and art, creative
+work, engineering and prototypes, software, education, collaborations — the
+things that are not research, and may never become research. Research is for
+academic inquiry; projects are for what you try.
 
 ```bash
 cp content/projects/_template.mdx content/projects/my-exploration.mdx
@@ -180,8 +182,12 @@ cp content/projects/_template.mdx content/projects/my-exploration.mdx
 title: "Project title"
 stage: exploration   # exploration | ongoing | set-aside | finished
 area: "Mathematics & Perception"
-date: 2026-10-21
+date: 2026-10-21     # the day the entry joined the site — shown as "Added …"
+period: ""           # when the work happened, in your words: "2025–2026", "Ongoing since 2025"
+role: ""             # your part in it: "Sole author", "Co-organiser"
+links: []            # - { label: "Repository", href: "https://…" }
 featured: true       # appears under "Current" and on the homepage
+keywords: []
 tags: [perception]
 ---
 ```
@@ -189,6 +195,21 @@ tags: [perception]
 `stage` is deliberately a different vocabulary from research `status`: an
 exploration is labelled as one, so nothing on the site reads as a finding before
 it is one.
+
+**Two dates, two meanings.** `date` is the day the entry was added to the site;
+it orders the index and is shown as *Added …*. `period` is when the work
+actually happened, written by hand and shown only when you give it. Nothing
+infers one from the other.
+
+`role`, `period`, `links` and `keywords` are optional and appear on the page
+only when present. A link needs a label and an absolute `https://` (or
+`http://`) address; anything else is dropped with a warning in `npm run dev`,
+so a typo never becomes a broken link. External links open in a new tab with
+the usual safety attributes.
+
+A project page may answer four questions — the question, the approach, the
+process, the outcome — each as an ordinary `##` heading, and each only when
+there is something true to say. An exploration is allowed to stay unfinished.
 
 ---
 

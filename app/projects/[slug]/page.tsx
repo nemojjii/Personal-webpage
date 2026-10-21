@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Fragment, type ReactNode } from "react";
 
 import { ArticleLayout } from "@/components/content/ArticleLayout";
 import { Mdx } from "@/components/content/mdx";
@@ -47,6 +48,34 @@ export default async function ProjectPage({ params }: Params) {
   const siblings = getEntries("projects").slice().sort(byOrderThenDate);
   const index = siblings.findIndex((e) => e.slug === entry.slug);
 
+  // Only what was actually given: no row is ever rendered for an empty field.
+  const facts = (
+    [
+      entry.role ? { term: "Role", detail: entry.role } : null,
+      entry.period ? { term: "Period", detail: entry.period } : null,
+      entry.keywords.length ? { term: "Keywords", detail: entry.keywords.join(" · ") } : null,
+      entry.links.length
+        ? {
+            term: entry.links.length > 1 ? "Links" : "Link",
+            detail: entry.links.map((link, i) => (
+              <Fragment key={link.href}>
+                {i > 0 ? <span className="text-ink-muted"> · </span> : null}
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-quiet text-ink"
+                >
+                  {link.label}
+                </a>
+                <span className="text-ink-muted"> {new URL(link.href).host}</span>
+              </Fragment>
+            )),
+          }
+        : null,
+    ] as ({ term: string; detail: ReactNode } | null)[]
+  ).filter((f): f is { term: string; detail: ReactNode } => f !== null);
+
   const header = (
     <ArticleHeader
       eyebrow={
@@ -60,17 +89,33 @@ export default async function ProjectPage({ params }: Params) {
       tags={entry.tags}
       meta={[
         entry.area ? <span key="area">{entry.area}</span> : null,
+        // The entry's own date — the day it joined the site. The work's
+        // period, when known, is a fact of its own below.
         entry.date ? (
-          <time key="date" dateTime={entry.date}>
-            {formatDate(entry.date)}
-          </time>
+          <span key="date">
+            Added <time dateTime={entry.date}>{formatDate(entry.date)}</time>
+          </span>
         ) : null,
         entry.updated ? (
           <span key="updated">Updated {formatDate(entry.updated, "short")}</span>
         ) : null,
       ].filter(Boolean)}
     >
-      {entry.pdf ? <Attachment href={entry.pdf} /> : null}
+      {facts.length ? (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 font-sans text-[0.75rem]">
+          {facts.map((fact) => (
+            <Fragment key={fact.term}>
+              <dt className="label !text-ink-muted">{fact.term}</dt>
+              <dd className="text-ink-soft">{fact.detail}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      ) : null}
+      {entry.pdf ? (
+        <div className={facts.length ? "mt-5" : ""}>
+          <Attachment href={entry.pdf} />
+        </div>
+      ) : null}
     </ArticleHeader>
   );
 
