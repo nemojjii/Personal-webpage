@@ -34,8 +34,7 @@ export const site = {
   ],
 
   /** One-line description used for search engines and link previews. */
-  description:
-    "Academic homepage and intellectual archive of Iris (Jieun) Kim — chemical physics and mathematics at Rutgers University, with research in theoretical science and mathematical modeling.",
+  description: "Iris (Jieun) Kim | Chemical Physics & Mathematics at Rutgers University.",
 
   /**
    * Professional links. Leave a value as "" and it disappears from the
