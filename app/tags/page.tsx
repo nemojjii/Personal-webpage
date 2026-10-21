@@ -7,7 +7,7 @@ import { allTags } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Index of tags",
-  description: "Every subject that recurs across the research, writings and notebook.",
+  description: "Every subject that recurs across the research, projects, books and films.",
   alternates: { canonical: "/tags" },
 };
 
@@ -20,7 +20,7 @@ export default function TagsPage() {
         <PageHeader
           eyebrow="Index"
           title="Tags"
-          intro="The subjects that recur across research, writings and notebook. Tags are the loosest of the three ways things are connected here — the other two are explicit relations and backlinks."
+          intro="The subjects that recur across research, projects, books and films. Tags are the loosest of the three ways things are connected here — the other two are explicit relations and backlinks."
         />
 
         {tags.length ? (

@@ -5,12 +5,7 @@ import { WaveField } from "@/components/viz/WaveField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EntryList } from "@/components/ui/EntryRow";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import {
-  allEntries,
-  getEntries,
-  notebookBySequence,
-  splitFeatured,
-} from "@/lib/content";
+import { allEntries, getEntries, splitFeatured } from "@/lib/content";
 import { isWork } from "@/lib/types";
 import { toWorkCard } from "@/lib/works";
 import { site } from "@/site.config";
@@ -20,8 +15,6 @@ export default function HomePage() {
   const featuredResearch = [...research.featured, ...research.rest].slice(0, 3);
   const projects = splitFeatured(getEntries("projects"));
   const featuredProjects = [...projects.featured, ...projects.rest].slice(0, 2);
-  const writings = getEntries("writings").slice(0, 3);
-  const notes = notebookBySequence().slice(0, 4);
   // Featured works first, then the most recently added, across books and films.
   const works = allEntries().filter(isWork);
   const fromCollection = [...works.filter((w) => w.featured), ...works.filter((w) => !w.featured)]
@@ -109,45 +102,6 @@ export default function HomePage() {
             Projects
           </SectionHeading>
           <EntryList entries={featuredProjects} className="mt-2 border-t-0" />
-        </section>
-      ) : null}
-
-      {/* ── Writings ────────────────────────────────────────────────────── */}
-      {writings.length ? (
-        <section className="pt-16 sm:pt-20">
-          <SectionHeading action={{ label: "All writings", href: "/writings" }}>
-            Selected writing
-          </SectionHeading>
-          <EntryList entries={writings} className="mt-2 border-t-0" />
-        </section>
-      ) : null}
-
-      {/* ── Notebook ───────────────────────────────────────────────────── */}
-      {notes.length ? (
-        <section className="pt-16 sm:pt-20">
-          <SectionHeading action={{ label: "The notebook", href: "/notebook" }}>
-            From the notebook
-          </SectionHeading>
-          <ul className="mt-5 grid gap-x-10 gap-y-5 sm:grid-cols-2">
-            {notes.map((note) => (
-              <li key={note.ref} className="entry-row border-t border-rule-soft pt-4">
-                <Link href={note.href} className="group block">
-                  <span className="font-mono text-[0.6875rem] tracking-wide text-ink-muted tnum">
-                    <span aria-hidden="true">№ </span>
-                    {note.number}
-                  </span>
-                  <span className="entry-title mt-1.5 block font-serif text-[1.125rem] leading-snug">
-                    {note.title}
-                  </span>
-                  {note.summary ? (
-                    <span className="mt-1.5 block max-w-[24rem] font-serif text-[0.9375rem] leading-[1.55] text-ink-soft">
-                      {note.summary}
-                    </span>
-                  ) : null}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </section>
       ) : null}
 

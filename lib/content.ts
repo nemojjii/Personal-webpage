@@ -10,7 +10,6 @@ import {
   type Entry,
   type EntryRef,
   type FilmEntry,
-  type NotebookEntry,
   type ProjectEntry,
   type ProjectStage,
   type ReadingStatus,
@@ -19,8 +18,6 @@ import {
   type ThemeCollection,
   type ViewingStatus,
   type Visibility,
-  type WritingCategory,
-  type WritingEntry,
   collectionMeta,
   collections,
   isWork,
@@ -29,7 +26,6 @@ import {
   researchStatuses,
   viewingStatuses,
   visibilities,
-  writingCategories,
 } from "./types";
 
 const CONTENT_ROOT = path.join(process.cwd(), "content");
@@ -146,12 +142,6 @@ function parseEntry(collection: Collection, filename: string): Entry {
     references: asArray(data.references),
   } satisfies Omit<Entry, "collection"> & { collection: Collection };
 
-  // Research and projects are allowed to have no date yet — an entry whose
-  // materials are still being assembled is still part of the archive.
-  if (!data.date && (collection === "writings" || collection === "notebook")) {
-    warn(where, "missing `date` in frontmatter");
-  }
-
   if (collection === "research") {
     let status = String(data.status ?? "idea") as ResearchStatus;
     if (!(status in researchStatuses)) {
@@ -182,7 +172,8 @@ function parseEntry(collection: Collection, filename: string): Entry {
     } as ProjectEntry;
   }
 
-  if (collection === "books" || collection === "films") {
+  // What remains is a book or a film: the two share the work fields.
+  {
     const added = optionalDate(data.added) ?? optionalDate(data.date) ?? "";
     if (!added) warn(where, "missing `added` date");
     if (visibility !== "public" && optionalString(data.image)) {
@@ -242,22 +233,6 @@ function parseEntry(collection: Collection, filename: string): Entry {
       dateWatched: optionalDate(data.dateWatched),
     } as FilmEntry;
   }
-
-  if (collection === "writings") {
-    let category = String(data.category ?? "reflections") as WritingCategory;
-    if (!(category in writingCategories)) {
-      warn(where, `unknown category "${category}" — falling back to "reflections"`);
-      category = "reflections";
-    }
-    return { ...base, collection: "writings", category } as WritingEntry;
-  }
-
-  const numberFromName = /^(\d{3,})[-_]/.exec(filename)?.[1];
-  const number = String(data.number ?? numberFromName ?? "").padStart(3, "0");
-  if (!numberFromName && !data.number) {
-    warn(where, "no sequential number — prefix the filename, e.g. 004-my-note.mdx");
-  }
-  return { ...base, collection: "notebook", number } as NotebookEntry;
 }
 
 /* ───────────────────────────── the index ──────────────────────────────── */
@@ -333,13 +308,6 @@ export function researchByStatus(): ResearchEntry[] {
       const d = researchStatuses[a.status].order - researchStatuses[b.status].order;
       return d !== 0 ? d : byOrderThenDate(a, b);
     });
-}
-
-/** Notebook entries ordered by their sequential number, highest first. */
-export function notebookBySequence(): NotebookEntry[] {
-  return getEntries("notebook")
-    .slice()
-    .sort((a, b) => b.number.localeCompare(a.number));
 }
 
 /* ──────────────────────── the relations system ────────────────────────── */

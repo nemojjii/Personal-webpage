@@ -6,7 +6,7 @@ import { collectionMeta } from "@/lib/types";
 /**
  * An inline cross-reference to another entry on the site.
  *
- *   See <Ref to="notebook/002-on-measure-and-attention" /> for the
+ *   See <Ref to="research/consensus-dynamics-in-networks" /> for the
  *   earlier version of this argument.
  *
  * Renders the referenced entry's real title, so a renamed title stays
@@ -24,14 +24,9 @@ export function Ref({ to, children }: { to: string; children?: React.ReactNode }
     );
   }
 
-  const label =
-    entry.collection === "notebook" && !children
-      ? `№ ${(entry as { number: string }).number} · ${entry.title}`
-      : (children ?? entry.title);
-
   return (
     <Link href={entry.href} title={`${collectionMeta[entry.collection].singular}: ${entry.title}`}>
-      {label}
+      {children ?? entry.title}
     </Link>
   );
 }

@@ -5,12 +5,10 @@ import { type Collection, type Entry, collectionMeta } from "@/lib/types";
 
 import { SectionHeading } from "./SectionHeading";
 
-const GROUP_ORDER: Collection[] = ["research", "projects", "writings", "notebook", "books", "films"];
+const GROUP_ORDER: Collection[] = ["research", "projects", "books", "films"];
 const GROUP_LABEL: Record<Collection, string> = {
   research: "Related research",
   projects: "Related projects",
-  writings: "Related writings",
-  notebook: "Related notes",
   books: "Related books",
   films: "Related films",
 };
@@ -19,14 +17,7 @@ function ConnectionLink({ entry }: { entry: Entry }) {
   return (
     <li className="entry-row">
       <Link href={entry.href} className="group block py-2">
-        <span className="entry-title font-serif text-[1.0625rem] leading-snug">
-          {entry.collection === "notebook" ? (
-            <span className="mr-2 font-mono text-[0.75rem] text-ink-muted tnum">
-              {entry.number}
-            </span>
-          ) : null}
-          {entry.title}
-        </span>
+        <span className="entry-title font-serif text-[1.0625rem] leading-snug">{entry.title}</span>
         {entry.date ? (
           <span className="ml-2 font-sans text-[0.6875rem] text-ink-muted">
             {formatDate(entry.date, "short")}

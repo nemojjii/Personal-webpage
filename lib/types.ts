@@ -1,5 +1,5 @@
 /** The content collections. Each maps to content/<collection>/. */
-export const collections = ["research", "projects", "writings", "notebook", "books", "films"] as const;
+export const collections = ["research", "projects", "books", "films"] as const;
 export type Collection = (typeof collections)[number];
 
 /**
@@ -53,15 +53,6 @@ export const projectStages = {
 } as const;
 export type ProjectStage = keyof typeof projectStages;
 
-/** Essay categories for /writings. */
-export const writingCategories = {
-  philosophy: { label: "Philosophy" },
-  literature: { label: "Literature" },
-  "science-and-society": { label: "Science & Society" },
-  reflections: { label: "Reflections" },
-} as const;
-export type WritingCategory = keyof typeof writingCategories;
-
 /** A reference to another entry, written in frontmatter as "collection/slug". */
 export type EntryRef = string;
 
@@ -114,17 +105,6 @@ export interface ProjectEntry extends EntryBase {
   keywords: string[];
 }
 
-export interface WritingEntry extends EntryBase {
-  collection: "writings";
-  category: WritingCategory;
-}
-
-export interface NotebookEntry extends EntryBase {
-  collection: "notebook";
-  /** Sequential index such as "001". Taken from the filename prefix. */
-  number: string;
-}
-
 /** Fields the Bookshelf and the Screening Room share. */
 export interface WorkBase extends EntryBase {
   /** Display title — the Korean title as you keep it. `title` holds this. */
@@ -174,18 +154,10 @@ export interface FilmEntry extends WorkBase {
   dateWatched?: string;
 }
 
-export type Entry =
-  | ResearchEntry
-  | ProjectEntry
-  | WritingEntry
-  | NotebookEntry
-  | BookEntry
-  | FilmEntry;
+export type Entry = ResearchEntry | ProjectEntry | BookEntry | FilmEntry;
 
 export const isResearch = (e: Entry): e is ResearchEntry => e.collection === "research";
 export const isProject = (e: Entry): e is ProjectEntry => e.collection === "projects";
-export const isWriting = (e: Entry): e is WritingEntry => e.collection === "writings";
-export const isNotebook = (e: Entry): e is NotebookEntry => e.collection === "notebook";
 export const isBook = (e: Entry): e is BookEntry => e.collection === "books";
 export const isFilm = (e: Entry): e is FilmEntry => e.collection === "films";
 export const isWork = (e: Entry): e is BookEntry | FilmEntry => isBook(e) || isFilm(e);
@@ -200,8 +172,6 @@ export const collectionMeta: Record<
 > = {
   research: { singular: "Research", plural: "Research", href: "/research", base: "/research" },
   projects: { singular: "Project", plural: "Projects", href: "/projects", base: "/projects" },
-  writings: { singular: "Essay", plural: "Writings", href: "/writings", base: "/writings" },
-  notebook: { singular: "Note", plural: "Notebook", href: "/notebook", base: "/notebook" },
   books: { singular: "Book", plural: "Bookshelf", href: "/bookshelf", base: "/bookshelf" },
   films: { singular: "Film", plural: "Screening Room", href: "/films", base: "/films" },
 };

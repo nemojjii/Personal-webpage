@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { formatDate } from "@/lib/content";
-import { type Entry, projectStages, writingCategories } from "@/lib/types";
+import { type Entry, projectStages } from "@/lib/types";
 
 import { StatusBadge } from "./StatusBadge";
 import { TagList } from "./TagList";
@@ -14,12 +14,6 @@ function Marker({ entry }: { entry: Entry }) {
     return (
       <span className="font-sans text-[0.6875rem] font-medium tracking-[0.12em] uppercase text-ink-soft">
         {projectStages[entry.stage].label}
-      </span>
-    );
-  if (entry.collection === "writings")
-    return (
-      <span className="font-sans text-[0.6875rem] font-medium tracking-[0.12em] uppercase text-accent">
-        {writingCategories[entry.category].label}
       </span>
     );
   if (entry.collection === "books")
@@ -36,18 +30,12 @@ function Marker({ entry }: { entry: Entry }) {
         {entry.year ? <span className="text-ink-muted"> · {entry.year}</span> : null}
       </span>
     );
-  return (
-    <span className="font-mono text-[0.75rem] tracking-wide text-ink-muted tnum">
-      <span aria-hidden="true">№ </span>
-      <span className="sr-only">Entry </span>
-      {entry.number}
-    </span>
-  );
+  return null;
 }
 
 /**
- * One row in a content index. Shared by Research, Writings, Notebook, tag
- * pages and the homepage so that every list on the site reads the same way.
+ * One row in a content index. Shared by Research, Projects, tag pages and the
+ * homepage so that every list on the site reads the same way.
  */
 export function EntryRow({
   entry,
@@ -58,8 +46,7 @@ export function EntryRow({
 }) {
   const hasArea =
     (entry.collection === "research" || entry.collection === "projects") && Boolean(entry.area);
-  const hasMeta =
-    hasArea || entry.collection === "writings" || (!compact && entry.tags.length > 0);
+  const hasMeta = hasArea || (!compact && entry.tags.length > 0);
 
   return (
     <li className="entry-row border-b border-rule-soft last:border-b-0">
@@ -101,11 +88,6 @@ export function EntryRow({
               {hasArea ? (
                 <span className="font-sans text-[0.75rem] text-ink-muted">
                   {(entry as { area?: string }).area}
-                </span>
-              ) : null}
-              {entry.collection === "writings" ? (
-                <span className="font-sans text-[0.75rem] text-ink-muted">
-                  {entry.readingMinutes} min read
                 </span>
               ) : null}
               {!compact ? <TagList tags={entry.tags} size="xs" /> : null}

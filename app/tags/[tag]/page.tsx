@@ -22,12 +22,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: `${record.tag}`,
     description: `Everything tagged “${record.tag}” — ${record.count} ${
       record.count === 1 ? "entry" : "entries"
-    } across research, writings and the notebook.`,
+    } across research, projects, books and films.`,
     alternates: { canonical: `/tags/${record.slug}` },
   };
 }
 
-const ORDER: Collection[] = ["research", "projects", "writings", "notebook", "books", "films"];
+const ORDER: Collection[] = ["research", "projects", "books", "films"];
 
 export default async function TagPage({ params }: Params) {
   const { tag } = await params;

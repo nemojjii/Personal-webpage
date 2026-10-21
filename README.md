@@ -1,10 +1,10 @@
 # An Academic Website, A Personal Universe
 
 The personal academic homepage and intellectual archive of **Iris (Jieun) Kim** —
-research, projects, writings, a working notebook, and a CV — built to be added
+research, projects, a collection of books and films, and a CV — built to be added
 to for years, one file at a time.
 
-Adding an essay, a project, or a note means **creating one Markdown file**.
+Adding a research project, an exploration, a book or a film means **creating one Markdown file**.
 Nothing in `app/` or `components/` has to be touched.
 
 ---
@@ -16,16 +16,14 @@ Nothing in `app/` or `components/` has to be touched.
 3. [Changing your name and academic information](#3-changing-your-name-and-academic-information)
 4. [Adding a research project](#4-adding-a-research-project)
 5. [Adding a project](#5-adding-a-project)
-6. [Publishing an essay](#6-publishing-an-essay)
-7. [Creating a notebook entry](#7-creating-a-notebook-entry)
-8. [The Collection — the Bookshelf and the Screening Room](#8-the-collection-the-bookshelf-and-the-screening-room)
-9. [Linking related content](#9-linking-related-content)
-10. [Writing with mathematics, figures and footnotes](#10-writing-with-mathematics-figures-and-footnotes)
-11. [The CV, and adding a PDF](#11-the-cv-and-adding-a-pdf)
-12. [Changing typography and colours](#12-changing-typography-and-colours)
-13. [The mathematical visualisation](#13-the-mathematical-visualisation)
-14. [Deploying to Vercel](#14-deploying-to-vercel)
-15. [Design and architecture notes](#15-design-and-architecture-notes)
+6. [The Collection — the Bookshelf and the Screening Room](#6-the-collection-the-bookshelf-and-the-screening-room)
+7. [Linking related content](#7-linking-related-content)
+8. [Writing with mathematics, figures and footnotes](#8-writing-with-mathematics-figures-and-footnotes)
+9. [The CV, and adding a PDF](#9-the-cv-and-adding-a-pdf)
+10. [Changing typography and colours](#10-changing-typography-and-colours)
+11. [The mathematical visualisation](#11-the-mathematical-visualisation)
+12. [Deploying to Vercel](#12-deploying-to-vercel)
+13. [Design and architecture notes](#13-design-and-architecture-notes)
 
 ---
 
@@ -50,8 +48,6 @@ site.config.ts          ← your name, affiliation, intro, links, CV file
 content/                ← EVERYTHING YOU WRITE LIVES HERE
   research/*.mdx          one file per research project
   projects/*.mdx          one file per exploration
-  writings/*.mdx          one file per essay
-  notebook/NNN-*.mdx      one file per note, numbered
   books/*.mdx             the Bookshelf — one file per book
   films/*.mdx             the Screening Room — one file per film
   collections/*.mdx       thematic collections across books and films
@@ -64,8 +60,6 @@ app/                    ← routes; you will rarely edit these
   about/                  /about
   research/               /research  + /research/[slug]
   projects/               /projects  + /projects/[slug]
-  writings/               /writings  + /writings/[slug]
-  notebook/               /notebook  + /notebook/[slug]
   collection/             /collection + /collection/[slug]  (thematic collections)
   bookshelf/              /bookshelf + /bookshelf/[slug]
   films/                  /films     + /films/[slug]
@@ -196,45 +190,7 @@ it is one.
 
 ---
 
-## 6. Publishing an essay
-
-```bash
-cp content/writings/_template.mdx content/writings/an-essay.mdx
-```
-
-```yaml
----
-title: "Essay title"
-subtitle: ""
-summary: ""
-category: philosophy   # philosophy | literature | science-and-society | reflections
-date: 2026-04-11
-tags: [aesthetics]
-related: []
-references: []
----
-```
-
-Reading time is computed from the text. Categories with no essays in them are
-not shown, so the filter row on `/writings` only ever offers real choices.
-
----
-
-## 7. Creating a notebook entry
-
-```bash
-cp content/notebook/_template.mdx content/notebook/004-a-small-identity.mdx
-```
-
-The **numeric prefix is the entry number** shown on the site (`№ 004`), and it
-is what other entries use to refer to it. Keep the numbers sequential; don't
-renumber old notes.
-
-Notes need nothing but a `title` and a `date`. They can be two sentences.
-
----
-
-## 8. The Collection — the Bookshelf and the Screening Room
+## 6. The Collection — the Bookshelf and the Screening Room
 
 The Collection is the personal cultural archive: **the Bookshelf** at
 `/bookshelf` (books) and **the Screening Room** at `/films` (films), introduced
@@ -375,10 +331,10 @@ declare itself a member with `collections: [on-solitude]`; the two directions
 are merged, and collections appear on `/collection` and on every member's page.
 Nothing is ever placed in a collection automatically.
 
-### Connecting books, films, essays and notes
+### Connecting books, films and research
 
 Use `related:` exactly as elsewhere on the site — `films/magnolia`,
-`books/demian`, `writings/an-essay`, `notebook/003-a-note` — in either entry.
+`books/demian`, `research/consensus-dynamics-in-networks` — in either entry.
 The reverse direction is derived. Shared `tags:` give the weaker, automatic
 "elsewhere under the same tags" connection; `themes:` and `collections:` are
 the Collection's own, and are never inferred.
@@ -395,7 +351,7 @@ shelf is shown.
 
 ---
 
-## 9. Linking related content
+## 7. Linking related content
 
 This is the part of the site designed to grow into a network.
 
@@ -403,25 +359,25 @@ Every entry has a reference of the form `collection/slug`:
 
 ```
 research/perception-and-geometry
-writings/on-the-silence-of-proofs
-notebook/003-a-metric-on-attention
+projects/mathematics-perception-and-expression
+books/demian
 ```
 
 **Declare a relation once, in either entry's frontmatter:**
 
 ```yaml
 related:
-  - notebook/003-a-metric-on-attention
-  - writings/on-the-silence-of-proofs
+  - projects/mathematics-perception-and-expression
+  - books/demian
 ```
 
-The reverse direction is derived automatically, so the note shows the project
-too. There is nothing to keep in sync. Three kinds of connection are rendered
+The reverse direction is derived automatically, so the book shows the research
+project too. There is nothing to keep in sync. Three kinds of connection are rendered
 at the foot of every entry by `ConnectedIdeas`:
 
 | Connection | Where it comes from |
 | --- | --- |
-| Related research / writings / notes | `related:`, in either direction (backlinks) |
+| Related research / projects / books / films | `related:`, in either direction (backlinks) |
 | Elsewhere under the same tags | a shared `tags:` entry, when not already linked |
 | Tag pages | `/tags/<tag>`, generated from every tag in use |
 
@@ -429,7 +385,7 @@ at the foot of every entry by `ConnectedIdeas`:
 target's real title — so renaming an entry never leaves a stale sentence behind:
 
 ```mdx
-This continues the argument in <Ref to="notebook/003-a-metric-on-attention" />.
+This continues the argument in <Ref to="books/demian" />.
 <Ref to="research/perception-and-geometry">the geometry project</Ref> says more.
 ```
 
@@ -442,7 +398,7 @@ An unresolved `<Ref>` degrades to plain grey text rather than a broken link.
 
 ---
 
-## 10. Writing with mathematics, figures and footnotes
+## 8. Writing with mathematics, figures and footnotes
 
 All content files are MDX, so the following work everywhere.
 
@@ -503,7 +459,7 @@ in the right margin on wide screens, folded under the masthead on small ones.
 
 ---
 
-## 11. The CV, and adding a PDF
+## 9. The CV, and adding a PDF
 
 The CV is structured data, not prose: [`content/cv.ts`](content/cv.ts). Add
 items to any section:
@@ -541,7 +497,7 @@ on its own (`Print this page`), so a PDF is optional.
 
 ---
 
-## 12. Changing typography and colours
+## 10. Changing typography and colours
 
 **Colours** — the top of [`app/globals.css`](app/globals.css):
 
@@ -577,7 +533,7 @@ same `@theme` block; long-form sizes live in the `.prose` section below it.
 
 ---
 
-## 13. The mathematical visualisation
+## 11. The mathematical visualisation
 
 [`components/viz/WaveField.tsx`](components/viz/WaveField.tsx) draws the
 interference pattern of two coherent circular sources. At a point $p$ at
@@ -617,7 +573,7 @@ them, and the first hyperbola either side.
 
 ---
 
-## 14. Deploying to Vercel
+## 12. Deploying to Vercel
 
 ```bash
 npm i -g vercel        # once
@@ -633,15 +589,13 @@ Before the first production deploy, set `url` in `site.config.ts` to the real
 domain; `sitemap.xml`, `robots.txt`, canonical URLs and Open Graph tags are all
 generated from it.
 
-Every route is prerendered at build time except `/writings`, which reads
-`?category=` on the server so the filter works without JavaScript. The
-Bookshelf and the Screening Room are prerendered too; their search and filters
-run in the browser over the public catalogue. New content
+Every route is prerendered at build time. The Bookshelf and the Screening
+Room's search and filters run in the browser over the public catalogue. New content
 appears after a rebuild, which a `git push` triggers automatically.
 
 ---
 
-## 15. Design and architecture notes
+## 13. Design and architecture notes
 
 **Stack** — Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4,
 MDX via `next-mdx-remote/rsc`, KaTeX, Motion. No database, no CMS, no auth,
@@ -651,8 +605,8 @@ no paid services.
 
 - *Content as files.* Frontmatter plus MDX means your archive is plain text you
   own, diffable in git, and readable in twenty years. Adding an entry touches no
-  application code. There are four collections — research, projects, writings,
-  notebook — and adding a fifth means a folder, a type, and a route.
+  application code. There are four collections — research, projects, books,
+  films — and adding a fifth means a folder, a type, and a route.
 - *Relations declared once.* Backlinks are derived, not maintained.
 - *Animation where it earns its place.* Page transitions are a CSS opacity
   fade — deliberately not a transform, which would create a containing block and
