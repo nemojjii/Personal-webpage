@@ -22,8 +22,9 @@ Nothing in `app/` or `components/` has to be touched.
 9. [The CV, and adding a PDF](#9-the-cv-and-adding-a-pdf)
 10. [Changing typography and colours](#10-changing-typography-and-colours)
 11. [The mathematical visualisation](#11-the-mathematical-visualisation)
-12. [Deploying to Vercel](#12-deploying-to-vercel)
-13. [Design and architecture notes](#13-design-and-architecture-notes)
+12. [The Little Laboratory](#12-the-little-laboratory)
+13. [Deploying to Vercel](#13-deploying-to-vercel)
+14. [Design and architecture notes](#14-design-and-architecture-notes)
 
 ---
 
@@ -61,6 +62,7 @@ app/                    ← routes; you will rarely edit these
   research/               /research  + /research/[slug]
   projects/               /projects  + /projects/[slug]
   collection/             /collection + /collection/[slug]  (thematic collections)
+  laboratory/             /laboratory + /laboratory/<experiment>
   bookshelf/              /bookshelf + /bookshelf/[slug]
   films/                  /films     + /films/[slug]
   cv/ contact/ tags/      /cv /contact /tags + /tags/[tag]
@@ -573,7 +575,31 @@ them, and the first hyperbola either side.
 
 ---
 
-## 12. Deploying to Vercel
+## 12. The Little Laboratory
+
+`/laboratory` holds three small interactive experiments — wave superposition,
+gradient descent on a quadratic bowl, and first-order reaction kinetics — each
+at its own route. They are deliberately independent of the content system:
+there are no MDX files to add, and nothing here links to research.
+
+```
+lib/laboratory.ts           the three experiments: titles, descriptions, model notes (MDX)
+lib/laboratory/wave.ts      y = A₁ sin(k₁x − ω₁t) + A₂ sin(k₂x − ω₂t + Δφ), with ω = v·k
+lib/laboratory/gradient.ts  f = ½(ax² + by²), p ← p − η∇f, and the η < 2/max(a,b) condition
+lib/laboratory/kinetics.ts  [A] = [A]₀ e^(−kt), t½ = ln 2 / k
+components/laboratory/      the instruments (client components), shared controls, the clock
+app/laboratory/             the landing page and one page per experiment
+```
+
+The mathematics lives in `lib/laboratory/*.ts` as pure functions with no
+rendering in them, so it can be checked on its own. Every instrument starts
+its animation only after first paint and not at all for a visitor who prefers
+reduced motion; play, pause, step and reset are ordinary buttons and the
+sliders are ordinary range inputs, so everything works from the keyboard.
+
+---
+
+## 13. Deploying to Vercel
 
 ```bash
 npm i -g vercel        # once
@@ -595,7 +621,7 @@ appears after a rebuild, which a `git push` triggers automatically.
 
 ---
 
-## 13. Design and architecture notes
+## 14. Design and architecture notes
 
 **Stack** — Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4,
 MDX via `next-mdx-remote/rsc`, KaTeX, Motion. No database, no CMS, no auth,

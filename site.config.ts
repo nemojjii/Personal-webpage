@@ -100,6 +100,7 @@ export const navigation: readonly NavItem[] = [
       { label: "The Screening Room", href: "/films" },
     ],
   },
+  { label: "Little Laboratory", href: "/laboratory" },
   { label: "CV", href: "/cv" },
 ];
 

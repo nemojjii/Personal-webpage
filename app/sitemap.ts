@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { allEntries, allTags, themeCollections } from "@/lib/content";
+import { experiments } from "@/lib/laboratory";
 import { navigation, secondaryNavigation, site } from "@/site.config";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -27,6 +28,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.5,
   }));
 
+  const laboratoryRoutes = experiments.map((experiment) => ({
+    url: `${base}${experiment.href}`,
+    lastModified: now,
+    changeFrequency: "yearly" as const,
+    priority: 0.6,
+  }));
+
   const entryRoutes = allEntries().map((entry) => ({
     url: `${base}${entry.href}`,
     lastModified: entry.updated || entry.date ? new Date(entry.updated || entry.date) : now,
@@ -41,5 +49,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.3,
   }));
 
-  return [...staticRoutes, ...collectionRoutes, ...entryRoutes, ...tagRoutes];
+  return [...staticRoutes, ...collectionRoutes, ...laboratoryRoutes, ...entryRoutes, ...tagRoutes];
 }
