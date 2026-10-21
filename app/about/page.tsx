@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { ArticleLayout } from "@/components/content/ArticleLayout";
 import { Mdx } from "@/components/content/mdx";
 import { Prose } from "@/components/content/Prose";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Mark } from "@/components/viz/Mark";
 import { getPage } from "@/lib/pages";
 import { buildToc } from "@/lib/toc";
 import { site } from "@/site.config";
@@ -40,21 +38,6 @@ export default function AboutPage() {
           ) : (
             <EmptyState>This page has not been written yet.</EmptyState>
           )}
-
-          <footer className="no-print mt-20 flex items-center gap-5 border-t border-rule pt-7">
-            <Mark className="shrink-0 text-accent" size={40} />
-            <p className="font-sans text-[0.8125rem] leading-relaxed text-ink-soft">
-              The full record is on the{" "}
-              <Link href="/cv" className="link-quiet text-ink">
-                CV
-              </Link>
-              . For correspondence, see{" "}
-              <Link href="/contact" className="link-quiet text-ink">
-                contact
-              </Link>
-              .
-            </p>
-          </footer>
         </ArticleLayout>
       </div>
     </div>
