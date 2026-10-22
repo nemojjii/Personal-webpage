@@ -136,8 +136,9 @@ Edit the frontmatter, delete `draft: true`, and it appears at
 title: "Full project title"
 subtitle: ""                      # optional, italic, under the title
 summary: "One or two sentences."  # index pages and link previews
-status: completed                 # idea | in-progress | completed | publication
+status: completed                 # idea | in-progress | preliminary | completed | publication
 area: "Computational Physics"
+context: ""                       # optional, e.g. "Earlier independent and school-based research"
 date: 2025-06-01                  # may be left as "" until you know it
 updated: 2026-05-20               # optional
 featured: true                    # Featured research, rather than Additional
@@ -156,7 +157,11 @@ The research index has two groups: **Featured research** (`featured: true`) and
 if present, and otherwise by date, newest first — so you can arrange the
 featured list by hand without inventing dates.
 
-`status` sets the badge on the entry (completed, in progress, and so on).
+`status` sets the badge on the entry (completed, in progress, preliminary work,
+and so on); `preliminary` is for work whose experiments were run but which was
+never developed into a documented study. `context` is a restrained line about
+where the work stands in your history, shown in the page header — never a
+school, venue or award.
 `*asterisks*` in a reference line become italics. An entry with `date: ""` is
 listed without a date rather than being hidden — useful while the details of
 older work are still being recovered.

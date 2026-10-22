@@ -4,6 +4,7 @@ const TONE: Record<ResearchStatus, string> = {
   publication: "text-accent before:bg-accent",
   "in-progress": "text-ink before:bg-ink",
   completed: "text-ink-soft before:bg-ink-soft",
+  preliminary: "text-ink-muted before:bg-ink-muted",
   idea: "text-ink-muted before:bg-ink-muted",
 };
 

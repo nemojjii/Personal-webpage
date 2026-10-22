@@ -1,9 +1,9 @@
 ---
-title: "Study on Power Spectral Density by Improving Electroencephalography Signal Quality"
-subtitle: "Area of the alpha band in EEG as a measure of stability"
+title: "Area of Alpha Band in EEG for Stability Analysis"
 summary: "Measuring the area under the alpha band of an EEG spectrum as a quantitative index of restfulness, with an autoencoder trained to denoise the signal before the spectrum is taken."
 status: completed
 area: "Signal Processing & Neurophysics"
+context: "Earlier independent and school-based research"
 date: ""
 featured: true
 order: 1
@@ -19,8 +19,8 @@ related:
 references: []
 ---
 
-{/* VERIFY — this page is the most provisional of the five. See the notes at the
-    foot of this file; several titles and claims still need your confirmation. */}
+{/* VERIFY — see the notes at the foot of this file. The O1 contradiction, the
+    subject count and the spectrum normalisation remain open. */}
 
 An electroencephalogram is a recording of voltages at the scalp, and most of
 what it contains is not brain activity: muscle tension, eye blinks and mains
@@ -50,22 +50,28 @@ superposition of sinusoids, so that a long and visually noisy recording can be
 summarised by how its power is distributed across frequency. The conventional
 bands are delta, theta, alpha, beta and gamma; the alpha band sits at 8–13 Hz.
 
-Writing $x(t)$ for the recorded signal, the discrete Fourier transform gives
-coefficients
+The poster states its method in words; the equations in this section are the
+standard definitions behind that method, set out here for the reader, and are
+not reproduced from the poster. Writing $x_n$ for the sampled signal, the
+discrete Fourier transform gives coefficients
 
 $$
 X_k = \sum_{n=0}^{N-1} x_n\, e^{-2\pi i k n / N},
 $$
 
-from which the power spectrum $P(f) = |X(f)|^2$ follows. The quantity of
-interest is the band-limited integral
+and the power spectral density follows from their squared magnitude once it is
+normalised by the record length and the sampling rate — for a plain
+periodogram, $P_k = |X_k|^2 / (N f_s)$ — so that $P(f)$ carries units of
+$\mu\mathrm{V}^2/\mathrm{Hz}$ and the band-limited integral
 
 $$
-P_\alpha = \int_{8\,\mathrm{Hz}}^{13\,\mathrm{Hz}} P(f)\, \dd f,
+P_\alpha = \int_{8\,\mathrm{Hz}}^{13\,\mathrm{Hz}} P(f)\, \dd f
 $$
 
-evaluated numerically as the area under the spectral curve. Reported in units of
-$\mu\mathrm{V}^2$, this is the number the project treats as an index of
+carries units of $\mu\mathrm{V}^2$. The poster reports alpha power in
+$\mu\mathrm{V}^2$ and describes it as the area under the spectral curve by
+trapezoidal integration; the normalisation it applied to the spectrum is not
+recorded. This integral is the number the project treats as an index of
 restfulness, computed channel by channel so that its spatial distribution across
 the scalp can be compared.
 
@@ -82,10 +88,12 @@ has and the noise does not.
 
 ## Methodology
 
-**Acquisition.** EEG was recorded from a subject on a 21-channel system placed
-according to the international 10–20 system, with conductive gel applied for
-signal quality and the participant instructed to minimise movement and external
-stimulation. The recorded REF data were converted to EDF for processing.
+**Acquisition.** EEG was recorded on a 21-channel system placed according to
+the international 10–20 system, with conductive gel applied for signal quality
+and instructions to minimise movement and external stimulation. The recorded
+REF data were converted to EDF for processing. The poster refers to "the
+patient" in one place and to "participants" in another; how many people were
+recorded is not stated.
 
 **Preprocessing and noise injection.** Signals were loaded in Python with
 `pyedflib` and normalised. Gaussian noise was then added artificially to the
@@ -129,9 +137,10 @@ channels could be inspected alongside the numbers.
 
 ## Challenges and limitations
 
-- **A single subject.** All measurements come from one recording session on one
-  participant. Nothing here supports a population claim, and the diagnostic
-  possibilities the poster raises are speculation about an individual trace, not
+- **How many people were recorded is not stated.** The poster gives no number
+  of subjects, sessions or epochs, and its wording is inconsistent on the
+  point. Nothing here supports a population claim, and the diagnostic
+  possibilities the poster raises are speculation about a recording, not
   findings.
 - **The noise is synthetic.** The autoencoder was trained on Gaussian noise
   added deliberately to clean recordings. Real EEG artefacts — blinks, EMG,
@@ -156,11 +165,17 @@ channels could be inspected alongside the numbers.
   needed; nothing has been written on your behalf.
 
   ── NOTES REQUIRING VERIFICATION ─────────────────────────────────────────────
-  1. TITLE. The title shown is the one from your résumé. The poster is titled
-     "Area of Alpha Band in EEG for Stability Analysis" and an early draft
-     introduction carries "EEG analysis and noise reduction using machine
-     learning". These are three different titles for related work. Confirm which
-     names the submitted paper; the subtitle currently carries the poster title.
+  1. TITLE — changed 2026-10-21 to the poster's title, "Area of Alpha Band in
+     EEG for Stability Analysis", on Iris's instruction. The former title,
+     "Study on Power Spectral Density by Improving Electroencephalography
+     Signal Quality", comes from the résumé and appears in no document on
+     disk. It still stands in content/cv.ts, which was out of scope for this
+     pass — decide whether the CV should follow. The slug and URL are
+     unchanged, and the former subtitle (a paraphrase of the poster title) was
+     dropped. A third working title, "EEG analysis and noise reduction using
+     machine learning", is the first line ("Potential title:") of the notes
+     compilation "Iris Kim - Alpha band analysis.pdf"; the draft introduction
+     carries no title.
   2. SOURCES USED. Content on this page comes from the POSTER
      ("Alpah band analysis poster.pdf") only — it is the single document that
      contains your own data and results. Deliberately NOT used:
@@ -171,8 +186,8 @@ channels could be inspected alongside the numbers.
        · "Introduction - ASR - Jieun Kim.pdf" — a draft introduction. Its
          "over 95% accuracy" is a cited external study (Frontiers in Physiology,
          2022), not your result.
-       · "ASR initial proposal-2.pdf" — a proposal for a different project
-         (digital image processing and filter/window design).
+       · "ASR initial proposal-2.pdf" — the proposal behind the MRI entry
+         (digital image processing, filters and windows); not EEG.
   3. ALPHA BAND BOUNDS. The poster says 8–13 Hz; the draft introduction says
      8–12 Hz. 8–13 Hz is used here. Confirm.
   4. METHOD CONFLICT. The draft introduction describes 1–2 s epochs and
@@ -187,7 +202,20 @@ channels could be inspected alongside the numbers.
      acceptance email or the proceedings entry and I will add it properly.
   7. CHANNEL COUNT. 21 channels per the poster. The notes document describes a
      27-channel montage, but that belongs to the external g.tec article.
-  8. CROSS-LINK. The draft introduction states that the same paper also treated
-     consensus dynamics, with electrodes as the agents. That is why this entry
-     and the consensus project are linked as related work. Confirm it is right.
+  8. CROSS-LINK. The draft introduction states that "the paper" also treated
+     consensus dynamics, with electrodes as the agents, but the sentence ends
+     with a citation [3] to an external page, so it may describe that source
+     rather than your own work. The related-work link stays as an editorial
+     connection; confirm it is right.
+  9. SPECTRUM NORMALISATION. The poster says only "area under the spectral
+     curve, trapezoidal integration (numpy.trapz)" and reports μV²; whether
+     the spectrum was a normalised PSD (|X|²/(N f_s)) or a raw |X|² is not
+     recorded. The page gives the standard definition, says the equations are
+     the site's exposition rather than the poster's, and says the poster's
+     normalisation is unknown. No value has been recomputed.
+ 10. SUBJECT COUNT. "The patient" and "participants" appear in the same
+     methods step. The number of people recorded is not stated; the page now
+     says so instead of assuming one subject.
+ 11. CONTEXT LINE. The header shows "Earlier independent and school-based
+     research" (approved wording, 2026-10-21). No school or mentor is named.
 */}

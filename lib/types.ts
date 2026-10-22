@@ -34,8 +34,10 @@ export type ViewingStatus = keyof typeof viewingStatuses;
 
 /** Research project lifecycle. The key is what you write in frontmatter. */
 export const researchStatuses = {
-  idea: { label: "Research Idea", order: 3 },
+  idea: { label: "Research Idea", order: 4 },
   "in-progress": { label: "In Progress", order: 1 },
+  /** Experiments were run, but the work was not developed into a documented study. */
+  preliminary: { label: "Preliminary Work", order: 3 },
   completed: { label: "Completed", order: 2 },
   publication: { label: "Publication", order: 0 },
 } as const;
@@ -109,6 +111,12 @@ export interface ResearchEntry extends EntryBase {
   status: ResearchStatus;
   /** Research area, e.g. "Computational Physics". */
   area?: string;
+  /**
+   * Where the work stands in the author's history, in a few restrained words —
+   * e.g. "Earlier independent and school-based research". Shown in the page
+   * header when given; never a school, venue or award.
+   */
+  context?: string;
   keywords: string[];
 }
 

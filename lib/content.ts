@@ -197,6 +197,7 @@ function parseEntry(collection: Collection, filename: string): Entry {
       collection: "research",
       status,
       area: data.area ? String(data.area) : undefined,
+      context: data.context ? String(data.context) : undefined,
       keywords: asArray(data.keywords),
     } as ResearchEntry;
   }

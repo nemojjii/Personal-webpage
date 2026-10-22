@@ -21,7 +21,7 @@ export default function ResearchPage() {
       <PageHeader
         eyebrow="Archive"
         title="Research"
-        intro="Work in theoretical science, mathematical modeling, and the computational side of physics and chemistry. Full accounts of each project are being assembled from the original materials."
+        intro="Earlier independent and school-based research in theoretical science, mathematical modeling, and the computational side of physics and chemistry, written up here from the original materials. Each account says what its sources establish and what remains open."
       />
 
       {featured.length || rest.length ? (

@@ -55,7 +55,7 @@ const TOPOLOGIES: Topology[] = [
       [0.3, 0.75],
       [0.9, 0.5],
     ],
-    note: "The worked example: nodes 1–4 of the six-node graph, with the edges among them.",
+    note: "The worked example: nodes 1–4 of the six-node graph, with the edges among them. Initial state as in the manuscript's printed code; its printed figure appears to start elsewhere.",
   },
   {
     key: "sparse",
@@ -424,10 +424,13 @@ export function ConsensusExplorer() {
 
       <figcaption className="mt-3 font-sans text-[0.8125rem] leading-relaxed text-ink-soft">
         <span className="font-medium text-ink">Reconstruction.</span> The graphs,
-        initial states, step size and horizon are those documented in the
-        manuscript; the curves are redrawn here by integrating{" "}
+        initial states, step size and horizon are those of the code printed in
+        the manuscript; the curves are redrawn here by integrating{" "}
         <span className="font-mono text-[0.75rem]">dx/dt = −Lx</span> in the
-        browser. This is an illustration of the documented simulation, not an
+        browser. For the four-node case the manuscript&apos;s printed figure
+        appears to start from a different initial state than its printed code
+        (near 10, 20, 5, 15 rather than 1, 2, 3, 0); the demonstration follows
+        the code. This is an illustration of the documented simulation, not an
         independent experimental result. The eigenvalues are computed from the
         same Laplacian as a check on the convergence claim.
       </figcaption>

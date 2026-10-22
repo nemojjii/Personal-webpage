@@ -56,6 +56,7 @@ export default async function ResearchEntryPage({ params }: Params) {
       summary={entry.summary}
       tags={entry.tags}
       meta={[
+        entry.context ? <span key="context">{entry.context}</span> : null,
         entry.area ? <span key="area">{entry.area}</span> : null,
         entry.date ? (
           <time key="date" dateTime={entry.date}>

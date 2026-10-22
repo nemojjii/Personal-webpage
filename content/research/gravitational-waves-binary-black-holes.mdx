@@ -3,6 +3,7 @@ title: "Calculations of Gravitational Waves from Binary Black Hole Systems"
 summary: "A deliberately classical model of a black-hole inspiral: Newtonian circular orbits losing energy at the Peters–Mathews rate, integrated until the event horizons meet, and the resulting frequency sweep compared with LIGO's observations."
 status: completed
 area: "Computational Astrophysics"
+context: "Earlier independent and school-based research"
 date: ""
 featured: false
 order: 4
@@ -19,8 +20,9 @@ references:
   - "Abbott, B. P., et al. (2016). Observation of gravitational waves from a binary black hole merger. *Physical Review Letters*, 116(6), 061102."
 ---
 
-{/* VERIFY — see the notes at the foot of this file. One of them concerns a
-    factor of two in the derivation and should be read before anything else. */}
+{/* VERIFY — see the notes at the foot of this file. The factor of two in the
+    manuscript's energy expression and the frequency claim are now disclosed on
+    the page itself; the remaining notes are still open. */}
 
 Simulating a binary black hole merger properly means solving the Einstein field
 equations numerically, which is the work of large collaborations. This project
@@ -52,9 +54,24 @@ $$
 \frac{\dd E}{\dd t} = -\frac{32}{5}\,\frac{G^4}{c^5}\,\frac{(m_1 m_2)^2 (m_1 + m_2)}{r^5}.
 $$
 
-Energy loss shrinks the orbit. Relating $\dd E/\dd t$ to $\dd r/\dd t$ through
-the orbital energy gives a differential equation for the separation alone, of the
-form $\dd r/\dd t \propto -r^{-3}$, so the inspiral accelerates sharply as the
+Energy loss shrinks the orbit. The manuscript relates $\dd E/\dd t$ to
+$\dd r/\dd t$ by writing the mechanical energy of the pair as
+$E = -G m_1 m_2 / r$ and differentiating, which gives
+
+$$
+\frac{\dd r}{\dd t} = -\frac{32}{5}\,\frac{G^3}{c^5}\,\frac{m_1 m_2\,(m_1 + m_2)}{r^3}.
+$$
+
+One step of this needs a caveat the manuscript does not make. For a circular
+orbit the kinetic energy contributes $+G m_1 m_2 / (2r)$, so the total
+mechanical energy is $E = -G m_1 m_2 / (2r)$; with that expression the
+separation shrinks exactly twice as fast,
+$\dd r/\dd t = -\tfrac{64}{5}\,(G^3/c^5)\, m_1 m_2 (m_1 + m_2) / r^3$, which is
+the rate Peters and Mathews give. The results below are the manuscript's,
+computed with its own expression. The difference changes the time-scale of the
+inspiral by a factor of two but not its shape, and not the orbital frequency at
+any given separation, which depends only on Kepler's law. Either way
+$\dd r/\dd t \propto -r^{-3}$, so the inspiral accelerates sharply as the
 bodies close.
 
 The orbit cannot shrink indefinitely, because black holes have a size. For mass
@@ -113,18 +130,40 @@ Matplotlib for visualisation.
 ## Results and observations
 
 **GW150914.** Initial conditions matched to the first detection — 36 and 29
-solar masses, initial separation 1000 km. The integration shows the separation
-contracting slowly and then collapsing, with a sharp acceleration late in the
-run. Against the observed event the manuscript reports three points of
-agreement: the strongest signal lasts about 0.2 s; the frequency rises from
-about 35 Hz to about 250 Hz; and the bodies reach 30–60% of the speed of light.
+solar masses, initial separation 1000 km. The manuscript's integration shows
+the separation contracting slowly and then collapsing, with the horizons
+meeting after about 0.6 s. That is the figure the manuscript reports, obtained
+with its energy expression; with the standard orbital energy (see above) the
+same run would take about 0.3 s — a correction made on this page, not a result
+of the original work. Against the observed event the manuscript claims three
+points of agreement: that the strongest part of the signal lasts about 0.2 s;
+that the frequency rises from about 35 Hz to about 250 Hz; and that the bodies
+reach 30–60% of the speed of light.
+
+The second of these needs qualifying. The 35–250 Hz band is the observational
+reference from the LIGO paper, and it is not what the stated initial conditions
+produce. Under the manuscript's own convention — four pulses per revolution, so
+a frequency of $4\omega/2\pi$ — Kepler's law gives about 59 Hz at 1000 km,
+250 Hz at a separation of about 380 km, and about 700 Hz when the horizons
+meet; the manuscript's own spectrogram accordingly begins near 60 Hz. (With the
+physical gravitational-wave frequency of twice the orbital frequency, the same
+run would sweep from about 30 Hz to about 350 Hz.) These figures are an
+independent calculation from the stated model and initial conditions, not a
+re-run of the original code, which was not available. The third point holds for
+the *relative* orbital speed $\sqrt{GM/r}$: it is $0.31c$ at 1000 km, reaches
+$0.6c$ at about 270 km, and exceeds it only in the final few milliseconds
+before the cut-off. The speed of each body about the centre of mass is smaller,
+roughly $0.14c$ to $0.39c$ over the run.
 
 **GW190521.** Masses of 85 and 66 solar masses, initial separation adjusted to
-1700 km. Both simulation and observation show a strong, rapidly rising signal
-within roughly 0.1 s. The simulated frequency rose through about 60–150 Hz
-against roughly 50–100 Hz observed. For the heavier pair, simulation and
-observation agree in direction: a shorter signal at lower frequency. Specific
-frequency values and spectrogram shape differ.
+1700 km, for which the manuscript's run ends after about 0.4 s — the same
+energy expression, and so the same factor of two, applies. Both simulation and
+observation show a strong, rapidly rising signal within roughly 0.1 s. The
+simulated frequency rose through about 60–150 Hz against roughly 50–100 Hz
+observed; those are the manuscript's figures, and from 1700 km its convention
+starts near 41 Hz. For the heavier pair, simulation and observation agree in
+direction: a shorter signal at lower frequency. Specific frequency values and
+spectrogram shape differ.
 
 The honest summary is the manuscript's own: that classical mechanics plus one
 relativistic energy-loss formula produces "quite plausible" frequency evolution,
@@ -144,6 +183,10 @@ rather than a reproduction of the waveform.
 - **Horizons touching is not merger.** Real binaries become dynamically unstable
   at the innermost stable circular orbit, well before the horizons meet, so the
   cut-off is a convenient stopping rule rather than a physical one.
+- **Newtonian orbits plus one relativistic formula.** The orbit is Keplerian,
+  the energy loss is the leading quadrupole term, and the end is a geometric
+  cut-off. The plunge, merger and ringdown of a real coalescence are
+  relativistic and are not modelled; the comparison is with the inspiral alone.
 - **Circular orbits and no spin.** Eccentricity and spin are both set aside;
   both matter for real systems.
 - **The factor of four is an assumption, not a derivation.** Quadrupole
@@ -156,32 +199,31 @@ rather than a reproduction of the waveform.
   Yours to write; nothing has been written on your behalf.
 
   ── NOTES REQUIRING VERIFICATION ─────────────────────────────────────────────
-  1. *** LIKELY FACTOR-OF-TWO ERROR IN THE DERIVATION. ***
-     The manuscript writes the orbital energy as E = -G m1 m2 / r. For a
-     circular orbit the total mechanical energy is E = -G m1 m2 / (2r), because
-     the kinetic energy supplies +G m1 m2 / (2r). Using the manuscript's E gives
-         dr/dt = -(32/5)(G^3/c^5) m1 m2 (m1+m2) / r^3,
-     whereas the standard Peters-Mathews result is
-         dr/dt = -(64/5)(G^3/c^5) m1 m2 (m1+m2) / r^3,
-     exactly twice as fast. Integrating the correct rate for 36 + 29 solar
-     masses from r0 = 1000 km down to r_min = 192 km gives a merger time of
-     about 0.30 s; the manuscript reports about 0.6 s, which is what the halved
-     rate produces. The 0.6 s figure therefore looks like a direct consequence
-     of the energy expression rather than a coincidence.
-     This page deliberately does NOT print the E or dr/dt equations, and does
-     not repeat the 0.6 s figure, pending your decision. I have not altered your
-     research — only withheld the step that looks wrong.
-  2. FREQUENCY MATCH NEEDS RECHECKING. With the x4 convention and r0 = 1000 km,
-     four times the orbital frequency already starts near 59 Hz and passes
-     250 Hz at r = 382 km, reaching about 703 Hz at r_min. The quoted
-     "35 Hz to 250 Hz" does not fall out of the stated model and initial
-     conditions as written. With the physical factor of two instead, the sweep
-     from 1000 km runs about 30 Hz to 351 Hz, which brackets the observed
-     35-250 Hz rather well. Worth re-examining against your actual code.
-  3. CONFIRMED CORRECT. The 30-60% light-speed claim checks out: the relative
-     orbital speed sqrt(GM/r) at r0 = 1000 km is 0.310c, and reaches 0.60c near
-     r = 267 km. Schwarzschild radii of 106.3 km and 85.7 km give
-     r_min = 192.0 km as stated.
+  1. FACTOR OF TWO IN THE DERIVATION — disclosed on the page (2026-10-21).
+     The manuscript writes the orbital energy as E = -G m1 m2 / r; for a
+     circular orbit it is E = -G m1 m2 / (2r), so the manuscript's
+         dr/dt = -(32/5)(G^3/c^5) m1 m2 (m1+m2) / r^3
+     is half the Peters-Mathews rate, -(64/5)(G^3/c^5) m1 m2 (m1+m2) / r^3.
+     The page prints both expressions, keeps the manuscript's 0.6 s as the
+     reported value and gives 0.30 s as an independent correction, labelled as
+     such. Closed-form check: t = (r0^4 - r_min^4) / (4K) with
+     K = (beta/5) G^3 m1 m2 M / c^5, beta = 32 (manuscript) or 64 (standard):
+     36+29 Msun from 1000 km -> 0.596 s / 0.298 s; 85+66 Msun from 1700 km ->
+     0.397 s / 0.199 s. The manuscript's own figures (about 0.6 s and 0.4 s)
+     match the beta = 32 values, so they were produced with its expression.
+     The original code is not on disk and was NOT re-run; every number on the
+     page beyond the manuscript's own is a closed-form or Kepler calculation.
+  2. FREQUENCY CLAIM — qualified on the page (2026-10-21). With the x4
+     convention from r0 = 1000 km: 59.1 Hz at r0, 250 Hz at r = 382 km, 703 Hz
+     at r_min; the manuscript's spectrogram starts near 64 Hz. With f = 2 f_orb
+     instead: 29.6 -> 352 Hz. The "35 Hz to 250 Hz" is LIGO's reported band
+     (Abbott et al. 2016) and is presented as the observational reference.
+     Still open: whether the actual code used a different r0 (35 Hz under x4
+     needs r0 of about 1418 km).
+  3. VELOCITY CLAIM — qualified on the page (2026-10-21). Relative speed
+     sqrt(GM/r): 0.310c at 1000 km, 0.60c at 267 km, 0.707c at r_min = 192.0 km
+     (above 0.6c only for the last ~2 ms). Speeds about the centre of mass:
+     m1 0.14-0.32c, m2 0.17-0.39c. Schwarzschild radii 106.3 km and 85.6 km.
   4. "Dr. Linus" in the Background should be **Rainer Weiss**. The 2017 Nobel
      Prize in Physics went to Weiss, Barish and Thorne.
   5. DISTANCE. "The observed gravitational waves were created by black holes
@@ -212,4 +254,7 @@ rather than a reproduction of the waveform.
  11. ABSTRACT STYLE. The submitted abstract opens with Batman's Bat-Signal and
      an ice-cream analogy. Charming for a competition, unusual for an academic
      abstract - worth rewriting if this is ever submitted elsewhere.
+ 12. CONTEXT LINE. The header shows "Earlier independent and school-based
+     research" (approved wording, 2026-10-21). No school, mentor, competition
+     or placement is displayed; nothing here says that none exists.
 */}
