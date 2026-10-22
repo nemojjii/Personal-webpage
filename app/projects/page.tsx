@@ -38,7 +38,7 @@ export default function ProjectsPage() {
           {rest.length ? (
             <section aria-labelledby="projects-other">
               <SectionHeading as="h3">
-                <span id="projects-other">Other explorations</span>
+                <span id="projects-other">Selected Projects</span>
               </SectionHeading>
               <EntryList entries={rest} className="border-t-0" />
             </section>

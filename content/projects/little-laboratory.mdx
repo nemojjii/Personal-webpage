@@ -1,0 +1,103 @@
+---
+title: "Little Laboratory — Interactive Scientific Explorations"
+subtitle: "Three instruments, one standard model each"
+summary: "A small set of interactive experiments built into this site — wave superposition, gradient descent and first-order reaction kinetics — each turning one textbook model into something to move, read off and test."
+stage: ongoing
+area: "Scientific Computing & Interactive Visualization"
+# The day this entry joined the site. The laboratory itself opened in October 2026.
+date: 2026-10-22
+period: "Since October 2026"
+role: "Independent Development"
+links: []
+featured: false
+order: 3
+keywords:
+  - interactive visualization
+  - wave superposition
+  - gradient descent
+  - reaction kinetics
+  - scientific computing
+tags: [simulation, mathematics]
+related: []
+references: []
+---
+
+The [Little Laboratory](/laboratory) is a small space on this site where
+equations become something to explore. It exists because a model one has only
+read is not yet understood; the moment of understanding usually comes from
+moving a parameter and seeing what changes. Each of its three instruments takes
+one standard model — a textbook result, not a research finding — writes it down
+exactly, and puts its parameters under the visitor's hand.
+
+## The approach
+
+Every experiment is built the same way. The mathematics lives in a small,
+dependency-free TypeScript module that evaluates the model in closed form; a
+page component draws it as inline SVG and exposes its parameters as sliders and
+buttons; readouts print the quantities the model defines; and notes beneath the
+instrument state the equations, the assumptions and what to look for. A shared
+clock advances time for the animated experiments, re-rendering about thirty
+times a second, pausing while the tab is hidden, and never starting on its own
+for a visitor who prefers reduced motion. The sliders are native range inputs
+that announce their values, so the instruments work from the keyboard.
+
+What a visitor can investigate is bounded by the model, deliberately. Nothing
+is measured, fitted or simulated beyond the equation on the page, and the notes
+say so. Two of the experiments are linked to research entries elsewhere on the
+site where the same mathematics or the same idea appears, with a sentence
+saying what the connection is and what it is not.
+
+## The experiments
+
+### I. Wave Superposition
+
+Two sine waves travel along one string, $y_1 = A_1 \sin(k_1 x - \omega_1 t)$
+and $y_2 = A_2 \sin(k_2 x - \omega_2 t + \Delta\varphi)$, and the string shows
+their sum. Both move at one speed $v$, so $\omega = v k$ — the non-dispersive
+case, an assumption of the instrument rather than a law. Sliders set the two
+amplitudes, the two wave numbers, the relative phase and the speed; the clock
+can be paused and reset; four presets jump to the instructive cases; and a
+toggle shades, at each point and instant, whether the two displacements pull
+the same way or opposite ways. When the wave numbers are equal the readout gives
+the resultant amplitude $\sqrt{A_1^2 + A_2^2 + 2A_1A_2\cos\Delta\varphi}$ and
+names the interference constructive, destructive or partial; when they differ
+it says, correctly, that there is no single amplitude and the sum beats.
+[Open Wave Superposition](/laboratory/wave-superposition).
+
+### II. Gradient Descent
+
+A point on the quadratic bowl $f(x,y) = \tfrac{1}{2}(a x^2 + b y^2)$ is moved
+against the gradient, $\mathbf{p}_{n+1} = \mathbf{p}_n - \eta\,\nabla f(\mathbf{p}_n)$
+with $\nabla f = (a x, b y)$. The curvatures $a$ and $b$, the learning rate
+$\eta$ and the starting point are adjustable — the start can also be placed by
+clicking on the surface — and the path is stepped through one iteration at a
+time or played. The whole trajectory is computed in advance, at most two hundred
+steps, stopping when the gradient falls below $10^{-6}$ or the point has left
+any sensible frame. Because the coordinates decouple, each step multiplies $x$
+by $(1 - \eta a)$ and $y$ by $(1 - \eta b)$; the instrument reads the regime
+off those factors and says whether the rate is converging, oscillating or
+diverging, with the bound $\eta < 2/\max(a, b)$ printed beside it. Level curves
+of $f$ are drawn as the ellipses they are.
+[Open Gradient Descent](/laboratory/gradient-descent).
+
+### III. Reaction Kinetics
+
+An idealised first-order reaction $\mathrm{A} \to \text{products}$:
+$d[\mathrm{A}]/dt = -k[\mathrm{A}]$, which integrates to
+$[\mathrm{A}](t) = [\mathrm{A}]_0\,e^{-kt}$ with half-life $t_{1/2} = \ln 2 / k$.
+Sliders set the initial concentration, the rate constant and the elapsed time,
+which can also be played; the plot's window spans about six half-lives, dashed
+markers show the successive halvings, equally spaced, and a panel of one
+hundred dots keeps a tally of the fraction remaining — a tally, the caption
+says, not a simulation. The readouts give the concentration, the fraction
+remaining, the half-life and the instantaneous rate $k[\mathrm{A}]$; with
+$k = 0$ nothing reacts and the instrument says there is no half-life. No
+numerical integration is involved: the exponential is evaluated directly.
+[Open Reaction Kinetics](/laboratory/reaction-kinetics).
+
+## Where it stands
+
+Three instruments, open and working. The laboratory is meant to grow slowly,
+one well-understood model at a time, and only when there is something true and
+small enough to put under a slider. It is a way of thinking, not a research
+output: nothing here is new, and that is the point.
