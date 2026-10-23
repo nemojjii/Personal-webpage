@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 
-import { deformPoint, easeTo } from "@/lib/home/fieldPointer";
+import { deformPoint, easeTo, subdivideAndDeform, type Point } from "@/lib/home/fieldPointer";
 
 import { useFieldCanvas } from "./useFieldCanvas";
 
@@ -242,6 +242,35 @@ function resolve(f: FamilySpec, L: number): Resolved {
 const breathing = (f: FamilySpec, r: Resolved, x: number, t: number) =>
   1 + f.breathe * Math.cos(r.breatheQ * x - r.breatheOmega * t) + f.breathe2 * Math.cos(r.breathe2Q * x - r.breathe2Omega * t + 1.1);
 
+/**
+ * Appends a path through `points` to whatever the context's current path
+ * already is, starting with a moveTo — the same role `ctx.lineTo` plays for
+ * a straight polyline, but tangent-continuous everywhere: each interior
+ * point becomes the control point of a quadratic Bézier ending at the
+ * midpoint to its neighbour, a standard construction that passes exactly
+ * through the first and last points, only near the interior ones, and never
+ * leaves the triangle each three consecutive points form — so it can bend
+ * tightly without overshooting or looping back on itself. Used only for the
+ * deformed, pointer-subdivided point runs (see subdivideAndDeform); the
+ * resting artwork draws with plain `lineTo` and never calls this.
+ */
+function strokeSmoothPath(ctx: CanvasRenderingContext2D, points: Point[]) {
+  if (points.length === 0) return;
+  ctx.moveTo(points[0].x, points[0].y);
+  if (points.length === 1) return;
+  if (points.length === 2) {
+    ctx.lineTo(points[1].x, points[1].y);
+    return;
+  }
+  let i = 1;
+  for (; i < points.length - 2; i++) {
+    const xc = (points[i].x + points[i + 1].x) / 2;
+    const yc = (points[i].y + points[i + 1].y) / 2;
+    ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+  }
+  ctx.quadraticCurveTo(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+}
+
 export function HeroField({
   fade = { left: 0.35, top: 0.14, bottom: 0.16 },
   opacity = 1,
@@ -461,29 +490,64 @@ export function HeroField({
           const shaped = mix * mix * (3 - 2 * mix);
           const alpha = (f.alpha[0] + (f.alpha[1] - f.alpha[0]) * shaped) * opacity * fade;
           ctx.beginPath();
-          let drawing = false;
+          // `y` itself — fed into the next x step below and into the bounds
+          // check below — is always the true, undeformed value Newton's
+          // method found; this split only changes what happens to a point
+          // after it is found, never how it is found.
+          const pointerActive = influence.current > 1e-4 && smoothPos.current !== null;
           let y = (c * L) / cosA;
-          for (let x = -dx; x <= w + dx; x += dx) {
-            for (let it = 0; it < 2; it++) y -= (H(x, y) - c) / Hy(x, y);
-            if (!Number.isFinite(y) || y < -margin || y > h + margin) {
-              drawing = false;
-              y = Number.isFinite(y) ? Math.max(-margin, Math.min(h + margin, y)) : (c * L) / cosA;
-              continue;
+          if (!pointerActive) {
+            // No pointer: the exact original path, unchanged — a straight
+            // polyline through the true points, same as before any pointer
+            // response existed. The resting artwork and reduced-motion's
+            // one frame always draw through this branch.
+            let drawing = false;
+            for (let x = -dx; x <= w + dx; x += dx) {
+              for (let it = 0; it < 2; it++) y -= (H(x, y) - c) / Hy(x, y);
+              if (!Number.isFinite(y) || y < -margin || y > h + margin) {
+                drawing = false;
+                y = Number.isFinite(y) ? Math.max(-margin, Math.min(h + margin, y)) : (c * L) / cosA;
+                continue;
+              }
+              if (drawing) ctx.lineTo(x, y);
+              else {
+                ctx.moveTo(x, y);
+                drawing = true;
+              }
             }
-            // The deformation is purely a display-time offset of this one
-            // point: `y` itself — fed into the next x step above and into
-            // the bounds check above — is always the true, undeformed value.
-            // Deformed around smoothPos (the eased position), not the raw
-            // pointer — see the comment where it is defined.
-            const p =
-              influence.current > 1e-4 && smoothPos.current
-                ? deformPoint(x, y, smoothPos.current.x, smoothPos.current.y, influence.current)
-                : { x, y };
-            if (drawing) ctx.lineTo(p.x, p.y);
-            else {
-              ctx.moveTo(p.x, p.y);
-              drawing = true;
+          } else {
+            // Pointer active: buffer each unbroken run of true points, then
+            // deform it — adaptively subdividing wherever a run passes close
+            // to the pointer, since deformPoint's push direction rotates
+            // fastest right there and a plain lineTo through just the two
+            // bare endpoints can show a visible corner (see
+            // subdivideAndDeform) — and connect the result with
+            // strokeSmoothPath instead of lineTo, so no hard corner remains
+            // even at the small residual turn subdivision alone cannot fully
+            // remove right at closest approach.
+            const px = smoothPos.current!.x;
+            const py = smoothPos.current!.y;
+            const inf = influence.current;
+            let run: Point[] = [];
+            const flush = () => {
+              if (run.length === 0) return;
+              const deformed: Point[] = [deformPoint(run[0].x, run[0].y, px, py, inf)];
+              for (let k = 1; k < run.length; k++) {
+                deformed.push(...subdivideAndDeform(run[k - 1], run[k], px, py, inf));
+              }
+              strokeSmoothPath(ctx, deformed);
+              run = [];
+            };
+            for (let x = -dx; x <= w + dx; x += dx) {
+              for (let it = 0; it < 2; it++) y -= (H(x, y) - c) / Hy(x, y);
+              if (!Number.isFinite(y) || y < -margin || y > h + margin) {
+                flush();
+                y = Number.isFinite(y) ? Math.max(-margin, Math.min(h + margin, y)) : (c * L) / cosA;
+                continue;
+              }
+              run.push({ x, y });
             }
+            flush();
           }
           if (style) {
             ctx.globalAlpha = alpha;

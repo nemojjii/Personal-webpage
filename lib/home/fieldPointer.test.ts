@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { deformPoint, easeTo, gaussianWeight, POINTER_DEFORM_DEFAULTS } from "./fieldPointer.ts";
+import { deformPoint, easeTo, gaussianWeight, POINTER_DEFORM_DEFAULTS, subdivideAndDeform } from "./fieldPointer.ts";
 
 function close(a: number, b: number, eps = 1e-9) {
   assert.ok(Math.abs(a - b) < eps, `expected ${a} ≈ ${b} (±${eps})`);
@@ -139,6 +139,85 @@ test("easeTo: never overshoots a fixed target, approaching monotonically from ei
     assert.ok(fromAbove <= prevAbove && fromAbove >= 5);
     prevAbove = fromAbove;
   }
+});
+
+/* ───────────────────────────── subdivideAndDeform ────────────────────────── */
+
+test("subdivideAndDeform: a single deformed point when the segment is far from the pointer", () => {
+  const params = { sigma: 60, strength: 15 };
+  const pts = subdivideAndDeform({ x: 0, y: 500 }, { x: 10, y: 500 }, 0, 0, 1, params);
+  assert.equal(pts.length, 1);
+  close(pts[0].x, deformPoint(10, 500, 0, 0, 1, params).x);
+  close(pts[0].y, deformPoint(10, 500, 0, 0, 1, params).y);
+});
+
+test("subdivideAndDeform: subdivides (more than one point) when the segment passes close to the pointer", () => {
+  const params = { sigma: 200, strength: 20 };
+  const pts = subdivideAndDeform({ x: -10, y: 2 }, { x: 10, y: 2 }, 0, 0, 1, params);
+  assert.ok(pts.length > 1, `expected subdivision, got ${pts.length} point(s)`);
+  assert.ok(pts.length <= 16, "capped at 16 extra samples");
+});
+
+test("subdivideAndDeform: the last sample always lands exactly on deformPoint(to, …)", () => {
+  const params = { sigma: 200, strength: 20 };
+  for (const [from, to] of [
+    [{ x: -10, y: 2 }, { x: 10, y: 2 }],
+    [{ x: 300, y: 300 }, { x: 310, y: 305 }],
+  ] as const) {
+    const pts = subdivideAndDeform(from, to, 0, 0, 1, params);
+    const expected = deformPoint(to.x, to.y, 0, 0, 1, params);
+    close(pts[pts.length - 1].x, expected.x);
+    close(pts[pts.length - 1].y, expected.y);
+  }
+});
+
+test("subdivideAndDeform: every returned point is finite", () => {
+  const params = { sigma: 200, strength: 20 };
+  for (const h of [0, 1, 2, 5, 50]) {
+    const pts = subdivideAndDeform({ x: -50, y: h }, { x: 50, y: h }, 0, 0, 1, params);
+    for (const p of pts) {
+      assert.equal(Number.isFinite(p.x), true);
+      assert.equal(Number.isFinite(p.y), true);
+    }
+  }
+});
+
+test("subdivideAndDeform: unaffected when influence is 0 — a single unchanged point", () => {
+  const pts = subdivideAndDeform({ x: -10, y: 2 }, { x: 10, y: 2 }, 0, 0, 0);
+  assert.deepEqual(pts, [{ x: 10, y: 2 }]);
+});
+
+test("subdivideAndDeform: measurably straightens the sharp turn a plain deform-and-lineTo would draw near a close pass", () => {
+  // Reproduces the Phase 16.3 symptom directly: a nearly-straight true
+  // curve passing a few pixels from the pointer, deformed either as three
+  // bare points (the old behaviour) or via subdivideAndDeform between each
+  // pair — the turning angle at the middle vertex should be smaller with
+  // subdivision than without it.
+  const params = { sigma: 200, strength: 20 };
+  const px = 0, py = 0;
+  const a = { x: -10, y: 2 };
+  const b = { x: 0, y: 2 };
+  const c = { x: 10, y: 2 };
+  function turningAngleDeg(p0: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }) {
+    const v1 = { x: p1.x - p0.x, y: p1.y - p0.y };
+    const v2 = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const dot = v1.x * v2.x + v1.y * v2.y;
+    const m = Math.hypot(v1.x, v1.y) * Math.hypot(v2.x, v2.y) || 1;
+    return (Math.acos(Math.max(-1, Math.min(1, dot / m))) * 180) / Math.PI;
+  }
+  const bareAngle = turningAngleDeg(
+    deformPoint(a.x, a.y, px, py, 1, params),
+    deformPoint(b.x, b.y, px, py, 1, params),
+    deformPoint(c.x, c.y, px, py, 1, params),
+  );
+  const ab = subdivideAndDeform(a, b, px, py, 1, params);
+  const bc = subdivideAndDeform(b, c, px, py, 1, params);
+  const subdivided = [deformPoint(a.x, a.y, px, py, 1, params), ...ab, ...bc];
+  let worst = 0;
+  for (let i = 1; i < subdivided.length - 1; i++) {
+    worst = Math.max(worst, turningAngleDeg(subdivided[i - 1], subdivided[i], subdivided[i + 1]));
+  }
+  assert.ok(worst < bareAngle, `expected subdivision to reduce the worst turning angle (${worst.toFixed(1)} vs ${bareAngle.toFixed(1)})`);
 });
 
 /* ───────────────────────────────── defaults ─────────────────────────────── */
