@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test lib/laboratory/*.test.ts",
+    "test": "node --test lib/laboratory/*.test.ts lib/works.test.ts",
     "check-image-freshness": "node scripts/check-image-freshness.mjs",
     "discover-tmdb": "node scripts/discover-tmdb.mjs",
     "discover-yes24": "node scripts/discover-yes24.mjs"

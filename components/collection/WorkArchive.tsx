@@ -8,10 +8,12 @@ import {
   EMPTY_QUERY,
   type WorkQuery,
   applyQuery,
+  creatorFacet,
   creatorNoun,
   facet,
   groupByCreator,
   isDefaultQuery,
+  languageFacet,
   paramsToQuery,
   queryToParams,
   sortLabel,
@@ -56,6 +58,8 @@ export function WorkArchive({
   const themes = useMemo(() => facet(items, "themes"), [items]);
   const statuses = useMemo(() => statusFacet(items), [items]);
   const years = useMemo(() => (kind === "films" ? yearFacet(items) : []), [items, kind]);
+  const languages = useMemo(() => languageFacet(items), [items]);
+  const creators = useMemo(() => creatorFacet(items), [items]);
 
   const results = useMemo(() => applyQuery(items, query), [items, query]);
   const groups = useMemo(() => (query.group ? groupByCreator(results) : []), [results, query.group]);
@@ -99,6 +103,24 @@ export function WorkArchive({
               options={genres.map((g) => ({ value: g, label: g }))}
             />
           ) : null}
+          {languages.length > 1 ? (
+            <Select
+              label="Language"
+              value={query.language}
+              onChange={(language) => update({ language })}
+              all="Any language"
+              options={languages}
+            />
+          ) : null}
+          {creators.length > 1 ? (
+            <Select
+              label={kind === "books" ? "Author" : "Director"}
+              value={query.creator}
+              onChange={(creator) => update({ creator })}
+              all={kind === "books" ? "Any author" : "Any director"}
+              options={creators.map((c) => ({ value: c, label: c }))}
+            />
+          ) : null}
           {themes.length > 0 ? (
             <Select
               label="Theme"
@@ -130,7 +152,7 @@ export function WorkArchive({
             label="Sort"
             value={query.sort}
             onChange={(sort) => update({ sort: sort as WorkQuery["sort"] })}
-            options={workSorts.map((s) => ({ value: s, label: sortLabel(s, kind) }))}
+            options={workSorts.map((s) => ({ value: s, label: sortLabel(s) }))}
           />
           <Select
             label="View"

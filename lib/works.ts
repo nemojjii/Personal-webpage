@@ -4,7 +4,7 @@ import {
   type WorkCardData,
   readingStatuses,
   viewingStatuses,
-} from "./types";
+} from "./types.ts";
 
 /**
  * Pure helpers for the Collection. Nothing here touches the file system, so
@@ -139,21 +139,27 @@ export function languageName(code?: string): string | undefined {
 
 /* ───────────────────────── search, filter, sort ───────────────────────── */
 
-export const workSorts = ["added", "updated", "title", "creator", "year"] as const;
+/**
+ * "curated" is the order the page already renders in when no sort is
+ * chosen — by `added`, then title — kept as a named, selectable sort (not
+ * merely the default) so it can be returned to exactly after another sort
+ * has been applied.
+ */
+export const workSorts = ["curated", "title", "titleDesc", "yearAsc", "yearDesc"] as const;
 export type WorkSort = (typeof workSorts)[number];
 
-export function sortLabel(sort: WorkSort, collection: "books" | "films"): string {
+export function sortLabel(sort: WorkSort): string {
   switch (sort) {
-    case "added":
-      return "Recently added";
-    case "updated":
-      return "Recently updated";
+    case "curated":
+      return "Curated order";
     case "title":
-      return "Title";
-    case "creator":
-      return collection === "books" ? "Author" : "Director";
-    case "year":
-      return "Year";
+      return "Title A–Z";
+    case "titleDesc":
+      return "Title Z–A";
+    case "yearAsc":
+      return "Year, oldest first";
+    case "yearDesc":
+      return "Year, newest first";
   }
 }
 
@@ -165,6 +171,10 @@ export interface WorkQuery {
   status: string;
   /** Release or publication year, as a string so it round-trips through the URL. */
   year: string;
+  /** ISO 639-1 code of the original language. */
+  language: string;
+  /** Author or director, matched exactly. */
+  creator: string;
   sort: WorkSort;
   /** Group the results under their author or director. */
   group: boolean;
@@ -176,14 +186,23 @@ export const EMPTY_QUERY: WorkQuery = {
   theme: "",
   status: "",
   year: "",
-  sort: "added",
+  language: "",
+  creator: "",
+  sort: "curated",
   group: false,
 };
 
 export function isDefaultQuery(query: WorkQuery): boolean {
   return (
-    !query.q && !query.genre && !query.theme && !query.status && !query.year &&
-    query.sort === EMPTY_QUERY.sort && !query.group
+    !query.q &&
+    !query.genre &&
+    !query.theme &&
+    !query.status &&
+    !query.year &&
+    !query.language &&
+    !query.creator &&
+    query.sort === EMPTY_QUERY.sort &&
+    !query.group
   );
 }
 
@@ -250,22 +269,24 @@ function compareDateDesc(a: string | undefined, b: string | undefined): number {
 
 export function sortWorks(cards: WorkCardData[], sort: WorkSort): WorkCardData[] {
   const byTitle = (a: WorkCardData, b: WorkCardData) => compareText(a.title, b.title);
+  // Works without a year sink to the end whichever direction is chosen.
+  const byYear = (a: WorkCardData, b: WorkCardData, ascending: boolean) => {
+    if (a.year === undefined && b.year === undefined) return byTitle(a, b);
+    if (a.year === undefined) return 1;
+    if (b.year === undefined) return -1;
+    return (ascending ? a.year - b.year : b.year - a.year) || byTitle(a, b);
+  };
   return cards.slice().sort((a, b) => {
     switch (sort) {
       case "title":
         return byTitle(a, b);
-      case "creator":
-        return compareText(a.creator, b.creator) || (a.year ?? 0) - (b.year ?? 0) || byTitle(a, b);
-      case "year": {
-        // Newest first; works without a year sink to the end.
-        if (a.year === undefined && b.year === undefined) return byTitle(a, b);
-        if (a.year === undefined) return 1;
-        if (b.year === undefined) return -1;
-        return b.year - a.year || byTitle(a, b);
-      }
-      case "updated":
-        return compareDateDesc(a.updated ?? a.added, b.updated ?? b.added) || byTitle(a, b);
-      case "added":
+      case "titleDesc":
+        return -byTitle(a, b);
+      case "yearAsc":
+        return byYear(a, b, true);
+      case "yearDesc":
+        return byYear(a, b, false);
+      case "curated":
       default:
         return compareDateDesc(a.added, b.added) || byTitle(a, b);
     }
@@ -279,7 +300,9 @@ export function applyQuery(cards: WorkCardData[], query: WorkQuery): WorkCardDat
       (!query.genre || card.genres.includes(query.genre)) &&
       (!query.theme || card.themes.includes(query.theme)) &&
       (!query.status || card.status === query.status) &&
-      (!query.year || String(card.year ?? "") === query.year),
+      (!query.year || String(card.year ?? "") === query.year) &&
+      (!query.language || card.language === query.language) &&
+      (!query.creator || card.creator === query.creator),
   );
   return sortWorks(filtered, query.sort);
 }
@@ -288,6 +311,22 @@ export function applyQuery(cards: WorkCardData[], query: WorkQuery): WorkCardDat
 export function facet(cards: WorkCardData[], key: "genres" | "themes"): string[] {
   const set = new Set<string>();
   for (const card of cards) for (const value of card[key]) set.add(value);
+  return [...set].sort(collator.compare);
+}
+
+/** Original languages in use, as code/name pairs, in collation order by name. */
+export function languageFacet(cards: WorkCardData[]): { value: string; label: string }[] {
+  const codes = new Set<string>();
+  for (const card of cards) if (card.language) codes.add(card.language);
+  return [...codes]
+    .map((code) => ({ value: code, label: languageName(code) ?? code }))
+    .sort((a, b) => collator.compare(a.label, b.label));
+}
+
+/** Authors or directors in use, in collation order. Entries awaiting a creator are skipped. */
+export function creatorFacet(cards: WorkCardData[]): string[] {
+  const set = new Set<string>();
+  for (const card of cards) if (card.creator) set.add(card.creator);
   return [...set].sort(collator.compare);
 }
 
@@ -347,7 +386,9 @@ export function paramsToQuery(params: URLSearchParams | null): WorkQuery {
     theme: params.get("theme") ?? "",
     status: params.get("status") ?? "",
     year: params.get("year") ?? "",
-    sort: (workSorts as readonly string[]).includes(sort) ? (sort as WorkSort) : "added",
+    language: params.get("lang") ?? "",
+    creator: params.get("who") ?? "",
+    sort: (workSorts as readonly string[]).includes(sort) ? (sort as WorkSort) : "curated",
     group: params.get("view") === "creator",
   };
 }
@@ -359,6 +400,8 @@ export function queryToParams(query: WorkQuery): URLSearchParams {
   if (query.theme) params.set("theme", query.theme);
   if (query.status) params.set("status", query.status);
   if (query.year) params.set("year", query.year);
+  if (query.language) params.set("lang", query.language);
+  if (query.creator) params.set("who", query.creator);
   if (query.sort !== EMPTY_QUERY.sort) params.set("sort", query.sort);
   if (query.group) params.set("view", "creator");
   return params;
