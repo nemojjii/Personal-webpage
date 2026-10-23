@@ -124,6 +124,32 @@ export default function HomePage() {
         </section>
       ) : null}
 
+      {/* ── Interactive Explorations ───────────────────────────────────── */}
+      <section className="pt-16 sm:pt-20">
+        <SectionHeading>Interactive Explorations</SectionHeading>
+        <div className="mt-7 grid gap-x-10 gap-y-9 sm:grid-cols-2">
+          <Link href="/laboratory" className="entry-row block">
+            <h3 className="font-serif text-[1.25rem] leading-snug">
+              <span className="entry-title">Little Laboratory</span>
+            </h3>
+            <p className="mt-2 font-serif text-[1.0625rem] leading-[1.6] text-ink-soft">
+              Four small interactive experiments in wave superposition, gradient descent,
+              reaction kinetics and Fourier synthesis — each one textbook model, turned into
+              something to move and read off.
+            </p>
+          </Link>
+          <Link href="/projects/generative-art" className="entry-row block">
+            <h3 className="font-serif text-[1.25rem] leading-snug">
+              <span className="entry-title">Generative Art Playground</span>
+            </h3>
+            <p className="mt-2 font-serif text-[1.0625rem] leading-[1.6] text-ink-soft">
+              Mathematical rules made visual — complex-plane transformations, vector-field
+              streamlines and parametric curves — in International Klein Blue.
+            </p>
+          </Link>
+        </div>
+      </section>
+
       {/* ── The Collection ─────────────────────────────────────────────── */}
       {fromCollection.length ? (
         <section className="pt-16 sm:pt-20">

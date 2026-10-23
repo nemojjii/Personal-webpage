@@ -16,14 +16,30 @@ function isUnder(pathname: string, href: string) {
 }
 
 /** An item is "here" on its own route and on any route it declares as its own. */
-function isActive(pathname: string, item: NavItem) {
+function matches(pathname: string, item: NavItem) {
   return isUnder(pathname, item.href) || (item.includes ?? []).some((h) => isUnder(pathname, h));
+}
+
+/**
+ * The one nav item that is "here" — the longest `href` among every item that
+ * matches, so a more specific item (e.g. "Generative Art", /projects/generative-art)
+ * wins over a shorter ancestor route that also matches (e.g. "Projects", /projects)
+ * rather than both lighting up together.
+ */
+function activeItem(pathname: string, items: readonly NavItem[]): NavItem | undefined {
+  return items
+    .filter((item) => matches(pathname, item))
+    .reduce<NavItem | undefined>(
+      (best, item) => (!best || item.href.length > best.href.length ? item : best),
+      undefined,
+    );
 }
 
 export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const reduceMotion = useReducedMotion();
+  const active = activeItem(pathname, allLinks);
 
   // The menu is remembered as "open at this path", so navigating anywhere
   // closes it without an effect that writes state after the fact.
@@ -70,21 +86,21 @@ export function Header() {
         <nav aria-label="Primary" className="hidden xl:block">
           <ul className="flex items-center gap-x-7">
             {navigation.map((item) => {
-              const active = isActive(pathname, item);
+              const isHere = item === active;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    aria-current={active ? "page" : undefined}
+                    aria-current={isHere ? "page" : undefined}
                     className={`relative block py-1 font-sans text-[0.8125rem] transition-colors duration-200 ${
-                      active ? "text-accent" : "text-ink-soft hover:text-ink"
+                      isHere ? "text-accent" : "text-ink-soft hover:text-ink"
                     }`}
                   >
                     {item.label}
                     <span
                       aria-hidden="true"
                       className={`absolute -bottom-0.5 left-0 right-0 h-px origin-left bg-accent transition-transform duration-[420ms] ease-[cubic-bezier(.22,.61,.36,1)] ${
-                        active ? "scale-x-100" : "scale-x-0"
+                        isHere ? "scale-x-100" : "scale-x-0"
                       }`}
                     />
                   </Link>
@@ -96,9 +112,9 @@ export function Header() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  aria-current={isActive(pathname, item) ? "page" : undefined}
+                  aria-current={item === active ? "page" : undefined}
                   className={`block py-1 font-sans text-[0.8125rem] transition-colors duration-200 ${
-                    isActive(pathname, item)
+                    item === active
                       ? "text-accent"
                       : "text-ink-soft hover:text-ink"
                   }`}
@@ -155,18 +171,18 @@ export function Header() {
           >
             <ul className="shell flex flex-col py-4">
               {allLinks.map((item) => {
-                const active = isUnder(pathname, item.href);
+                const isHere = item === active;
                 return (
                   <li key={item.href} className="border-b border-rule-soft last:border-b-0">
                     <Link
                       href={item.href}
-                      aria-current={active ? "page" : undefined}
+                      aria-current={isHere ? "page" : undefined}
                       className={`flex items-baseline justify-between py-4 font-serif text-[1.5rem] leading-none ${
-                        active ? "text-accent" : "text-ink"
+                        isHere ? "text-accent" : "text-ink"
                       }`}
                     >
                       {item.label}
-                      {active ? (
+                      {isHere ? (
                         <span aria-hidden="true" className="font-sans text-[0.625rem] tracking-[0.2em] uppercase">
                           here
                         </span>
