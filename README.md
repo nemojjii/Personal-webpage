@@ -289,12 +289,70 @@ note.
 
 ### Covers and posters
 
-Put the file in `public/covers/` or `public/posters/` and point `image` at it.
-Add `imageCredit` when the source asks for attribution. Until then the shelf
-sets a typographic cover — a spine and a title for a book, a dark title card
-for a film — so nothing is ever shown that could be mistaken for an official
-cover. Only use images you have the right to publish; nothing on the site
-fetches imagery from anywhere.
+`image` is either a local file or an image from one of a small number of
+providers whose terms have been checked:
+
+```yaml
+image: "/covers/demian.jpg"                    # a file you put in public/covers/
+image: "https://image.tmdb.org/t/p/w500/…jpg"  # a TMDB film poster
+image: "https://image.yes24.com/goods/…"       # a YES24 book cover
+imageCredit: "Source: YES24"                   # shown beneath the cover
+imageSourceUrl: "https://www.yes24.com/…"      # required by YES24: links the credit back to the book's own page
+imageFetched: "2026-10-22"                     # required for a TMDB image: the day it was fetched (see below)
+```
+
+A URL on any other host is dropped at build time, with a warning, rather than
+shown — see `ALLOWED_IMAGE_HOSTS` in `lib/content.ts` and `images.remotePatterns`
+in `next.config.ts`, which must list the same hosts. Until `image` is set the
+shelf uses a typographic cover instead — a spine and a title for a book, a
+dark title card for a film — so nothing is ever shown that could be mistaken
+for an official cover.
+
+**Providers, as last checked (2026-10-23):**
+
+- **TMDB** (film posters). Its license does **not** permit commercial use —
+  a site that carries ads or other revenue may count as commercial even if
+  personal; this site carries none, so is unaffected, but re-check this if
+  that ever changes. Register at themoviedb.org → account settings → API,
+  and put the key in `TMDB_API_KEY` in `.env.local` (never commit it). Its
+  terms require the TMDB logo and an exact notice wherever its content is
+  shown — both are already rendered by `<CollectionCredits>`, which appears
+  automatically on any Collection page that uses a `image.tmdb.org` image —
+  and forbid caching its content for more than **six months**. Because this
+  site is static, that is a process rather than code: set `imageFetched` to
+  the day you fetch a TMDB image, and run `npm run check-image-freshness`
+  periodically; it lists any TMDB-sourced image approaching or past six
+  months old so it can be re-checked and `imageFetched` brought forward.
+- **YES24 Developers** (Korean book covers). Free "Basic" key, issued
+  instantly to a YES24 account at developers.yes24.com; put it in
+  `YES24_API_KEY`. Its terms require crediting YES24 (`imageCredit`) and
+  linking back to the book's own YES24 page (`imageSourceUrl`) — set both
+  together. `<CollectionCredits>` adds the site-wide credit; the per-book
+  link lives beside the cover on that book's own page.
+- **Open Library** (keyless). Its general reuse terms have not been
+  confirmed, and its search API returns one cover per *work*, which can
+  belong to a different edition — even a different language — than the one
+  you own. Treat any Open Library cover as provisional until you have
+  looked at it and confirmed, by eye, that it is the edition you mean.
+
+Only use images you have the right to publish. Aladin's OpenAPI, once
+considered for this, closed its service in October 2026.
+
+**Finding candidates.** `scripts/discover-tmdb.mjs` and
+`scripts/discover-yes24.mjs` search the two providers for every film and
+book respectively and write a JSON candidate list (poster/cover URLs,
+confidence, and — for titles with many editions — every plausible
+alternative, never a silent pick) to a path you give them, defaulting to
+`/tmp`. Neither writes to `content/` or touches a running site: they are a
+discovery step for a human to review, not a publishing one. Both read their
+key only from `.env.local` (`TMDB_API_KEY`, `YES24_API_KEY`) and refuse to
+make a single request if it is missing, empty, or still a placeholder —
+and never print the key, in a log or anywhere else.
+
+```sh
+npm run discover-tmdb    # writes /tmp/tmdb-discovery.json
+npm run discover-yes24   # writes /tmp/yes24-discovery.json
+```
 
 > Everything under `public/` is served to anyone who knows the URL, whatever
 > the entry's visibility. Keep the covers of private entries out of `public/`;

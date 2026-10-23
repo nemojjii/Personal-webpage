@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { CollectionCredits } from "@/components/collection/CollectionCredits";
 import { WorkGrid } from "@/components/collection/WorkGrid";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getEntries, themeCollectionItems, themeCollections } from "@/lib/content";
 import { type WorkCardData, isWork } from "@/lib/types";
-import { toWorkCard } from "@/lib/works";
+import { imageProvidersInUse, toWorkCard } from "@/lib/works";
 
 export const metadata: Metadata = {
   title: "The Collection",
@@ -83,6 +84,8 @@ export default function CollectionPage() {
     ...collection,
     count: themeCollectionItems(collection).filter(isWork).length,
   }));
+  const shownBooks = pick(books, 4).map(toWorkCard);
+  const shownFilms = pick(films, 4).map(toWorkCard);
 
   return (
     <div className="shell py-16 sm:py-20">
@@ -107,7 +110,7 @@ export default function CollectionPage() {
           enter="Browse the shelf"
           count={books.length}
           noun="book"
-          items={pick(books, 4).map(toWorkCard)}
+          items={shownBooks}
         />
         <Space
           numeral="II"
@@ -118,7 +121,7 @@ export default function CollectionPage() {
           enter="Enter the screening room"
           count={films.length}
           noun="film"
-          items={pick(films, 4).map(toWorkCard)}
+          items={shownFilms}
         />
       </div>
 
@@ -151,6 +154,8 @@ export default function CollectionPage() {
           </ul>
         </section>
       ) : null}
+
+      <CollectionCredits providers={imageProvidersInUse([...shownBooks, ...shownFilms])} />
     </div>
   );
 }

@@ -36,10 +36,15 @@ collections: []
 viewingStatus: unspecified
 dateWatched: ""
 
-# Put the file in public/posters/ and point at it, e.g. "/posters/magnolia.jpg".
-# Without an image the archive sets a typographic title card instead.
+# A file in public/posters/ ("/posters/magnolia.jpg"), or an https URL from
+# image.tmdb.org (see README § Covers and posters for how to get one and
+# what it requires). Without an image the archive sets a typographic title
+# card instead.
 image: ""
 imageCredit: ""
+# Required alongside image for a TMDB poster: the day it was fetched, so
+# npm run check-image-freshness can track TMDB's six-month cache limit.
+imageFetched: ""
 
 tags: []
 # Refs such as books/demian or notebook/003-a-note. The reverse link is derived.

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { CollectionCredits } from "@/components/collection/CollectionCredits";
 import { WorkArchive } from "@/components/collection/WorkArchive";
 import { WorkGrid } from "@/components/collection/WorkGrid";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getEntries } from "@/lib/content";
-import { toWorkCard } from "@/lib/works";
+import { imageProvidersInUse, toWorkCard } from "@/lib/works";
 
 export const metadata: Metadata = {
   title: "The Screening Room",
@@ -46,6 +47,8 @@ export default function FilmsPage() {
           <EmptyState>The first screening has not been programmed yet.</EmptyState>
         </div>
       )}
+
+      <CollectionCredits providers={imageProvidersInUse(films)} />
     </div>
   );
 }

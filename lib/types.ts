@@ -160,10 +160,30 @@ export interface WorkBase extends EntryBase {
   themes: string[];
   /** Slugs of thematic collections (content/collections/) this work belongs to. */
   inCollections: string[];
-  /** Path under public/, e.g. "/covers/demian.jpg". Absent → typographic placeholder. */
+  /**
+   * Path under public/ ("/covers/demian.jpg") or an https URL on an
+   * allowed provider host (see lib/content.ts ALLOWED_IMAGE_HOSTS).
+   * Absent → typographic placeholder.
+   */
   image?: string;
   /** Short attribution for the image, shown beneath it when present. */
   imageCredit?: string;
+  /**
+   * Where a provider's terms require the image to link back to their own
+   * page for the work (YES24's terms do; it is good practice generally),
+   * this is that page, rendered as the link under `imageCredit`. An
+   * absolute http(s) URL; anything else is dropped.
+   */
+  imageSourceUrl?: string;
+  /**
+   * The day (YYYY-MM-DD) an `image` sourced from a provider with its own
+   * cache-expiry terms was last fetched from that provider — TMDB's terms
+   * forbid caching its content for more than six months. Set this whenever
+   * `image` points at image.tmdb.org; `npm run check-image-freshness` warns
+   * once it is more than ~150 days old. Meaningless, and ignored, for a
+   * local file or a provider with no such limit.
+   */
+  imageFetched?: string;
   /** Date this entry was added to the archive (YYYY-MM-DD). Real, not invented. */
   added: string;
   /** False until the bibliographic metadata has been checked by you. */

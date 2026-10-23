@@ -347,3 +347,35 @@ const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
 export function titleLang(title: string): string | undefined {
   return HANGUL.test(title) ? "ko" : undefined;
 }
+
+/* ───────────────────────────── image providers ────────────────────────── */
+
+/** A provider whose terms require crediting them wherever their images appear. */
+export type ImageProvider = "tmdb" | "yes24";
+
+const PROVIDER_HOSTS: Record<ImageProvider, string> = {
+  tmdb: "image.tmdb.org",
+  yes24: "image.yes24.com",
+};
+
+/**
+ * Which credited providers actually supply an image among these works, so a
+ * page can show exactly the attribution its own content requires — never a
+ * blanket notice for a provider nothing on the page uses.
+ */
+export function imageProvidersInUse(works: { image?: string }[]): Set<ImageProvider> {
+  const hosts = new Set<string>();
+  for (const w of works) {
+    if (!w.image?.startsWith("https://")) continue;
+    try {
+      hosts.add(new URL(w.image).hostname);
+    } catch {
+      /* malformed values never reach this far from lib/content.ts; ignore defensively */
+    }
+  }
+  const providers = new Set<ImageProvider>();
+  for (const [provider, host] of Object.entries(PROVIDER_HOSTS) as [ImageProvider, string][]) {
+    if (hosts.has(host)) providers.add(provider);
+  }
+  return providers;
+}

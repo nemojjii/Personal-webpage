@@ -1,5 +1,7 @@
 import { titleLang } from "@/lib/works";
 
+import { RemoteCover } from "./RemoteCover";
+
 export interface CoverWork {
   collection: "books" | "films";
   title: string;
@@ -9,40 +11,15 @@ export interface CoverWork {
 }
 
 /**
- * A book cover or film poster, 2:3. When no image has been added the cover
- * is set in type instead — a spine and a title for a book, a dark title card
- * for a film — so the shelf holds together before any imagery exists, and
- * nothing is ever shown that could be mistaken for an official cover.
+ * The cover set in type — a spine and a title for a book, a dark title card
+ * for a film — shown whenever no image has been added, and as the graceful
+ * fallback if an added image fails to load. Nothing here could be mistaken
+ * for an official cover.
  *
- * The typographic version is decorative: the card or masthead beside it
- * already carries the title for assistive technology.
+ * Decorative: the card or masthead beside it already carries the title for
+ * assistive technology.
  */
-export function WorkCover({
-  work,
-  eager = false,
-  className = "",
-}: {
-  work: CoverWork;
-  /** Load immediately — for the one cover above the fold on a detail page. */
-  eager?: boolean;
-  className?: string;
-}) {
-  if (work.image) {
-    const noun = work.collection === "books" ? "Cover of" : "Poster for";
-    return (
-      <div className={`aspect-2/3 overflow-hidden border border-rule-soft bg-surface ${className}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- local file, sized by its box */}
-        <img
-          src={work.image}
-          alt={`${noun} ${work.title}`}
-          loading={eager ? "eager" : "lazy"}
-          decoding="async"
-          className="h-full w-full object-cover"
-        />
-      </div>
-    );
-  }
-
+function TypographicCover({ work, className = "" }: { work: CoverWork; className?: string }) {
   const lang = titleLang(work.title);
 
   if (work.collection === "books") {
@@ -99,4 +76,45 @@ export function WorkCover({
       ) : null}
     </div>
   );
+}
+
+/**
+ * A book cover or film poster, 2:3. When `work.image` is given it is drawn
+ * whole (`object-contain`, never cropped) inside the frame, from a local
+ * file under public/ or from an allowed remote host (see
+ * next.config.ts and lib/content.ts ALLOWED_IMAGE_HOSTS); if it fails to
+ * load, or when no image has been added at all, the cover is set in type
+ * instead — so the shelf holds together before any imagery exists, and
+ * nothing is ever shown that could be mistaken for an official cover.
+ */
+export function WorkCover({
+  work,
+  eager = false,
+  sizes = "(min-width: 1024px) 240px, (min-width: 640px) 260px, 45vw",
+  className = "",
+}: {
+  work: CoverWork;
+  /** Load immediately — for the one cover above the fold on a detail page. */
+  eager?: boolean;
+  /** The `sizes` attribute for the responsive image. Tune per layout context. */
+  sizes?: string;
+  className?: string;
+}) {
+  const fallback = <TypographicCover work={work} className={className} />;
+
+  if (work.image) {
+    const noun = work.collection === "books" ? "Cover of" : "Poster for";
+    return (
+      <RemoteCover
+        src={work.image}
+        alt={`${noun} ${work.title}`}
+        eager={eager}
+        sizes={sizes}
+        className={className}
+        fallback={fallback}
+      />
+    );
+  }
+
+  return fallback;
 }

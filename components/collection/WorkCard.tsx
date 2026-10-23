@@ -10,10 +10,13 @@ import { WorkCover } from "./WorkCover";
 export function WorkCard({
   item,
   showKind = false,
+  sizes,
 }: {
   item: WorkCardData;
   /** Say whether it is a book or a film — for mixed lists such as a thematic collection. */
   showKind?: boolean;
+  /** The `sizes` attribute for the cover image, matching the grid it sits in. */
+  sizes?: string;
 }) {
   const second = secondaryTitle(item);
   return (
@@ -21,6 +24,7 @@ export function WorkCard({
       <Link href={item.href} className="group block">
         <WorkCover
           work={item}
+          sizes={sizes}
           className="transition-opacity duration-300 group-hover:opacity-[0.92]"
         />
         <div className="mt-3">

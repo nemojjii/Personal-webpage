@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check-image-freshness": "node scripts/check-image-freshness.mjs",
+    "discover-tmdb": "node scripts/discover-tmdb.mjs",
+    "discover-yes24": "node scripts/discover-yes24.mjs"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",

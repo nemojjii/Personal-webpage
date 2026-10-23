@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CollectionCredits } from "@/components/collection/CollectionCredits";
 import { WorkGrid } from "@/components/collection/WorkGrid";
 import { Mdx } from "@/components/content/mdx";
 import { Prose } from "@/components/content/Prose";
@@ -11,7 +12,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getThemeCollection, themeCollectionItems, themeCollections } from "@/lib/content";
 import { type BookEntry, type FilmEntry, isWork } from "@/lib/types";
-import { toWorkCard } from "@/lib/works";
+import { imageProvidersInUse, toWorkCard } from "@/lib/works";
 import { site } from "@/site.config";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -85,6 +86,8 @@ export default async function ThemeCollectionPage({ params }: Params) {
           <EntryList entries={others} className="border-t-0" compact />
         </section>
       ) : null}
+
+      <CollectionCredits providers={imageProvidersInUse(works)} />
     </div>
   );
 }

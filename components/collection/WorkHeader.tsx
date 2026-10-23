@@ -110,11 +110,23 @@ export function WorkHeader({
               image: entry.image,
             }}
             eager
+            sizes="152px"
             className="w-[9.5rem] sm:w-full"
           />
           {entry.imageCredit ? (
             <p className="mt-2 max-w-[9.5rem] font-sans text-[0.6875rem] leading-snug text-ink-muted sm:max-w-none">
-              {entry.imageCredit}
+              {entry.imageSourceUrl ? (
+                <a
+                  href={entry.imageSourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-quiet"
+                >
+                  {entry.imageCredit}
+                </a>
+              ) : (
+                entry.imageCredit
+              )}
             </p>
           ) : null}
         </div>

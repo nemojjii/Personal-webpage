@@ -116,6 +116,65 @@ function optionalYear(value: unknown): number | undefined {
 }
 
 /**
+ * Hosts a book cover or film poster `image:` may be fetched from, when it is
+ * not a local path under public/. Keep this in sync with the remotePatterns
+ * in next.config.ts — an image whose host is not in both places is dropped,
+ * with a warning, rather than silently left broken on the page.
+ */
+const ALLOWED_IMAGE_HOSTS = new Set(["image.tmdb.org", "image.yes24.com", "covers.openlibrary.org"]);
+
+/**
+ * A work's `image:`. Either a local path under public/ ("/covers/foo.jpg",
+ * "/posters/foo.jpg") or an absolute https URL on an allowed host. Anything
+ * else — a relative path elsewhere, an http: URL, a host not on the list —
+ * is dropped, with a warning in development, so a typo or an unapproved
+ * source can never reach the page.
+ */
+function parseImage(value: unknown, where: string): string | undefined {
+  const raw = optionalString(value);
+  if (!raw) return undefined;
+  if (raw.startsWith("/")) return raw;
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    warn(where, `\`image\` is neither a local path (starting with /) nor an absolute URL: ${raw}`);
+    return undefined;
+  }
+  if (url.protocol !== "https:") {
+    warn(where, `\`image\` must be a local path or an https: URL, not ${url.protocol}: ${raw}`);
+    return undefined;
+  }
+  if (!ALLOWED_IMAGE_HOSTS.has(url.hostname)) {
+    warn(
+      where,
+      `\`image\` host "${url.hostname}" is not on the allowed list (${[...ALLOWED_IMAGE_HOSTS].join(", ")}): ${raw}`,
+    );
+    return undefined;
+  }
+  return raw;
+}
+
+/**
+ * `imageSourceUrl`: an absolute http(s) URL, or dropped with a warning.
+ * Unlike `image`, this is not restricted to a host allowlist — it is a
+ * link for a human to follow (a provider's own product page), never a
+ * resource the page fetches or embeds.
+ */
+function optionalAbsoluteUrl(value: unknown, field: string, where: string): string | undefined {
+  const raw = optionalString(value);
+  if (!raw) return undefined;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error();
+    return raw;
+  } catch {
+    warn(where, `\`${field}\` is not an absolute http(s) URL: ${raw}`);
+    return undefined;
+  }
+}
+
+/**
  * A project's `links:`. Each needs a label and an absolute http(s) URL;
  * anything else is left out, with a warning in development, so a typo can
  * never become a broken or unsafe link on the page.
@@ -224,7 +283,7 @@ function parseEntry(collection: Collection, filename: string): Entry {
   {
     const added = optionalDate(data.added) ?? optionalDate(data.date) ?? "";
     if (!added) warn(where, "missing `added` date");
-    if (visibility !== "public" && optionalString(data.image)) {
+    if (visibility !== "public" && optionalString(data.image)?.startsWith("/")) {
       warn(
         where,
         "a non-public entry names an image under public/ — anything there is served to whoever knows the URL",
@@ -241,8 +300,10 @@ function parseEntry(collection: Collection, filename: string): Entry {
       genres: asArray(data.genres),
       themes: asArray(data.themes),
       inCollections: asArray(data.collections),
-      image: optionalString(data.image),
+      image: parseImage(data.image, where),
       imageCredit: optionalString(data.imageCredit),
+      imageSourceUrl: optionalAbsoluteUrl(data.imageSourceUrl, "imageSourceUrl", where),
+      imageFetched: optionalDate(data.imageFetched),
       added,
       verified: data.verified === true,
       verifyNote: optionalString(data.verifyNote),
