@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 
-import { deformPoint, easeTo, subdivideAndDeform, type Point } from "@/lib/home/fieldPointer";
+import { capSpeed, easeTo, flowDisplace, subdivideAndFlow, type Point } from "@/lib/home/fieldPointer";
 
 import { useFieldCanvas } from "./useFieldCanvas";
 
@@ -65,39 +65,54 @@ import { useFieldCanvas } from "./useFieldCanvas";
  *  know where a mouse or pen pointer is — touch is explicitly excluded, so
  *  nothing here can ever compete with a scroll or any other gesture.
  *
- *  POINTER RESPONSE. A mouse or pen pointer near the artwork pushes nearby
- *  points radially outward by a bounded Gaussian amount (lib/home/fieldPointer.ts:
- *  deformPoint, w(d) = exp(−d²/2σ²)) — applied only at the moment a point is
- *  pushed to the drawn path, after Newton's method has already found it on
- *  the true, undeformed geometry, so the deformation can never feed back into
- *  the root-finding or destabilise it. Two things are eased toward their
- *  target, each with its own time constant (lib/home/fieldPointer.ts: easeTo):
- *  an `influence` factor, toward 1 while a pointer is present and toward 0
- *  once it leaves, so the response's *strength* arrives and settles smoothly;
- *  and a smoothed copy of the pointer's position itself, toward the latest
- *  raw sample, so a sudden direction change or a stop settles rather than
- *  cutting. Position easing alone turned out not to be the fix for the
- *  stepping a visitor could see while moving the pointer, though — replaying
- *  a captured real drag through it at several time constants left the
- *  average distance between consecutive drawn frames essentially unchanged;
- *  easing a target that is itself advancing mostly adds lag, not smoothness.
- *  What closes that gap is the frame rate above: this component asks
- *  useFieldCanvas to draw at 60 fps rather than its 30 fps default, halving
- *  the distance a hand can cover between redraws and, with it, the size of
- *  the visible step. Under prefers-reduced-motion the draw loop never
- *  restarts after its one still frame, so pointer movement already has
- *  nothing to redraw into; the pointer handler also checks the same media
- *  query itself, so the state is never even tracked in that case.
+ *  POINTER RESPONSE. A mouse or pen pointer near the artwork carries nearby
+ *  points along with its own motion — displaced toward wherever the pointer
+ *  is currently heading, by a bounded amount that falls off with distance
+ *  through a broad Gaussian envelope and grows with how fast the pointer is
+ *  moving, up to a cap (lib/home/fieldPointer.ts: flowDisplace) — applied
+ *  only at the moment a point is pushed to the drawn path, after Newton's
+ *  method has already found it on the true, undeformed geometry, so the
+ *  deformation can never feed back into the root-finding or destabilise it.
+ *  An earlier version pushed a point directly *away* from the pointer
+ *  instead; every nearby point moved a different direction (every direction,
+ *  in a full circle), and since that push was a function of position alone,
+ *  it stayed at full strength even with the pointer sitting still, reading
+ *  as a dent pinched around the cursor rather than a surface responding —
+ *  see lib/home/fieldPointer.ts for how that was measured, and why widening
+ *  that model's radius could not have fixed it. Driving the push by velocity
+ *  instead means every point within reach moves the *same* direction for a
+ *  given frame, which is what makes neighbouring lines read as one surface
+ *  moving together, and means there is nothing to hold a point displaced
+ *  once the pointer stops — the dent this replaced could not do that by
+ *  construction, however its radius was tuned.
  *
- *  The pointer response's radius and strength (lib/home/fieldPointer.ts:
- *  POINTER_DEFORM_DEFAULTS) were widened so the push reads as a surface
- *  responding, not a narrow patch moving — see that file for the measured
- *  comparison across radii. No separate mechanism was added for neighbouring
- *  lines to move together: because the push is already one continuous
- *  Gaussian field in (x, y), not resolved per line, points near each other
- *  already get nearly the same displacement, and widening the radius makes
- *  that truer still (the field is flatter locally), which is what reads as
- *  fluid. This is an artistic interaction, not a physical fluid simulation.
+ *  Three things are eased toward their target, each with its own time
+ *  constant (lib/home/fieldPointer.ts: easeTo): an `influence` factor,
+ *  toward 1 while a pointer is present and toward 0 once it leaves, so the
+ *  response's *reach* arrives and settles smoothly; a smoothed copy of the
+ *  pointer's position itself, toward the latest raw sample, so a sudden
+ *  direction change or a stop settles rather than cutting — this is where
+ *  the Gaussian envelope is centred, i.e. *where* the response happens; and
+ *  a smoothed pointer *velocity*, toward the instantaneous velocity between
+ *  the latest two raw samples (speed-capped first, via capSpeed, so one very
+ *  large jump between samples can't read as an arbitrarily hard push) —
+ *  this is what drives flowDisplace's direction and magnitude, i.e. *how* it
+ *  happens, and its own easing is what gives the response a trailing settle
+ *  after the pointer stops rather than cutting off the instant it does.
+ *  Position easing alone turned out not to be the fix for the stepping a
+ *  visitor could see while moving the pointer, though — replaying a captured
+ *  real drag through it at several time constants left the average distance
+ *  between consecutive drawn frames essentially unchanged; easing a target
+ *  that is itself advancing mostly adds lag, not smoothness. What closes
+ *  that gap is the frame rate below: this component asks useFieldCanvas to
+ *  draw at 60 fps rather than its 30 fps default, halving the distance a
+ *  hand can cover between redraws and, with it, the size of the visible
+ *  step. Under prefers-reduced-motion the draw loop never restarts after its
+ *  one still frame, so pointer movement already has nothing to redraw into;
+ *  the pointer handler also checks the same media query itself, so the
+ *  state is never even tracked in that case.
+ *
+ *  This is an artistic interaction, not a physical fluid simulation.
  *
  *  Separately — not a pointer-response matter — the number of lines a
  *  family draws is a floor of a continuously drifting quotient (see where
@@ -251,7 +266,7 @@ const breathing = (f: FamilySpec, r: Resolved, x: number, t: number) =>
  * through the first and last points, only near the interior ones, and never
  * leaves the triangle each three consecutive points form — so it can bend
  * tightly without overshooting or looping back on itself. Used only for the
- * deformed, pointer-subdivided point runs (see subdivideAndDeform); the
+ * displaced, pointer-subdivided point runs (see subdivideAndFlow); the
  * resting artwork draws with plain `lineTo` and never calls this.
  */
 function strokeSmoothPath(ctx: CanvasRenderingContext2D, points: Point[]) {
@@ -322,10 +337,12 @@ export function HeroField({
   // render — the already-running loop just picks up the latest values next
   // time it draws. `pointer` is the last known *raw* position in CSS pixels
   // local to the canvas, or null while nothing is hovering it; `smoothPos`
-  // is a separately-eased copy of it, read by the deformation (see below);
-  // `influence` is the eased [0, 1] response strength; `lastT` lets the draw
-  // loop compute its own dt from the time it is already given, without
-  // useFieldCanvas needing to know any of this exists.
+  // is a separately-eased copy of it — where the response is centred;
+  // `flowVelocity` is an eased (vx, vy) — how and how hard it responds, fed
+  // to flowDisplace below; `influence` is the eased [0, 1] response reach;
+  // `prevRaw`/`lastT` let the draw loop compute its own velocity sample and
+  // dt from state it is already given, without useFieldCanvas needing to
+  // know any of this exists.
   //
   // Position is eased on its own, at a short time constant, distinct from
   // influence's: smoothing a *target that is itself moving* mostly adds lag
@@ -336,11 +353,22 @@ export function HeroField({
   // Easing the position still earns its place for what redraw rate alone
   // cannot fix: a real pointer's own event timing is not perfectly even,
   // and a sudden direction change or stop should settle rather than cut.
+  // Velocity is eased separately again, at its own, longer time constant:
+  // this is what gives the response a trailing settle after the pointer
+  // stops rather than cutting off the instant the last raw sample does.
   const pointer = useRef<{ x: number; y: number } | null>(null);
   const smoothPos = useRef<{ x: number; y: number } | null>(null);
+  const prevRaw = useRef<{ x: number; y: number } | null>(null);
+  const flowVelocity = useRef({ vx: 0, vy: 0 });
   const influence = useRef(0);
   const lastT = useRef<number | null>(null);
   const POSITION_TAU = 0.045;
+  const VELOCITY_TAU = 0.12;
+  // A ceiling on the *raw* per-sample velocity, well above flowDisplace's
+  // own maxSpeed (so it only ever clips a genuinely implausible single jump,
+  // e.g. a focus change, not an ordinary fast drag) — applied before easing,
+  // so one such jump can't drag the eased velocity somewhere implausible either.
+  const MAX_RAW_SPEED = 3000;
 
   const onPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     // Touch is excluded on purpose: the artwork stays static under touch,
@@ -370,6 +398,24 @@ export function HeroField({
           y: easeTo(smoothPos.current.y, pointer.current.y, dt, POSITION_TAU),
         };
       }
+      // Instantaneous velocity between this sample and the last one seen —
+      // zero on the first sample after arriving or re-entering (nothing to
+      // difference against yet) and zero once the pointer leaves (there is
+      // no target to chase but 0, same as a stop while still hovering); in
+      // both cases flowVelocity's own easing below is what makes the
+      // transition a settle rather than a cut.
+      let rawVx = 0;
+      let rawVy = 0;
+      if (pointer.current && prevRaw.current && dt > 0) {
+        const capped = capSpeed((pointer.current.x - prevRaw.current.x) / dt, (pointer.current.y - prevRaw.current.y) / dt, MAX_RAW_SPEED);
+        rawVx = capped.vx;
+        rawVy = capped.vy;
+      }
+      prevRaw.current = pointer.current ? { ...pointer.current } : null;
+      flowVelocity.current = {
+        vx: easeTo(flowVelocity.current.vx, rawVx, dt, VELOCITY_TAU),
+        vy: easeTo(flowVelocity.current.vy, rawVy, dt, VELOCITY_TAU),
+      };
       const short = Math.min(w, h);
       // Reference length: the short edge, unless the canvas is a wide band.
       const L = Math.max(short, 0.88 * w);
@@ -517,23 +563,22 @@ export function HeroField({
             }
           } else {
             // Pointer active: buffer each unbroken run of true points, then
-            // deform it — adaptively subdividing wherever a run passes close
-            // to the pointer, since deformPoint's push direction rotates
-            // fastest right there and a plain lineTo through just the two
-            // bare endpoints can show a visible corner (see
-            // subdivideAndDeform) — and connect the result with
-            // strokeSmoothPath instead of lineTo, so no hard corner remains
-            // even at the small residual turn subdivision alone cannot fully
-            // remove right at closest approach.
+            // displace it along the current flow direction — adaptively
+            // subdividing wherever a run passes close to the pointer, for
+            // the Gaussian envelope's own (now much gentler) spatial
+            // gradient (see subdivideAndFlow) — and connect the result with
+            // strokeSmoothPath instead of lineTo, carried over from the same
+            // need as a general-purpose smoothing safety net.
             const px = smoothPos.current!.x;
             const py = smoothPos.current!.y;
+            const { vx, vy } = flowVelocity.current;
             const inf = influence.current;
             let run: Point[] = [];
             const flush = () => {
               if (run.length === 0) return;
-              const deformed: Point[] = [deformPoint(run[0].x, run[0].y, px, py, inf)];
+              const deformed: Point[] = [flowDisplace(run[0].x, run[0].y, px, py, vx, vy, inf)];
               for (let k = 1; k < run.length; k++) {
-                deformed.push(...subdivideAndDeform(run[k - 1], run[k], px, py, inf));
+                deformed.push(...subdivideAndFlow(run[k - 1], run[k], px, py, vx, vy, inf));
               }
               strokeSmoothPath(ctx, deformed);
               run = [];

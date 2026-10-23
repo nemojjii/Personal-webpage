@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { deformPoint, easeTo, gaussianWeight, POINTER_DEFORM_DEFAULTS, subdivideAndDeform } from "./fieldPointer.ts";
+import { capSpeed, easeTo, FLOW_DEFORM_DEFAULTS, flowDisplace, gaussianWeight, subdivideAndFlow } from "./fieldPointer.ts";
 
 function close(a: number, b: number, eps = 1e-9) {
   assert.ok(Math.abs(a - b) < eps, `expected ${a} ≈ ${b} (±${eps})`);
@@ -33,50 +33,100 @@ test("gaussianWeight: sigma = 0 is treated as no influence rather than divide-by
   assert.equal(Number.isFinite(gaussianWeight(5, 0)), true);
 });
 
-/* ─────────────────────────────── deformPoint ────────────────────────────── */
+/* ─────────────────────────────── flowDisplace ────────────────────────────── */
 
-test("deformPoint: unchanged when influence is 0", () => {
-  const p = deformPoint(10, 20, 15, 25, 0);
+test("flowDisplace: unchanged when influence is 0", () => {
+  const p = flowDisplace(10, 20, 15, 25, 100, 0, 0);
   assert.deepEqual(p, { x: 10, y: 20 });
 });
 
-test("deformPoint: unchanged exactly at the pointer (d = 0) — no direction, no NaN", () => {
-  const p = deformPoint(50, 50, 50, 50, 1);
-  assert.deepEqual(p, { x: 50, y: 50 });
-  assert.equal(Number.isFinite(p.x), true);
-  assert.equal(Number.isFinite(p.y), true);
+test("flowDisplace: unchanged when the pointer isn't moving, however close or long it has been there", () => {
+  // The defining difference from the retired radial model: sitting still
+  // leaves nothing to push with, at the pointer's exact position or anywhere else.
+  for (const [x, y] of [[0, 0], [50, 0], [-30, 40]] as const) {
+    const p = flowDisplace(x, y, 0, 0, 0, 0, 1);
+    assert.deepEqual(p, { x, y });
+  }
 });
 
-test("deformPoint: displacement is bounded by strength · influence at any distance", () => {
-  const params = { sigma: 60, strength: 15 };
+test("flowDisplace: pushes toward the velocity's direction, not away from the pointer", () => {
+  // A point due *west* of the pointer, with the pointer moving *east* (vx > 0),
+  // should move further east too — toward (vx, vy), never away from (px, py).
+  const p = flowDisplace(-30, 0, 0, 0, 300, 0, 1);
+  assert.ok(p.x > -30);
+  close(p.y, 0, 1e-6);
+});
+
+test("flowDisplace: every point within reach moves the *same* direction for a given velocity", () => {
+  const vx = 120, vy = -40;
+  const dirOf = (p: { x: number; y: number }) => Math.atan2(p.y, p.x);
+  const targetDir = Math.atan2(vy, vx);
+  for (const [x, y] of [[40, 0], [0, 40], [-40, 20], [20, -40]] as const) {
+    const before = { x, y };
+    const after = flowDisplace(x, y, 0, 0, vx, vy, 1);
+    const moved = { x: after.x - before.x, y: after.y - before.y };
+    if (Math.hypot(moved.x, moved.y) < 1e-6) continue; // outside the envelope — no direction to compare
+    close(dirOf(moved), targetDir, 1e-6);
+  }
+});
+
+test("flowDisplace: displacement is bounded by maxDisplacement · influence at any distance or speed", () => {
+  const params = { sigma: 60, strength: 15, maxDisplacement: 18, maxSpeed: 500 };
   for (const influence of [0.25, 0.6, 1]) {
     for (const d of [1, 10, 50, 150, 500]) {
-      const p = deformPoint(d, 0, 0, 0, influence, params);
-      const actualDisplacement = Math.hypot(p.x - d, p.y - 0);
-      assert.ok(actualDisplacement <= params.strength * influence + 1e-9);
+      for (const speed of [10, 500, 5000]) {
+        const p = flowDisplace(d, 0, 0, 0, speed, 0, influence, params);
+        const actual = Math.hypot(p.x - d, p.y - 0);
+        assert.ok(actual <= params.maxDisplacement * influence + 1e-9);
+      }
     }
   }
 });
 
-test("deformPoint: pushes directly away from the pointer", () => {
-  // Pointer at origin, point due east: displacement must stay on the positive x-axis.
-  const p = deformPoint(40, 0, 0, 0, 1, { sigma: 100, strength: 10 });
-  assert.ok(p.x > 40);
-  close(p.y, 0);
+test("flowDisplace: speed above maxSpeed pushes no harder than maxSpeed itself (saturates, does not grow further)", () => {
+  const params = { sigma: 200, maxDisplacement: 20, maxSpeed: 300 };
+  const atMax = flowDisplace(0, 0, 0, 0, 300, 0, 1, params);
+  const wayOver = flowDisplace(0, 0, 0, 0, 5000, 0, 1, params);
+  close(Math.hypot(atMax.x, atMax.y), Math.hypot(wayOver.x, wayOver.y), 1e-6);
 });
 
-test("deformPoint: negligible far beyond sigma, for any influence", () => {
-  const params = { sigma: 30, strength: 20 };
-  const p = deformPoint(1000, 1000, 0, 0, 1, params);
+test("flowDisplace: negligible far beyond sigma, for any influence or speed", () => {
+  const params = { sigma: 30, maxDisplacement: 20, maxSpeed: 500 };
+  const p = flowDisplace(1000, 1000, 0, 0, 500, 0, 1, params);
   close(p.x, 1000, 1e-6);
   close(p.y, 1000, 1e-6);
 });
 
-test("deformPoint: scales linearly with influence at fixed position", () => {
-  const params = { sigma: 80, strength: 10 };
-  const half = deformPoint(30, 0, 0, 0, 0.5, params);
-  const full = deformPoint(30, 0, 0, 0, 1, params);
+test("flowDisplace: scales linearly with influence at fixed position and velocity", () => {
+  const params = { sigma: 200, maxDisplacement: 20, maxSpeed: 500 };
+  const half = flowDisplace(30, 0, 0, 0, 200, 0, 0.5, params);
+  const full = flowDisplace(30, 0, 0, 0, 200, 0, 1, params);
   close((full.x - 30) / 2, half.x - 30, 1e-9);
+});
+
+test("flowDisplace: never leaves a visible static dent — zero velocity gives zero displacement everywhere, unlike a radial push", () => {
+  const params = FLOW_DEFORM_DEFAULTS;
+  let maxDisp = 0;
+  for (let x = -300; x <= 300; x += 20) {
+    for (let y = -300; y <= 300; y += 20) {
+      const p = flowDisplace(x, y, 0, 0, 0, 0, 1, params);
+      maxDisp = Math.max(maxDisp, Math.hypot(p.x - x, p.y - y));
+    }
+  }
+  assert.equal(maxDisp, 0);
+});
+
+/* ────────────────────────────────── capSpeed ─────────────────────────────── */
+
+test("capSpeed: leaves a velocity at or under the cap unchanged", () => {
+  assert.deepEqual(capSpeed(100, 0, 500), { vx: 100, vy: 0 });
+  assert.deepEqual(capSpeed(0, 0, 500), { vx: 0, vy: 0 });
+});
+
+test("capSpeed: rescales a velocity over the cap down to exactly the cap, preserving direction", () => {
+  const { vx, vy } = capSpeed(800, 600, 500); // 3-4-5 triangle, |v| = 1000
+  close(Math.hypot(vx, vy), 500, 1e-9);
+  close(vx / vy, 800 / 600, 1e-9); // same direction
 });
 
 /* ───────────────────────────────── easeTo ───────────────────────────────── */
@@ -141,40 +191,46 @@ test("easeTo: never overshoots a fixed target, approaching monotonically from ei
   }
 });
 
-/* ───────────────────────────── subdivideAndDeform ────────────────────────── */
+/* ───────────────────────────── subdivideAndFlow ──────────────────────────── */
 
-test("subdivideAndDeform: a single deformed point when the segment is far from the pointer", () => {
-  const params = { sigma: 60, strength: 15 };
-  const pts = subdivideAndDeform({ x: 0, y: 500 }, { x: 10, y: 500 }, 0, 0, 1, params);
+test("subdivideAndFlow: a single displaced point when the segment is far from the pointer", () => {
+  const params = { sigma: 60, maxDisplacement: 15, maxSpeed: 500 };
+  const pts = subdivideAndFlow({ x: 0, y: 500 }, { x: 10, y: 500 }, 0, 0, 300, 0, 1, params);
   assert.equal(pts.length, 1);
-  close(pts[0].x, deformPoint(10, 500, 0, 0, 1, params).x);
-  close(pts[0].y, deformPoint(10, 500, 0, 0, 1, params).y);
+  const expected = flowDisplace(10, 500, 0, 0, 300, 0, 1, params);
+  close(pts[0].x, expected.x);
+  close(pts[0].y, expected.y);
 });
 
-test("subdivideAndDeform: subdivides (more than one point) when the segment passes close to the pointer", () => {
-  const params = { sigma: 200, strength: 20 };
-  const pts = subdivideAndDeform({ x: -10, y: 2 }, { x: 10, y: 2 }, 0, 0, 1, params);
+test("subdivideAndFlow: a single unchanged point when the pointer isn't moving, regardless of distance", () => {
+  const pts = subdivideAndFlow({ x: -10, y: 2 }, { x: 10, y: 2 }, 0, 0, 0, 0, 1);
+  assert.deepEqual(pts, [{ x: 10, y: 2 }]);
+});
+
+test("subdivideAndFlow: subdivides (more than one point) when a moving pointer's segment passes close to it", () => {
+  const params = FLOW_DEFORM_DEFAULTS;
+  const pts = subdivideAndFlow({ x: -10, y: 2 }, { x: 10, y: 2 }, 0, 0, 300, 0, 1, params);
   assert.ok(pts.length > 1, `expected subdivision, got ${pts.length} point(s)`);
   assert.ok(pts.length <= 16, "capped at 16 extra samples");
 });
 
-test("subdivideAndDeform: the last sample always lands exactly on deformPoint(to, …)", () => {
-  const params = { sigma: 200, strength: 20 };
+test("subdivideAndFlow: the last sample always lands exactly on flowDisplace(to, …)", () => {
+  const params = FLOW_DEFORM_DEFAULTS;
   for (const [from, to] of [
     [{ x: -10, y: 2 }, { x: 10, y: 2 }],
     [{ x: 300, y: 300 }, { x: 310, y: 305 }],
   ] as const) {
-    const pts = subdivideAndDeform(from, to, 0, 0, 1, params);
-    const expected = deformPoint(to.x, to.y, 0, 0, 1, params);
+    const pts = subdivideAndFlow(from, to, 0, 0, 150, 80, 1, params);
+    const expected = flowDisplace(to.x, to.y, 0, 0, 150, 80, 1, params);
     close(pts[pts.length - 1].x, expected.x);
     close(pts[pts.length - 1].y, expected.y);
   }
 });
 
-test("subdivideAndDeform: every returned point is finite", () => {
-  const params = { sigma: 200, strength: 20 };
+test("subdivideAndFlow: every returned point is finite", () => {
+  const params = FLOW_DEFORM_DEFAULTS;
   for (const h of [0, 1, 2, 5, 50]) {
-    const pts = subdivideAndDeform({ x: -50, y: h }, { x: 50, y: h }, 0, 0, 1, params);
+    const pts = subdivideAndFlow({ x: -50, y: h }, { x: 50, y: h }, 0, 0, 400, -200, 1, params);
     for (const p of pts) {
       assert.equal(Number.isFinite(p.x), true);
       assert.equal(Number.isFinite(p.y), true);
@@ -182,47 +238,10 @@ test("subdivideAndDeform: every returned point is finite", () => {
   }
 });
 
-test("subdivideAndDeform: unaffected when influence is 0 — a single unchanged point", () => {
-  const pts = subdivideAndDeform({ x: -10, y: 2 }, { x: 10, y: 2 }, 0, 0, 0);
-  assert.deepEqual(pts, [{ x: 10, y: 2 }]);
-});
-
-test("subdivideAndDeform: measurably straightens the sharp turn a plain deform-and-lineTo would draw near a close pass", () => {
-  // Reproduces the Phase 16.3 symptom directly: a nearly-straight true
-  // curve passing a few pixels from the pointer, deformed either as three
-  // bare points (the old behaviour) or via subdivideAndDeform between each
-  // pair — the turning angle at the middle vertex should be smaller with
-  // subdivision than without it.
-  const params = { sigma: 200, strength: 20 };
-  const px = 0, py = 0;
-  const a = { x: -10, y: 2 };
-  const b = { x: 0, y: 2 };
-  const c = { x: 10, y: 2 };
-  function turningAngleDeg(p0: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }) {
-    const v1 = { x: p1.x - p0.x, y: p1.y - p0.y };
-    const v2 = { x: p2.x - p1.x, y: p2.y - p1.y };
-    const dot = v1.x * v2.x + v1.y * v2.y;
-    const m = Math.hypot(v1.x, v1.y) * Math.hypot(v2.x, v2.y) || 1;
-    return (Math.acos(Math.max(-1, Math.min(1, dot / m))) * 180) / Math.PI;
-  }
-  const bareAngle = turningAngleDeg(
-    deformPoint(a.x, a.y, px, py, 1, params),
-    deformPoint(b.x, b.y, px, py, 1, params),
-    deformPoint(c.x, c.y, px, py, 1, params),
-  );
-  const ab = subdivideAndDeform(a, b, px, py, 1, params);
-  const bc = subdivideAndDeform(b, c, px, py, 1, params);
-  const subdivided = [deformPoint(a.x, a.y, px, py, 1, params), ...ab, ...bc];
-  let worst = 0;
-  for (let i = 1; i < subdivided.length - 1; i++) {
-    worst = Math.max(worst, turningAngleDeg(subdivided[i - 1], subdivided[i], subdivided[i + 1]));
-  }
-  assert.ok(worst < bareAngle, `expected subdivision to reduce the worst turning angle (${worst.toFixed(1)} vs ${bareAngle.toFixed(1)})`);
-});
-
 /* ───────────────────────────────── defaults ─────────────────────────────── */
 
-test("POINTER_DEFORM_DEFAULTS: a reasonable, bounded interaction", () => {
-  assert.ok(POINTER_DEFORM_DEFAULTS.sigma > 0);
-  assert.ok(POINTER_DEFORM_DEFAULTS.strength > 0 && POINTER_DEFORM_DEFAULTS.strength < 50);
+test("FLOW_DEFORM_DEFAULTS: a reasonable, bounded interaction", () => {
+  assert.ok(FLOW_DEFORM_DEFAULTS.sigma > 0);
+  assert.ok(FLOW_DEFORM_DEFAULTS.maxDisplacement > 0 && FLOW_DEFORM_DEFAULTS.maxDisplacement < 50);
+  assert.ok(FLOW_DEFORM_DEFAULTS.maxSpeed > 0);
 });
