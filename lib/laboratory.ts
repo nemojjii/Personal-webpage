@@ -1,7 +1,7 @@
 import type { EntryRef, RelationKind } from "./types";
 
 /**
- * The Little Laboratory's three experiments: what the landing page lists,
+ * The Little Laboratory's four experiments: what the landing page lists,
  * what the sitemap includes, and the model notes each page sets beneath its
  * instrument. The mathematics itself lives in lib/laboratory/*.ts.
  */
@@ -21,7 +21,7 @@ export interface ExperimentRelation {
 
 export interface Experiment {
   slug: string;
-  numeral: "I" | "II" | "III";
+  numeral: "I" | "II" | "III" | "IV";
   title: string;
   /** The question the instrument lets you put to the model. */
   question: string;
@@ -198,6 +198,89 @@ Units are illustrative — mol L⁻¹ for concentration, seconds for time, s⁻�
 for $k$ — and no particular real reaction is meant. The particles in the
 lower panel are a tally, not a simulation: at each instant the number shown
 is the fraction of A remaining, rounded to one in a hundred.
+`,
+    related: [],
+  },
+  {
+    slug: "fourier-explorer",
+    numeral: "IV",
+    title: "Fourier Explorer",
+    question: "What does a periodic signal look like taken apart, one frequency at a time?",
+    description:
+      "A finite sum of sine waves, built one harmonic at a time. Set how many harmonics are active, their common fundamental frequency, and each one's own amplitude and phase, then watch the sum in time and its discrete amplitude spectrum update together.",
+    href: "/laboratory/fourier-explorer",
+    summary:
+      "An interactive finite Fourier series: harmonic count, fundamental frequency, and per-harmonic amplitude and phase, with the time-domain sum, its individual components, and the discrete amplitude spectrum shown side by side.",
+    notes: String.raw`
+## The model
+
+A finite Fourier series sums $N$ sine waves, each an integer multiple of one
+fundamental frequency $f_0$:
+
+$$
+f(t) = \sum_{n=1}^{N} A_n \sin\!\big(2\pi n f_0 t + \varphi_n\big).
+$$
+
+The $n$-th term — the $n$-th *harmonic* — has its own frequency $n f_0$,
+amplitude $A_n$ and phase $\varphi_n$; harmonic $1$ is the fundamental
+itself. Superposition is linear, so the sum at any instant is just the terms
+added together, exactly as in the Wave Superposition instrument — this one
+simply allows more than two.
+
+This is a **Fourier series**, built for a signal that already repeats every
+$1/f_0$ seconds. It is not a **Fourier transform**: a transform takes a
+signal — periodic or not — and produces a function of *continuous*
+frequency, via an integral over all time, not a sum of finitely many terms.
+Nothing here computes one. What a Fourier transform of a genuinely periodic
+signal returns is, in fact, exactly this: a discrete set of spikes at $0,
+f_0, 2f_0, \dots$ — which is why the lower panel is drawn as discrete lines
+rather than a continuous curve. It is the spectrum of what this instrument
+builds, not an approximation of something else.
+
+## The presets, and why their coefficients are what they are
+
+A true square wave's Fourier series carries only the *odd* harmonics, with
+amplitude $4/(n\pi)$:
+
+$$
+\mathrm{square}(t) = \frac{4}{\pi}\sum_{n \text{ odd}} \frac{1}{n}\sin(2\pi n f_0 t).
+$$
+
+A true sawtooth's series carries *every* harmonic, at $2/(n\pi)$, alternating
+in sign:
+
+$$
+\mathrm{sawtooth}(t) = \frac{2}{\pi}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{n}\sin(2\pi n f_0 t).
+$$
+
+A negative coefficient is the same sine with its amplitude's sign flipped —
+equivalently, the same amplitude with $\pi$ added to the phase, since
+$\sin(\theta + \pi) = -\sin\theta$. Every amplitude in this instrument is
+non-negative; the sawtooth preset's alternating sign is carried entirely in
+$\varphi_n$, set to $0$ or $\pi$.
+
+Both series are infinite. The presets here use all 8 harmonics this
+instrument allows and are only that — an approximation, visibly short of the
+sharp corner or edge they are approaching. Lower the harmonic count on
+either preset and the approximation visibly coarsens; the ripple that
+remains near each discontinuity even at 8 harmonics, and which does not
+shrink away as more are added, has a name — the **Gibbs phenomenon** — and
+is a real feature of truncating this particular kind of series, not a flaw
+in the instrument.
+
+## What the two panels show
+
+The upper panel is $f(t)$ against time, over two fundamental periods; the
+individual harmonics may be shown alongside it, each too faint to read on
+its own but visibly entering the sum. The lower panel is the amplitude
+spectrum: one line per *active* harmonic, placed at its own frequency $n
+f_0$ with height $A_n$. Phase does not appear on that axis — it is set, per
+harmonic, in the controls below — which is itself worth noticing: two
+signals can share an amplitude spectrum and still look nothing alike in
+time, if their harmonics are shifted relative to one another.
+
+Amplitude is in arbitrary units, as elsewhere in the Little Laboratory;
+frequency is in hertz and time in seconds.
 `,
     related: [],
   },

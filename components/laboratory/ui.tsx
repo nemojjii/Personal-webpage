@@ -160,3 +160,34 @@ export function Legend({
 export function Note({ children }: { children: ReactNode }) {
   return <p className="mt-4 font-sans text-[0.8125rem] leading-relaxed text-ink-soft">{children}</p>;
 }
+
+/**
+ * A compact expandable section for controls that do not need to be visible
+ * at all times — native `<details>`, so opening and closing it is already
+ * keyboard-operable and announced to assistive technology without any ARIA
+ * of its own.
+ */
+export function Disclosure({
+  summary,
+  children,
+  defaultOpen = false,
+}: {
+  summary: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  return (
+    <details className="group mt-6 border-t border-rule-soft pt-5" open={defaultOpen}>
+      <summary className="flex cursor-pointer list-none items-center gap-2 font-sans text-[0.75rem] font-medium tracking-[0.04em] text-ink-soft transition-colors duration-200 hover:text-ink">
+        <span
+          aria-hidden="true"
+          className="inline-block text-ink-muted transition-transform duration-200 group-open:rotate-90"
+        >
+          ▸
+        </span>
+        {summary}
+      </summary>
+      <div className="mt-5">{children}</div>
+    </details>
+  );
+}

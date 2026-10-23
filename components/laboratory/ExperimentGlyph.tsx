@@ -57,7 +57,7 @@ export function ExperimentGlyph({ slug, className = "" }: { slug: string; classN
             <circle cx="10" cy="16" r="1.6" fill="currentColor" stroke="none" />
             <circle cx="60" cy="36" r="1.4" fill="currentColor" stroke="none" />
           </>
-        ) : (
+        ) : slug === "reaction-kinetics" ? (
           <>
             <line x1="8" y1="64" x2={W - 4} y2="64" strokeWidth="0.6" opacity="0.4" />
             <line x1="8" y1="64" x2="8" y2="6" strokeWidth="0.6" opacity="0.4" />
@@ -72,6 +72,22 @@ export function ExperimentGlyph({ slug, className = "" }: { slug: string; classN
             {/* The first half-life, marked. */}
             <line x1="25.2" y1="64" x2="25.2" y2="37" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.6" />
             <line x1="8" y1="37" x2="25.2" y2="37" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.6" />
+          </>
+        ) : (
+          <>
+            {/* A square wave's spectrum: odd harmonics only, falling off as 1/n. */}
+            <line x1="8" y1="64" x2={W - 4} y2="64" strokeWidth="0.6" opacity="0.4" />
+            <line x1="8" y1="64" x2="8" y2="6" strokeWidth="0.6" opacity="0.4" />
+            {[1, 3, 5, 7].map((n) => {
+              const x = 8 + (n / 8) * (W - 20);
+              const h = 50 / n; // proportional to the square wave's own 4/(nπ) falloff
+              return (
+                <g key={n}>
+                  <line x1={x} y1="64" x2={x} y2={64 - h} strokeWidth="1.1" />
+                  <circle cx={x} cy={64 - h} r="1.6" fill="currentColor" stroke="none" />
+                </g>
+              );
+            })}
           </>
         )}
       </g>

@@ -665,22 +665,29 @@ either side.
 
 ## 12. The Little Laboratory
 
-`/laboratory` holds three small interactive experiments — wave superposition,
-gradient descent on a quadratic bowl, and first-order reaction kinetics — each
-at its own route. They are deliberately independent of the content system:
-there are no MDX files to add, and nothing here links to research.
+`/laboratory` holds four small interactive experiments — wave superposition,
+gradient descent on a quadratic bowl, first-order reaction kinetics, and
+Fourier synthesis — each at its own route. They are deliberately independent
+of the content system: there are no MDX files to add, and nothing here links
+to research.
 
 ```
-lib/laboratory.ts           the three experiments: titles, descriptions, model notes (MDX)
+lib/laboratory.ts           the four experiments: titles, descriptions, model notes (MDX)
 lib/laboratory/wave.ts      y = A₁ sin(k₁x − ω₁t) + A₂ sin(k₂x − ω₂t + Δφ), with ω = v·k
 lib/laboratory/gradient.ts  f = ½(ax² + by²), p ← p − η∇f, and the η < 2/max(a,b) condition
 lib/laboratory/kinetics.ts  [A] = [A]₀ e^(−kt), t½ = ln 2 / k
+lib/laboratory/fourier.ts   f(t) = Σ Aₙ sin(2π n f₀ t + φₙ), N = 1..8 harmonics
 components/laboratory/      the instruments (client components), shared controls, the clock
 app/laboratory/             the landing page and one page per experiment
 ```
 
 The mathematics lives in `lib/laboratory/*.ts` as pure functions with no
-rendering in them, so it can be checked on its own.
+rendering in them, so it can be checked on its own. `fourier.ts` has a
+companion test file run with Node's own test runner — no dependency needed:
+
+```
+node --test lib/laboratory/fourier.test.ts
+```
 
 An experiment can be connected to an entry. Write the relation once, on the
 experiment, in `lib/laboratory.ts`, with its kind and a sentence saying why:
