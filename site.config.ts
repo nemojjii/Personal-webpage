@@ -101,6 +101,7 @@ export const navigation: readonly NavItem[] = [
     ],
   },
   { label: "Little Laboratory", href: "/laboratory" },
+  { label: "Generative Art", href: "/projects/generative-art" },
   { label: "CV", href: "/cv" },
 ];
 

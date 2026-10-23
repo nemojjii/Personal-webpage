@@ -66,8 +66,8 @@ export function Header() {
           <span className="sr-only"> — home</span>
         </Link>
 
-        {/* Desktop navigation — from lg: with eight items the row no longer fits a tablet. */}
-        <nav aria-label="Primary" className="hidden lg:block">
+        {/* Desktop navigation — from xl: with nine items the row no longer fits a tablet or a narrow laptop. */}
+        <nav aria-label="Primary" className="hidden xl:block">
           <ul className="flex items-center gap-x-7">
             {navigation.map((item) => {
               const active = isActive(pathname, item);
@@ -118,7 +118,7 @@ export function Header() {
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-controls="mobile-navigation"
-          className="-mr-2 flex items-center gap-2 px-2 py-2 font-sans text-[0.75rem] tracking-[0.12em] uppercase text-ink-soft lg:hidden"
+          className="-mr-2 flex items-center gap-2 px-2 py-2 font-sans text-[0.75rem] tracking-[0.12em] uppercase text-ink-soft xl:hidden"
         >
           {open ? "Close" : "Menu"}
           <span aria-hidden="true" className="flex h-2.5 w-4 flex-col justify-between">
@@ -151,7 +151,7 @@ export function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
             transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
-            className="absolute inset-x-0 top-[var(--nav-h)] max-h-[calc(100dvh-var(--nav-h))] overflow-y-auto border-b border-rule bg-paper lg:hidden"
+            className="absolute inset-x-0 top-[var(--nav-h)] max-h-[calc(100dvh-var(--nav-h))] overflow-y-auto border-b border-rule bg-paper xl:hidden"
           >
             <ul className="shell flex flex-col py-4">
               {allLinks.map((item) => {
