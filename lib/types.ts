@@ -106,9 +106,20 @@ export interface EntryBase {
   references: string[];
 }
 
+/**
+ * Which half of the Research index an entry is grouped under. Deliberately
+ * separate from `status`: a completed manuscript can still host an ongoing
+ * continuation, and moving it to "ongoing" here must never be read as
+ * reopening or undoing what `status: completed` already says happened.
+ */
+export const archiveSections = ["ongoing", "completed"] as const;
+export type ArchiveSection = (typeof archiveSections)[number];
+
 export interface ResearchEntry extends EntryBase {
   collection: "research";
   status: ResearchStatus;
+  /** Which Research-index section this is listed under. See `ArchiveSection`. */
+  archiveSection: ArchiveSection;
   /** Research area, e.g. "Computational Physics". */
   area?: string;
   /**

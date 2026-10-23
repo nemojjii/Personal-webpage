@@ -12,6 +12,7 @@ import {
   isLaboratoryRef,
 } from "./laboratory";
 import {
+  type ArchiveSection,
   type BookEntry,
   type Collection,
   type Entry,
@@ -26,6 +27,7 @@ import {
   type ThemeCollection,
   type ViewingStatus,
   type Visibility,
+  archiveSections,
   collectionMeta,
   collections,
   isWork,
@@ -251,10 +253,16 @@ function parseEntry(collection: Collection, filename: string): Entry {
       warn(where, `unknown status "${status}" — falling back to "idea"`);
       status = "idea";
     }
+    let archiveSection = String(data.archiveSection ?? "completed") as ArchiveSection;
+    if (!(archiveSections as readonly string[]).includes(archiveSection)) {
+      warn(where, `unknown archiveSection "${archiveSection}" — falling back to "completed"`);
+      archiveSection = "completed";
+    }
     return {
       ...base,
       collection: "research",
       status,
+      archiveSection,
       area: data.area ? String(data.area) : undefined,
       context: data.context ? String(data.context) : undefined,
       keywords: asArray(data.keywords),
