@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
+
+import { deformPoint, easeTo } from "@/lib/home/fieldPointer";
 
 import { useFieldCanvas } from "./useFieldCanvas";
 
@@ -56,8 +58,24 @@ import { useFieldCanvas } from "./useFieldCanvas";
  *
  *  This is a kinematic construction — a flow field written down, not a fluid
  *  simulated. Canvas 2D, no WebGL, ~30 fps, paused off screen, one still
- *  frame under prefers-reduced-motion (see useFieldCanvas). The canvas never
- *  receives pointer events and is hidden from assistive technology.
+ *  frame under prefers-reduced-motion (see useFieldCanvas). The canvas itself
+ *  never receives pointer events and is hidden from assistive technology; it
+ *  is wrapped in a plain div that does, purely to know where a mouse or pen
+ *  pointer is (see POINTER RESPONSE below) — touch is explicitly excluded,
+ *  so nothing here can ever compete with a scroll or any other gesture.
+ *
+ *  POINTER RESPONSE. A mouse or pen pointer near the artwork pushes nearby
+ *  points radially outward by a bounded Gaussian amount (lib/home/fieldPointer.ts:
+ *  deformPoint, w(d) = exp(−d²/2σ²)) — applied only at the moment a point is
+ *  pushed to the drawn path, after Newton's method has already found it on
+ *  the true, undeformed geometry, so the deformation can never feed back into
+ *  the root-finding or destabilise it. An `influence` factor eases toward 1
+ *  while a pointer is present and toward 0 once it leaves (lib/home/fieldPointer.ts:
+ *  easeTo), so the response arrives and settles smoothly rather than
+ *  stepping. Under prefers-reduced-motion the draw loop above never restarts
+ *  after its one still frame, so pointer movement already has nothing to
+ *  redraw into; the pointer handler also checks the same media query itself,
+ *  so the state is never even tracked in that case.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -240,8 +258,35 @@ export function HeroField({
     [],
   );
 
+  // Pointer state: all refs, read and written only inside the draw loop and
+  // the handlers below, so a mouse moving never itself triggers a React
+  // render — the already-running ~30 fps loop just picks up the latest
+  // values next time it draws. `pointer` is the last known position in CSS
+  // pixels local to the canvas, or null while nothing is hovering it;
+  // `influence` is the eased [0, 1] response strength (see easeTo);
+  // `lastT` lets the draw loop compute its own dt from the time it is
+  // already given, without useFieldCanvas needing to know this exists.
+  const pointer = useRef<{ x: number; y: number } | null>(null);
+  const influence = useRef(0);
+  const lastT = useRef<number | null>(null);
+
+  const onPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    // Touch is excluded on purpose: the artwork stays static under touch,
+    // so a drag across it is never mistaken for anything but a scroll.
+    if (e.pointerType === "touch") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    pointer.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }, []);
+  const onPointerLeave = useCallback(() => {
+    pointer.current = null;
+  }, []);
+
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => {
+      const dt = lastT.current === null ? 0 : Math.max(0, t - lastT.current);
+      lastT.current = t;
+      influence.current = easeTo(influence.current, pointer.current ? 1 : 0, dt, 0.18);
       const short = Math.min(w, h);
       // Reference length: the short edge, unless the canvas is a wide band.
       const L = Math.max(short, 0.88 * w);
@@ -352,9 +397,16 @@ export function HeroField({
               y = Number.isFinite(y) ? Math.max(-margin, Math.min(h + margin, y)) : (c * L) / cosA;
               continue;
             }
-            if (drawing) ctx.lineTo(x, y);
+            // The deformation is purely a display-time offset of this one
+            // point: `y` itself — fed into the next x step above and into
+            // the bounds check above — is always the true, undeformed value.
+            const p =
+              influence.current > 1e-4 && pointer.current
+                ? deformPoint(x, y, pointer.current.x, pointer.current.y, influence.current)
+                : { x, y };
+            if (drawing) ctx.lineTo(p.x, p.y);
             else {
-              ctx.moveTo(x, y);
+              ctx.moveTo(p.x, p.y);
               drawing = true;
             }
           }
@@ -399,11 +451,18 @@ export function HeroField({
 
   const ref = useFieldCanvas(draw);
   return (
-    <canvas
-      ref={ref}
+    <div
+      className={`h-full w-full ${className}`}
       aria-hidden="true"
-      className={`pointer-events-none h-full w-full select-none ${className}`}
-    />
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
+    >
+      <canvas
+        ref={ref}
+        aria-hidden="true"
+        className="pointer-events-none h-full w-full select-none"
+      />
+    </div>
   );
 }
 

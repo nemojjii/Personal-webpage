@@ -34,6 +34,7 @@ export function SelectedWork() {
           title={research.title}
           description="A classical model of a black-hole inspiral, its orbital frequency sweep set beside LIGO's observed spectrograms."
           href={research.href}
+          caption="Illustrative waveform"
         >
           <ChirpPreview />
         </WorkPanel>
@@ -65,12 +66,15 @@ function WorkPanel({
   title,
   description,
   href,
+  /** A discreet note shown directly beneath the preview — for a visual that could otherwise be mistaken for real data or output. */
+  caption,
   children,
 }: {
   category: string;
   title: string;
   description: string;
   href: string;
+  caption?: string;
   children: ReactNode;
 }) {
   return (
@@ -78,7 +82,10 @@ function WorkPanel({
       <div className="aspect-square border border-rule-soft bg-surface/40 p-5 transition-colors duration-300 group-hover:border-rule">
         {children}
       </div>
-      <p className="label mt-4 mb-1.5">{category}</p>
+      {caption ? (
+        <p className="mt-2 font-sans text-[0.6875rem] text-ink-muted italic">{caption}</p>
+      ) : null}
+      <p className="mt-4 mb-1.5 label">{category}</p>
       <h3 className="font-serif text-[1.1875rem] leading-snug">
         <span className="entry-title">{title}</span>
       </h3>
