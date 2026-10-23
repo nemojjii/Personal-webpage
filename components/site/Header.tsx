@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { type NavItem, navigation, secondaryNavigation, site } from "@/site.config";
 
+import { NavDropdown } from "./NavDropdown";
 import { ThemeToggle } from "./ThemeToggle";
 
 const allLinks = [...navigation, ...secondaryNavigation];
@@ -89,21 +90,31 @@ export function Header() {
               const isHere = item === active;
               return (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={isHere ? "page" : undefined}
-                    className={`relative block py-1 font-sans text-[0.8125rem] transition-colors duration-200 ${
-                      isHere ? "text-accent" : "text-ink-soft hover:text-ink"
-                    }`}
-                  >
-                    {item.label}
-                    <span
-                      aria-hidden="true"
-                      className={`absolute -bottom-0.5 left-0 right-0 h-px origin-left bg-accent transition-transform duration-[420ms] ease-[cubic-bezier(.22,.61,.36,1)] ${
-                        isHere ? "scale-x-100" : "scale-x-0"
-                      }`}
+                  {item.desktopDropdown && item.children?.length ? (
+                    <NavDropdown
+                      key={pathname}
+                      label={item.label}
+                      isHere={isHere}
+                      pathname={pathname}
+                      items={item.children}
                     />
-                  </Link>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      aria-current={isHere ? "page" : undefined}
+                      className={`relative block py-1 font-sans text-[0.8125rem] transition-colors duration-200 ${
+                        isHere ? "text-accent" : "text-ink-soft hover:text-ink"
+                      }`}
+                    >
+                      {item.label}
+                      <span
+                        aria-hidden="true"
+                        className={`absolute -bottom-0.5 left-0 right-0 h-px origin-left bg-accent transition-transform duration-[420ms] ease-[cubic-bezier(.22,.61,.36,1)] ${
+                          isHere ? "scale-x-100" : "scale-x-0"
+                        }`}
+                      />
+                    </Link>
+                  )}
                 </li>
               );
             })}

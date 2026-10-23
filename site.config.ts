@@ -78,11 +78,19 @@ export interface NavItem {
   href: string;
   /**
    * Routes that also count as "here" for this item — the Bookshelf and the
-   * Screening Room live under Collection without crowding the header.
+   * Screening Room live under Collection, and the Generative Art Playground
+   * under Little Laboratory, without crowding the header.
    */
   includes?: readonly string[];
   /** Listed beneath the item in the mobile menu and the footer. */
   children?: readonly { label: string; href: string }[];
+  /**
+   * Renders as a dropdown on desktop instead of a plain link — the trigger
+   * toggles a short list of its own `children` rather than navigating
+   * directly. Opt-in per item (Collection also has `children`, for the
+   * mobile menu and footer, but stays a plain desktop link).
+   */
+  desktopDropdown?: boolean;
 }
 
 /** Primary navigation. Order here is the order in the header. */
@@ -100,8 +108,16 @@ export const navigation: readonly NavItem[] = [
       { label: "The Screening Room", href: "/films" },
     ],
   },
-  { label: "Little Laboratory", href: "/laboratory" },
-  { label: "Generative Art", href: "/projects/generative-art" },
+  {
+    label: "Little Laboratory",
+    href: "/laboratory",
+    includes: ["/projects/generative-art"],
+    desktopDropdown: true,
+    children: [
+      { label: "Little Laboratory", href: "/laboratory" },
+      { label: "Generative Art", href: "/projects/generative-art" },
+    ],
+  },
   { label: "CV", href: "/cv" },
 ];
 
