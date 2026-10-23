@@ -21,7 +21,7 @@ export function SelectedWork() {
   if (!research || research.collection !== "research") return null;
 
   return (
-    <section className="pt-10 sm:pt-12">
+    <section className="pt-6 sm:pt-8">
       <SectionHeading>Selected Work</SectionHeading>
       <p className="mt-5 max-w-[34rem] font-serif text-[1.0625rem] leading-[1.6] text-ink-soft">
         Three ways the same curiosity has been put to work — a research question,
@@ -82,9 +82,12 @@ function WorkPanel({
       <div className="aspect-square border border-rule-soft bg-surface/40 p-5 transition-colors duration-300 group-hover:border-rule">
         {children}
       </div>
-      {caption ? (
-        <p className="mt-2 font-sans text-[0.6875rem] text-ink-muted italic">{caption}</p>
-      ) : null}
+      {/* Always rendered, even without a caption, so the category label below
+          sits at the same height across all three panels in a row — only
+          the research panel currently needs the caption itself. */}
+      <p className="mt-2 font-sans text-[0.6875rem] text-ink-soft italic" aria-hidden={caption ? undefined : true}>
+        {caption ?? " "}
+      </p>
       <p className="mt-4 mb-1.5 label">{category}</p>
       <h3 className="font-serif text-[1.1875rem] leading-snug">
         <span className="entry-title">{title}</span>
