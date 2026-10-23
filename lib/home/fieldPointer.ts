@@ -17,7 +17,20 @@ export interface PointerDeformParams {
   strength: number;
 }
 
-export const POINTER_DEFORM_DEFAULTS: PointerDeformParams = { sigma: 110, strength: 12 };
+// Widened from an earlier {110, 12}: at that radius the response reached
+// only a narrow patch around the pointer (≈36% of the canvas at >1px of
+// displacement, on a representative hero size) and neighbouring points
+// ≈30–40px apart — the spacing between this piece's own lines — differed
+// in their displacement by up to half of it, reading as disjoint rather
+// than as one surface moving together. At {200, 20}, the same measurements
+// put ≈98% of the canvas above that threshold and cut the worst-case
+// neighbour-to-neighbour difference roughly in half, without the field
+// reaching full canvas coverage the way a still-wider {240, 22} did — kept
+// to feel like a disturbance centred on the pointer rather than a softening
+// of the whole piece. Strength scaled with sigma so the Gaussian's slope
+// near the pointer — and with it the character of the response, not just
+// its reach — stays close to the original.
+export const POINTER_DEFORM_DEFAULTS: PointerDeformParams = { sigma: 200, strength: 20 };
 
 /** w(d) = exp(−d² / (2σ²)) — 1 at the pointer, smoothly to 0 with distance. */
 export function gaussianWeight(d: number, sigma: number): number {

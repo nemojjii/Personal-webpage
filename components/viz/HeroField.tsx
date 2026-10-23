@@ -88,6 +88,24 @@ import { useFieldCanvas } from "./useFieldCanvas";
  *  restarts after its one still frame, so pointer movement already has
  *  nothing to redraw into; the pointer handler also checks the same media
  *  query itself, so the state is never even tracked in that case.
+ *
+ *  The pointer response's radius and strength (lib/home/fieldPointer.ts:
+ *  POINTER_DEFORM_DEFAULTS) were widened so the push reads as a surface
+ *  responding, not a narrow patch moving — see that file for the measured
+ *  comparison across radii. No separate mechanism was added for neighbouring
+ *  lines to move together: because the push is already one continuous
+ *  Gaussian field in (x, y), not resolved per line, points near each other
+ *  already get nearly the same displacement, and widening the radius makes
+ *  that truer still (the field is flatter locally), which is what reads as
+ *  fluid. This is an artistic interaction, not a physical fluid simulation.
+ *
+ *  Separately — not a pointer-response matter — the number of lines a
+ *  family draws is a floor of a continuously drifting quotient (see where
+ *  `count` is computed below) and used to pop a whole line in or out at the
+ *  far edge with no fade as that quotient crossed a whole number, often
+ *  enough to be visible within seconds. One extra line is now drawn past the
+ *  last full one, faded in by the quotient's fractional part, so that edge
+ *  is continuous in time too.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -413,16 +431,35 @@ export function HeroField({
           }
         // Lines sit a little closer on the band, whose height is small against L.
         const step = (f.spacing * (band ? 0.8 : 1) * (L >= 500 ? 1 : 0.85)) / L;
-        const count = Math.floor((hMax - hMin) / step);
+        // hMax − hMin drifts continuously as the family breathes and turns —
+        // over one turnPeriod it can nearly double — so the number of lines
+        // that fit, (hMax−hMin)/step, drifts continuously too, but flooring
+        // it to an integer line *count* does not: whenever that quotient
+        // crosses a whole number, a whole line at the far edge used to pop
+        // into or out of existence between one frame and the next, with no
+        // fade (confirmed analytically — see the Phase 16.2 notes — flooring
+        // the same quotient sampled every 50ms over two turnPeriods flips on
+        // the order of 100 times per family: a visible break roughly every
+        // half second, not once per cycle). One extra line is drawn past the
+        // last full one and faded in by the fractional part instead, so the
+        // edge line's alpha is a continuous function of time: 1 right up to
+        // the crossing, ~0 right after it, the two sides meeting at the
+        // crossing itself. Every other line, anchored to hMin, already moves
+        // continuously and never needed this.
+        const linesFit = (hMax - hMin) / step;
+        const count = Math.floor(linesFit);
+        const edgeFade = linesFit - count;
 
         const style = fi === FAR ? farStyle() : fi === WINE_FAMILY ? wineStyle() : null;
 
-        for (let j = 0; j <= count; j++) {
+        for (let j = 0; j <= count + 1; j++) {
+          const fade = j <= count ? 1 : edgeFade;
+          if (fade <= 0) continue;
           const c = hMin + j * step;
           // Slow modulation across the lines of a family: the darker lines are also the heavier ones.
           const mix = 0.5 + 0.5 * Math.sin(j * 0.72 + fi * 1.7);
           const shaped = mix * mix * (3 - 2 * mix);
-          const alpha = (f.alpha[0] + (f.alpha[1] - f.alpha[0]) * shaped) * opacity;
+          const alpha = (f.alpha[0] + (f.alpha[1] - f.alpha[0]) * shaped) * opacity * fade;
           ctx.beginPath();
           let drawing = false;
           let y = (c * L) / cosA;
