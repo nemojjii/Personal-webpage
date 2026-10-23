@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { VisibilityMark } from "@/components/ui/VisibilityMark";
 import type { WorkCardData } from "@/lib/types";
-import { secondaryTitle, titleLang } from "@/lib/works";
+import { primaryTitle, secondaryTitles, titleLang } from "@/lib/works";
 
 import { WorkCover } from "./WorkCover";
 
@@ -18,7 +18,8 @@ export function WorkCard({
   /** The `sizes` attribute for the cover image, matching the grid it sits in. */
   sizes?: string;
 }) {
-  const second = secondaryTitle(item);
+  const primary = primaryTitle(item);
+  const second = secondaryTitles(item);
   return (
     <li className="entry-row">
       <Link href={item.href} className="group block">
@@ -34,14 +35,18 @@ export function WorkCard({
             </span>
           ) : null}
           <h3
-            lang={titleLang(item.title)}
-            className="font-serif text-[1.0625rem] leading-[1.3] tracking-[-0.005em]"
+            lang={titleLang(primary)}
+            className="font-serif text-[1.0625rem] leading-[1.3] tracking-[-0.005em] [text-wrap:pretty]"
           >
-            <span className="entry-title">{item.title}</span>
+            <span className="entry-title">{primary}</span>
           </h3>
-          {second ? (
-            <p className="mt-0.5 font-serif text-[0.875rem] leading-snug text-ink-muted italic">
-              {second}
+          {second.length ? (
+            <p className="mt-0.5 flex flex-col gap-y-0.5 font-serif text-[0.875rem] leading-snug text-ink-muted italic">
+              {second.map((t) => (
+                <span key={t} lang={titleLang(t)}>
+                  {t}
+                </span>
+              ))}
             </p>
           ) : null}
           {item.creator || item.year ? (

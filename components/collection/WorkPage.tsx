@@ -9,7 +9,7 @@ import { References } from "@/components/ui/References";
 import { isProduction, themeCollectionsFor } from "@/lib/content";
 import { buildToc } from "@/lib/toc";
 import type { BookEntry, FilmEntry } from "@/lib/types";
-import { secondaryTitle } from "@/lib/works";
+import { primaryTitle, secondaryTitles } from "@/lib/works";
 import { site } from "@/site.config";
 
 import { WorkHeader } from "./WorkHeader";
@@ -18,8 +18,9 @@ type Work = BookEntry | FilmEntry;
 
 /** Page metadata for a book or film, with the Open Graph type to match. */
 export function workMetadata(entry: Work): Metadata {
-  const second = secondaryTitle(entry);
-  const title = second ? `${entry.title} (${second})` : entry.title;
+  const primary = primaryTitle(entry);
+  const second = secondaryTitles(entry);
+  const title = second.length ? `${primary} (${second.join(" / ")})` : primary;
   const creator = entry.collection === "books" ? entry.author : entry.director;
   const where = entry.collection === "books" ? "On the Bookshelf" : "In the Screening Room";
   const description =

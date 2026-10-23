@@ -1,10 +1,13 @@
-import { titleLang } from "@/lib/works";
+import { primaryTitle, titleLang } from "@/lib/works";
 
 import { RemoteCover } from "./RemoteCover";
 
 export interface CoverWork {
   collection: "books" | "films";
   title: string;
+  titleOriginal?: string;
+  titleEn?: string;
+  language?: string;
   creator?: string;
   year?: number;
   image?: string;
@@ -20,7 +23,8 @@ export interface CoverWork {
  * assistive technology.
  */
 function TypographicCover({ work, className = "" }: { work: CoverWork; className?: string }) {
-  const lang = titleLang(work.title);
+  const title = primaryTitle(work);
+  const lang = titleLang(title);
 
   if (work.collection === "books") {
     return (
@@ -35,7 +39,7 @@ function TypographicCover({ work, className = "" }: { work: CoverWork; className
           lang={lang}
           className="line-clamp-6 font-serif text-[0.9375rem] leading-[1.28] text-ink [text-wrap:balance]"
         >
-          {work.title}
+          {title}
         </span>
         <span className="mt-3 flex flex-col gap-y-1">
           {work.creator ? (
@@ -67,7 +71,7 @@ function TypographicCover({ work, className = "" }: { work: CoverWork; className
         lang={lang}
         className="line-clamp-5 font-serif text-[0.9375rem] leading-[1.28] text-paper [text-wrap:balance]"
       >
-        {work.title}
+        {title}
       </span>
       {work.creator ? (
         <span className="mt-2 line-clamp-2 font-sans text-[0.625rem] leading-[1.35] tracking-[0.08em] uppercase text-paper/60">
@@ -107,7 +111,7 @@ export function WorkCover({
     return (
       <RemoteCover
         src={work.image}
-        alt={`${noun} ${work.title}`}
+        alt={`${noun} ${primaryTitle(work)}`}
         eager={eager}
         sizes={sizes}
         className={className}

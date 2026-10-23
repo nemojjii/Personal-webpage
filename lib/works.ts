@@ -55,18 +55,47 @@ export function toWorkCard(entry: BookEntry | FilmEntry): WorkCardData {
 }
 
 /**
- * The title to set beneath the display title: the English title when there
- * is one, otherwise the original-language title when it differs. Undefined
- * when the display title already says everything.
+ * The title shown prominently: a documented English release/publication
+ * title when one is recorded (`titleEn`, or `titleOriginal` itself when the
+ * work's original language already is English), and the original-language
+ * title otherwise. Never a fabricated translation — where none is recorded,
+ * this is simply the title you'd have gotten before (`titleOriginal`, or
+ * `title` for a work with no separate original, e.g. one written in Korean).
  */
-export function secondaryTitle(work: {
+export function primaryTitle(work: {
   title: string;
   titleOriginal?: string;
   titleEn?: string;
-}): string | undefined {
-  if (work.titleEn && work.titleEn !== work.title) return work.titleEn;
-  if (work.titleOriginal && work.titleOriginal !== work.title) return work.titleOriginal;
-  return undefined;
+  language?: string;
+}): string {
+  if (work.titleEn) return work.titleEn;
+  if (work.language === "en" && work.titleOriginal) return work.titleOriginal;
+  return work.titleOriginal || work.title;
+}
+
+/**
+ * The title(s) to set beneath the primary title, smaller: the Korean title
+ * and the original-language title, in that order, each only when it differs
+ * from the primary title and from each other — so a Korean-original work
+ * with no English edition shows nothing here, and a Japanese novel with an
+ * English translation shows both its Korean and Japanese titles.
+ */
+export function secondaryTitles(work: {
+  title: string;
+  titleOriginal?: string;
+  titleEn?: string;
+  language?: string;
+}): string[] {
+  const primary = primaryTitle(work);
+  const seen = new Set([primary]);
+  const out: string[] = [];
+  for (const candidate of [work.title, work.titleOriginal]) {
+    if (candidate && !seen.has(candidate)) {
+      seen.add(candidate);
+      out.push(candidate);
+    }
+  }
+  return out;
 }
 
 /** What to call the person who made it. */
@@ -351,11 +380,12 @@ export function titleLang(title: string): string | undefined {
 /* ───────────────────────────── image providers ────────────────────────── */
 
 /** A provider whose terms require crediting them wherever their images appear. */
-export type ImageProvider = "tmdb" | "yes24";
+export type ImageProvider = "tmdb" | "yes24" | "openlibrary";
 
 const PROVIDER_HOSTS: Record<ImageProvider, string> = {
   tmdb: "image.tmdb.org",
   yes24: "image.yes24.com",
+  openlibrary: "covers.openlibrary.org",
 };
 
 /**

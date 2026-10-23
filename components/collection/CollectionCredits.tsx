@@ -22,6 +22,13 @@ import type { ImageProvider } from "@/lib/works";
  * the book's detail area; that is on each work's own page instead
  * (WorkHeader, via `imageSourceUrl`), since that is where a reader would
  * actually follow it.
+ *
+ * Open Library (openlibrary.org/dev/docs/api/covers, no dedicated terms
+ * page found; re-checked 2026-10-23): no attribution or logo is required,
+ * but "a courtesy link back to Open Library is appreciated" — given here
+ * and, per book, via `imageSourceUrl`. Cover scans are user-contributed
+ * and Open Library asserts no copyright over them, so unlike TMDB/YES24
+ * this is not a licensed-source guarantee.
  */
 export function CollectionCredits({ providers }: { providers: Set<ImageProvider> }) {
   if (providers.size === 0) return null;
@@ -46,6 +53,14 @@ export function CollectionCredits({ providers }: { providers: Set<ImageProvider>
           일부 도서 표지 제공:{" "}
           <a href="https://www.yes24.com/" target="_blank" rel="noopener noreferrer" className="link-quiet">
             YES24
+          </a>
+        </span>
+      ) : null}
+      {providers.has("openlibrary") ? (
+        <span>
+          Some book covers via{" "}
+          <a href="https://openlibrary.org/" target="_blank" rel="noopener noreferrer" className="link-quiet">
+            Open Library
           </a>
         </span>
       ) : null}

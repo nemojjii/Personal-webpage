@@ -12,7 +12,7 @@ import {
   readingStatuses,
   viewingStatuses,
 } from "@/lib/types";
-import { languageName, titleLang } from "@/lib/works";
+import { languageName, primaryTitle, secondaryTitles, titleLang } from "@/lib/works";
 
 import { WorkCover } from "./WorkCover";
 
@@ -40,12 +40,8 @@ export function WorkHeader({
     : viewingStatuses[entry.viewingStatus].label;
   const statusDate = isBook ? entry.dateFinished : entry.dateWatched;
 
-  const original =
-    entry.titleOriginal && entry.titleOriginal !== entry.title ? entry.titleOriginal : undefined;
-  const english =
-    entry.titleEn && entry.titleEn !== entry.title && entry.titleEn !== original
-      ? entry.titleEn
-      : undefined;
+  const primary = primaryTitle(entry);
+  const secondary = secondaryTitles(entry);
 
   const facts = (
     [
@@ -105,6 +101,9 @@ export function WorkHeader({
             work={{
               collection: entry.collection,
               title: entry.title,
+              titleOriginal: entry.titleOriginal,
+              titleEn: entry.titleEn,
+              language: entry.language,
               creator,
               year: entry.year,
               image: entry.image,
@@ -140,16 +139,19 @@ export function WorkHeader({
           </div>
 
           <h1
-            lang={titleLang(entry.title)}
+            lang={titleLang(primary)}
             className="font-serif text-display leading-[1.08] tracking-[-0.015em] text-balance"
           >
-            {entry.title}
+            {primary}
           </h1>
 
-          {original || english ? (
+          {secondary.length ? (
             <p className="mt-3 flex flex-col gap-y-0.5 font-serif text-[1.25rem] leading-[1.35] text-ink-soft italic sm:text-[1.35rem]">
-              {original ? <span lang={entry.language}>{original}</span> : null}
-              {english ? <span lang="en">{english}</span> : null}
+              {secondary.map((t) => (
+                <span key={t} lang={titleLang(t)}>
+                  {t}
+                </span>
+              ))}
             </p>
           ) : null}
 
