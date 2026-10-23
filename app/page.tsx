@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { WorkGrid } from "@/components/collection/WorkGrid";
+import { SelectedWork } from "@/components/home/SelectedWork";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EntryList } from "@/components/ui/EntryRow";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -96,8 +97,10 @@ export default function HomePage() {
       </section>
 
       <div className="shell">
+      <SelectedWork />
+
       {/* ── Research ────────────────────────────────────────────────────── */}
-      <section className="pt-10 sm:pt-12">
+      <section className="pt-16 sm:pt-20">
         <SectionHeading
           action={
             featuredResearch.length ? { label: "All research", href: "/research" } : undefined
@@ -123,32 +126,6 @@ export default function HomePage() {
           <EntryList entries={featuredProjects} className="mt-2 border-t-0" />
         </section>
       ) : null}
-
-      {/* ── Interactive Explorations ───────────────────────────────────── */}
-      <section className="pt-16 sm:pt-20">
-        <SectionHeading>Interactive Explorations</SectionHeading>
-        <div className="mt-7 grid gap-x-10 gap-y-9 sm:grid-cols-2">
-          <Link href="/laboratory" className="entry-row block">
-            <h3 className="font-serif text-[1.25rem] leading-snug">
-              <span className="entry-title">Little Laboratory</span>
-            </h3>
-            <p className="mt-2 font-serif text-[1.0625rem] leading-[1.6] text-ink-soft">
-              Four small interactive experiments in wave superposition, gradient descent,
-              reaction kinetics and Fourier synthesis — each one textbook model, turned into
-              something to move and read off.
-            </p>
-          </Link>
-          <Link href="/projects/generative-art" className="entry-row block">
-            <h3 className="font-serif text-[1.25rem] leading-snug">
-              <span className="entry-title">Generative Art Playground</span>
-            </h3>
-            <p className="mt-2 font-serif text-[1.0625rem] leading-[1.6] text-ink-soft">
-              Mathematical rules made visual — complex-plane transformations, vector-field
-              streamlines and parametric curves — in International Klein Blue.
-            </p>
-          </Link>
-        </div>
-      </section>
 
       {/* ── The Collection ─────────────────────────────────────────────── */}
       {fromCollection.length ? (
