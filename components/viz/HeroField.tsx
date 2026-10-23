@@ -57,25 +57,37 @@ import { useFieldCanvas } from "./useFieldCanvas";
  *  one radial destination-in pass — and change no geometry.
  *
  *  This is a kinematic construction — a flow field written down, not a fluid
- *  simulated. Canvas 2D, no WebGL, ~30 fps, paused off screen, one still
- *  frame under prefers-reduced-motion (see useFieldCanvas). The canvas itself
- *  never receives pointer events and is hidden from assistive technology; it
- *  is wrapped in a plain div that does, purely to know where a mouse or pen
- *  pointer is (see POINTER RESPONSE below) — touch is explicitly excluded,
- *  so nothing here can ever compete with a scroll or any other gesture.
+ *  simulated. Canvas 2D, no WebGL, 60 fps (30 before a pointer response
+ *  existed — see POINTER RESPONSE below for why that changed), paused off
+ *  screen, one still frame under prefers-reduced-motion (see useFieldCanvas).
+ *  The canvas itself never receives pointer events and is hidden from
+ *  assistive technology; it is wrapped in a plain div that does, purely to
+ *  know where a mouse or pen pointer is — touch is explicitly excluded, so
+ *  nothing here can ever compete with a scroll or any other gesture.
  *
  *  POINTER RESPONSE. A mouse or pen pointer near the artwork pushes nearby
  *  points radially outward by a bounded Gaussian amount (lib/home/fieldPointer.ts:
  *  deformPoint, w(d) = exp(−d²/2σ²)) — applied only at the moment a point is
  *  pushed to the drawn path, after Newton's method has already found it on
  *  the true, undeformed geometry, so the deformation can never feed back into
- *  the root-finding or destabilise it. An `influence` factor eases toward 1
- *  while a pointer is present and toward 0 once it leaves (lib/home/fieldPointer.ts:
- *  easeTo), so the response arrives and settles smoothly rather than
- *  stepping. Under prefers-reduced-motion the draw loop above never restarts
- *  after its one still frame, so pointer movement already has nothing to
- *  redraw into; the pointer handler also checks the same media query itself,
- *  so the state is never even tracked in that case.
+ *  the root-finding or destabilise it. Two things are eased toward their
+ *  target, each with its own time constant (lib/home/fieldPointer.ts: easeTo):
+ *  an `influence` factor, toward 1 while a pointer is present and toward 0
+ *  once it leaves, so the response's *strength* arrives and settles smoothly;
+ *  and a smoothed copy of the pointer's position itself, toward the latest
+ *  raw sample, so a sudden direction change or a stop settles rather than
+ *  cutting. Position easing alone turned out not to be the fix for the
+ *  stepping a visitor could see while moving the pointer, though — replaying
+ *  a captured real drag through it at several time constants left the
+ *  average distance between consecutive drawn frames essentially unchanged;
+ *  easing a target that is itself advancing mostly adds lag, not smoothness.
+ *  What closes that gap is the frame rate above: this component asks
+ *  useFieldCanvas to draw at 60 fps rather than its 30 fps default, halving
+ *  the distance a hand can cover between redraws and, with it, the size of
+ *  the visible step. Under prefers-reduced-motion the draw loop never
+ *  restarts after its one still frame, so pointer movement already has
+ *  nothing to redraw into; the pointer handler also checks the same media
+ *  query itself, so the state is never even tracked in that case.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -260,15 +272,28 @@ export function HeroField({
 
   // Pointer state: all refs, read and written only inside the draw loop and
   // the handlers below, so a mouse moving never itself triggers a React
-  // render — the already-running ~30 fps loop just picks up the latest
-  // values next time it draws. `pointer` is the last known position in CSS
-  // pixels local to the canvas, or null while nothing is hovering it;
-  // `influence` is the eased [0, 1] response strength (see easeTo);
-  // `lastT` lets the draw loop compute its own dt from the time it is
-  // already given, without useFieldCanvas needing to know this exists.
+  // render — the already-running loop just picks up the latest values next
+  // time it draws. `pointer` is the last known *raw* position in CSS pixels
+  // local to the canvas, or null while nothing is hovering it; `smoothPos`
+  // is a separately-eased copy of it, read by the deformation (see below);
+  // `influence` is the eased [0, 1] response strength; `lastT` lets the draw
+  // loop compute its own dt from the time it is already given, without
+  // useFieldCanvas needing to know any of this exists.
+  //
+  // Position is eased on its own, at a short time constant, distinct from
+  // influence's: smoothing a *target that is itself moving* mostly adds lag
+  // rather than shrinking the gap between samples (verified directly —
+  // replaying a captured real drag through this exact function at several
+  // τ left the average inter-frame step essentially unchanged while lag grew
+  // with τ) — what actually closes that gap is drawing more often, below.
+  // Easing the position still earns its place for what redraw rate alone
+  // cannot fix: a real pointer's own event timing is not perfectly even,
+  // and a sudden direction change or stop should settle rather than cut.
   const pointer = useRef<{ x: number; y: number } | null>(null);
+  const smoothPos = useRef<{ x: number; y: number } | null>(null);
   const influence = useRef(0);
   const lastT = useRef<number | null>(null);
+  const POSITION_TAU = 0.045;
 
   const onPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     // Touch is excluded on purpose: the artwork stays static under touch,
@@ -287,6 +312,17 @@ export function HeroField({
       const dt = lastT.current === null ? 0 : Math.max(0, t - lastT.current);
       lastT.current = t;
       influence.current = easeTo(influence.current, pointer.current ? 1 : 0, dt, 0.18);
+      if (pointer.current) {
+        // Snap in on the very first sample — nothing to ease from yet — then
+        // ease every sample after, including across a later re-entry, which
+        // reads as the response fading in near wherever the pointer came
+        // back rather than teleporting a stale position there.
+        smoothPos.current ??= { ...pointer.current };
+        smoothPos.current = {
+          x: easeTo(smoothPos.current.x, pointer.current.x, dt, POSITION_TAU),
+          y: easeTo(smoothPos.current.y, pointer.current.y, dt, POSITION_TAU),
+        };
+      }
       const short = Math.min(w, h);
       // Reference length: the short edge, unless the canvas is a wide band.
       const L = Math.max(short, 0.88 * w);
@@ -400,9 +436,11 @@ export function HeroField({
             // The deformation is purely a display-time offset of this one
             // point: `y` itself — fed into the next x step above and into
             // the bounds check above — is always the true, undeformed value.
+            // Deformed around smoothPos (the eased position), not the raw
+            // pointer — see the comment where it is defined.
             const p =
-              influence.current > 1e-4 && pointer.current
-                ? deformPoint(x, y, pointer.current.x, pointer.current.y, influence.current)
+              influence.current > 1e-4 && smoothPos.current
+                ? deformPoint(x, y, smoothPos.current.x, smoothPos.current.y, influence.current)
                 : { x, y };
             if (drawing) ctx.lineTo(p.x, p.y);
             else {
@@ -449,7 +487,14 @@ export function HeroField({
     [fade, opacity, colourFor],
   );
 
-  const ref = useFieldCanvas(draw);
+  // 60 fps, not useFieldCanvas's 30 fps default: at 30, a redraw is up to
+  // ~33ms apart, and a hand moving the pointer at an ordinary pace covers
+  // enough distance in that gap to make the deformation's position visibly
+  // step from frame to frame — confirmed by capturing a real drag's actual
+  // draw-to-draw position jumps, not assumed. Halving the gap roughly halves
+  // the step. The autonomous motion alone never needed this; only directly
+  // chasing a pointer does.
+  const ref = useFieldCanvas(draw, { fps: 60 });
   return (
     <div
       className={`h-full w-full ${className}`}

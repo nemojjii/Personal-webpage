@@ -105,6 +105,42 @@ test("easeTo: tau <= 0 snaps immediately to the target", () => {
   assert.equal(easeTo(0, 1, 0.01, 0), 1);
 });
 
+test("easeTo: frame-rate independent — many small steps vs few large steps covering the same total elapsed time converge to nearly the same value", () => {
+  const tau = 0.08;
+  const totalTime = 0.5;
+
+  let fine = 0; // simulating ~120 fps: 60 steps of ~1/120 s
+  for (let i = 0; i < 60; i++) fine = easeTo(fine, 1, totalTime / 60, tau);
+
+  let coarse = 0; // simulating ~20 fps: 10 steps of 1/20 s
+  for (let i = 0; i < 10; i++) coarse = easeTo(coarse, 1, totalTime / 10, tau);
+
+  close(fine, coarse, 1e-3);
+});
+
+test("easeTo: converges arbitrarily close to a fixed (resting) target as iterations continue", () => {
+  let v = -5; // start far from rest
+  const target = 0;
+  for (let i = 0; i < 500; i++) v = easeTo(v, target, 0.016, 0.1);
+  close(v, target, 1e-6);
+});
+
+test("easeTo: never overshoots a fixed target, approaching monotonically from either side", () => {
+  let fromBelow = 0;
+  let prevBelow = fromBelow;
+  let fromAbove = 10;
+  let prevAbove = fromAbove;
+  for (let i = 0; i < 50; i++) {
+    fromBelow = easeTo(fromBelow, 5, 0.02, 0.1);
+    assert.ok(fromBelow >= prevBelow && fromBelow <= 5);
+    prevBelow = fromBelow;
+
+    fromAbove = easeTo(fromAbove, 5, 0.02, 0.1);
+    assert.ok(fromAbove <= prevAbove && fromAbove >= 5);
+    prevAbove = fromAbove;
+  }
+});
+
 /* ───────────────────────────────── defaults ─────────────────────────────── */
 
 test("POINTER_DEFORM_DEFAULTS: a reasonable, bounded interaction", () => {
