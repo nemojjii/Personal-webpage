@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Fragment, type ReactNode } from "react";
 
 import { ArticleLayout } from "@/components/content/ArticleLayout";
@@ -18,7 +18,11 @@ import { site } from "@/site.config";
 type Params = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return getEntries("projects").map((entry) => ({ slug: entry.slug }));
+  // An entry with `externalPage` has no detail page of its own to build —
+  // see the redirect below, and the `externalPage` doc comment in lib/types.ts.
+  return getEntries("projects")
+    .filter((entry) => !entry.externalPage)
+    .map((entry) => ({ slug: entry.slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -43,6 +47,7 @@ export default async function ProjectPage({ params }: Params) {
   const { slug } = await params;
   const entry = getEntry("projects", slug);
   if (!entry || entry.collection !== "projects") notFound();
+  if (entry.externalPage) redirect(entry.externalPage);
 
   const toc = buildToc(entry.body);
   const siblings = getEntries("projects").slice().sort(byOrderThenDate);

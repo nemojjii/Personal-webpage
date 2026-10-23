@@ -275,6 +275,11 @@ function parseEntry(collection: Collection, filename: string): Entry {
       warn(where, `unknown stage "${stage}" — falling back to "exploration"`);
       stage = "exploration";
     }
+    let externalPage = optionalString(data.externalPage);
+    if (externalPage && !externalPage.startsWith("/")) {
+      warn(where, `externalPage "${externalPage}" must be a site-relative path starting with "/" — ignoring`);
+      externalPage = undefined;
+    }
     return {
       ...base,
       collection: "projects",
@@ -284,6 +289,8 @@ function parseEntry(collection: Collection, filename: string): Entry {
       role: optionalString(data.role),
       period: optionalString(data.period),
       links: parseLinks(data.links, where),
+      externalPage,
+      href: externalPage ?? base.href,
     } as ProjectEntry;
   }
 

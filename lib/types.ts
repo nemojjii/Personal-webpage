@@ -153,6 +153,14 @@ export interface ProjectEntry extends EntryBase {
   period?: string;
   /** Explicit external resources. Empty unless you add them. */
   links: ProjectLink[];
+  /**
+   * A site-relative path where this project's real page already lives (e.g.
+   * an interactive route built outside the content system). When set,
+   * `href` points here instead of the usual `/projects/<slug>`, and no
+   * `/projects/<slug>` detail page is built for this entry at all — so a
+   * project whose experience lives elsewhere gets exactly one page, not two.
+   */
+  externalPage?: string;
 }
 
 /** Fields the Bookshelf and the Screening Room share. */
