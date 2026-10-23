@@ -1,7 +1,7 @@
 ---
 title: "Little Laboratory — Interactive Scientific Explorations"
-subtitle: "Three instruments, one standard model each"
-summary: "A small set of interactive experiments built into this site — wave superposition, gradient descent and first-order reaction kinetics — each turning one textbook model into something to move, read off and test."
+subtitle: "Mathematical models, numerical methods, and visual intuition"
+summary: "A small set of interactive experiments built into this site — wave superposition, gradient descent, reaction kinetics and Fourier synthesis — each turning one textbook model into something to move, read off and test."
 stage: ongoing
 area: "Scientific Computing & Interactive Visualization"
 # The day this entry joined the site. The laboratory itself opened in October 2026.
@@ -16,6 +16,7 @@ keywords:
   - wave superposition
   - gradient descent
   - reaction kinetics
+  - fourier synthesis
   - scientific computing
 tags: [simulation, mathematics]
 related: []
@@ -25,7 +26,7 @@ references: []
 The [Little Laboratory](/laboratory) is a small space on this site where
 equations become something to explore. It exists because a model one has only
 read is not yet understood; the moment of understanding usually comes from
-moving a parameter and seeing what changes. Each of its three instruments takes
+moving a parameter and seeing what changes. Each of its four instruments takes
 one standard model — a textbook result, not a research finding — writes it down
 exactly, and puts its parameters under the visitor's hand.
 
@@ -95,9 +96,27 @@ $k = 0$ nothing reacts and the instrument says there is no half-life. No
 numerical integration is involved: the exponential is evaluated directly.
 [Open Reaction Kinetics](/laboratory/reaction-kinetics).
 
+### IV. Fourier Explorer
+
+A finite Fourier series sums $N$ sine waves, each an integer multiple of one
+fundamental frequency $f_0$: $f(t) = \sum_{n=1}^{N} A_n \sin(2\pi n f_0 t + \varphi_n)$.
+Sliders set the harmonic count, the fundamental frequency, and each harmonic's
+own amplitude and phase; three presets reach a pure sine, a square-wave
+approximation (odd harmonics only, amplitude $4/(n\pi)$) and a sawtooth-wave
+approximation (every harmonic, amplitude $2/(n\pi)$, its alternating sign
+carried as a phase of $0$ or $\pi$) — both genuine approximations, visibly
+short of the sharp edge they approach, with the ripple that remains even at
+the full eight harmonics named for what it is, the Gibbs phenomenon, rather
+than treated as a flaw. A second panel shows the discrete amplitude spectrum
+beside the time-domain sum, one line per active harmonic at its own
+frequency; the notes beneath are explicit that a finite series is not a
+Fourier transform — it is what a transform of a genuinely periodic signal
+already looks like.
+[Open Fourier Explorer](/laboratory/fourier-explorer).
+
 ## Where it stands
 
-Three instruments, open and working. The laboratory is meant to grow slowly,
+Four instruments, open and working. The laboratory is meant to grow slowly,
 one well-understood model at a time, and only when there is something true and
 small enough to put under a slider. It is a way of thinking, not a research
 output: nothing here is new, and that is the point.
