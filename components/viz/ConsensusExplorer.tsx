@@ -191,7 +191,7 @@ const SERIES_COLOURS = [
   "var(--color-accent-soft)",
   "var(--color-ink-soft)",
   "var(--color-ink-muted)",
-  "#9a6b73",
+  "var(--color-chart-extra)",
 ];
 
 export function ConsensusExplorer() {

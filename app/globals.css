@@ -2,7 +2,11 @@
 
 /* ───────────────────────────────────────────────────────────────────────────
    DESIGN TOKENS
-   Change the six colour values below and the whole site follows.
+   Change the colour values below and the whole site follows: every colour
+   used anywhere in the app — Tailwind's generated `bg-ink`/`text-accent`/…
+   utilities, every `var(--color-…)` an SVG or canvas reads directly — comes
+   from these custom properties, never a literal hex value of its own. That
+   is what makes the dark theme below a few lines rather than a rewrite.
    ─────────────────────────────────────────────────────────────────────── */
 
 @theme {
@@ -15,6 +19,7 @@
   --color-accent-soft: #8e4a55; /* wine, lightened for hairlines         */
   --color-rule: #d9d4ca; /* dividers                              */
   --color-rule-soft: #e7e2d9; /* faintest dividers                     */
+  --color-chart-extra: #9a6b73; /* a 6th series colour, off the main palette */
 
   --font-serif: var(--font-garamond), "EB Garamond", "Iowan Old Style",
     "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
@@ -29,6 +34,63 @@
   --measure: 36rem; /* long-form reading width */
 
   --ease-editorial: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   DARK THEME — a Midnight Klein identity, not an inverted light theme.
+   Read `app/layout.tsx` and `lib/theme.ts` first: `data-theme` is set by a
+   blocking inline script before hydration (never by Tailwind's `dark:`
+   variant, which only knows the class strategy or a media query, not an
+   explicit override a visitor chose). Two selectors below, deliberately:
+   `:root[data-theme="dark"]` applies an explicit choice outright, and the
+   `@media` block applies the same values when the OS prefers dark *and*
+   nothing explicit overrides it — which, because a plain `@media` query is
+   always live, is also how System mode updates on the fly if the OS theme
+   changes while the page is open, with no JavaScript watching for it.
+
+   `--color-accent-soft` here is NOT literally International Klein Blue
+   (#223BEE, used in `--color-accent`'s `-soft` role elsewhere) — at
+   2.5:1 against this background it reads fine as a large, bold accent but
+   fails even the lenient 3:1 non-text contrast guideline everywhere this
+   codebase actually uses `accent-soft`: thin 1px borders and chart lines
+   (Little Laboratory's wave-superposition instrument, the consensus-dynamics
+   explorer on the research pages). #6478E8 keeps the same hue and reads as
+   clearly the same family, at 3.9–4.5:1 so those borders and lines stay
+   legible. #223BEE's moodier, truer tone was kept for `--color-accent`'s
+   *text* role instead — but text needs stronger contrast than a hairline
+   does, so that role got the given softer blue (#869DFF, 6–7:1) and the
+   vivid one goes unused as a literal value. Report this trade-off plainly;
+   it is a deliberate legibility call, not an oversight.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-paper: #10172f;
+    --color-surface: #1a2442;
+    --color-ink: #f0eeff;
+    --color-ink-soft: #afb9d4;
+    --color-ink-muted: #8891b5;
+    --color-accent: #869dff;
+    --color-accent-soft: #6478e8;
+    --color-rule: #2e3a66;
+    --color-rule-soft: #1f2847;
+    --color-chart-extra: #c98f9c;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-paper: #10172f;
+  --color-surface: #1a2442;
+  --color-ink: #f0eeff;
+  --color-ink-soft: #afb9d4;
+  --color-ink-muted: #8891b5;
+  --color-accent: #869dff;
+  --color-accent-soft: #6478e8;
+  --color-rule: #2e3a66;
+  --color-rule-soft: #1f2847;
+  --color-chart-extra: #c98f9c;
+  color-scheme: dark;
 }
 
 /* ───────────────────────────────────────────────────────────────────────────

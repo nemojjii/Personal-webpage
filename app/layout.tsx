@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { EB_Garamond, Inter } from "next/font/google";
 
 import "katex/dist/katex.min.css";
@@ -7,6 +7,7 @@ import "./globals.css";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { professionalLinks } from "@/lib/links";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { site } from "@/site.config";
 
 const garamond = EB_Garamond({
@@ -23,6 +24,20 @@ const inter = Inter({
   variable: "--font-inter",
   weight: ["400", "500"],
 });
+
+/**
+ * The mobile browser chrome colour. Two entries, picked by the OS media
+ * query exactly like the CSS does — a visitor with an explicit light/dark
+ * choice stored only in `localStorage` still gets the chrome colour that
+ * matches their OS, since that is the best this (server-rendered) tag can
+ * do without JavaScript; it is a cosmetic detail, not the page itself.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8f6f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#10172f" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -73,8 +88,13 @@ function personSchema() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${garamond.variable} ${inter.variable}`}>
+    <html lang="en" className={`${garamond.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
+        {/* Sets `data-theme` before React hydrates, so an explicit light/dark
+            choice never flashes the wrong colours for a frame. Paired with
+            `suppressHydrationWarning` on <html> above, which covers only
+            that one element's attributes, not the rest of the tree. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script
           type="application/ld+json"
           // Serialised once at build time from site.config.

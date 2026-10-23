@@ -7,6 +7,8 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { type NavItem, navigation, secondaryNavigation, site } from "@/site.config";
 
+import { ThemeToggle } from "./ThemeToggle";
+
 const allLinks = [...navigation, ...secondaryNavigation];
 
 function isUnder(pathname: string, href: string) {
@@ -107,6 +109,8 @@ export function Header() {
             ))}
           </ul>
         </nav>
+
+        <ThemeToggle className="shrink-0" />
 
         {/* Mobile trigger */}
         <button

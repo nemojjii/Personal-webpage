@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { useFieldCanvas } from "./useFieldCanvas";
 
@@ -64,6 +64,9 @@ import { useFieldCanvas } from "./useFieldCanvas";
 /** Charcoal and wine as rgb triples — the site's `--color-ink` and `--color-accent`. */
 const INK = "36, 35, 32";
 const WINE = "112, 47, 59";
+/** The same two roles' dark-theme values — off-white and the soft Klein blue. */
+const INK_DARK = "240, 238, 255";
+const WINE_DARK = "134, 157, 255";
 
 interface WaveSpec {
   amplitude: number;
@@ -202,6 +205,41 @@ export function HeroField({
 }) {
   const cache = useRef({ L: 0, families: [] as Resolved[] });
 
+  // The construction below is untouched by theming — only which two rgb
+  // triples it paints with. Read fresh on mount and kept current by a
+  // MutationObserver (an explicit `data-theme` choice) and a matchMedia
+  // listener (System mode, so this follows an OS change live, same as the
+  // CSS does); `draw` reads the ref so this never costs a DOM read per frame.
+  const isDark = useRef(false);
+  useEffect(() => {
+    const resolve = () => {
+      const explicit = document.documentElement.dataset.theme;
+      if (explicit === "dark") return true;
+      if (explicit === "light") return false;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    };
+    isDark.current = resolve();
+
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => {
+      isDark.current = resolve();
+    };
+    mq.addEventListener("change", onChange);
+
+    const observer = new MutationObserver(onChange);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+    return () => {
+      mq.removeEventListener("change", onChange);
+      observer.disconnect();
+    };
+  }, []);
+
+  const colourFor = useCallback(
+    (base: string) => (isDark.current ? (base === INK ? INK_DARK : base === WINE ? WINE_DARK : base) : base),
+    [],
+  );
+
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => {
       const short = Math.min(w, h);
@@ -226,7 +264,7 @@ export function HeroField({
           const n = (breathing(f, r, x, t) - (1 - depth)) / (2 * depth); // 0 where the front is sparsest, 1 where densest
           const floor = band ? PRESENCE.farFloor.band : PRESENCE.farFloor.wide;
           const p = floor + (1 - floor) * Math.pow(1 - Math.min(1, Math.max(0, n)), 1.25);
-          g.addColorStop(i / stops, `rgba(${FAMILIES[FAR].colour}, ${p.toFixed(3)})`);
+          g.addColorStop(i / stops, `rgba(${colourFor(FAMILIES[FAR].colour)}, ${p.toFixed(3)})`);
         }
         return g;
       };
@@ -242,7 +280,7 @@ export function HeroField({
         for (let i = 0; i <= stops; i++) {
           const u = i / stops;
           const p = PRESENCE.wineFloor + (1 - PRESENCE.wineFloor) * 0.5 * (1 + Math.cos(Math.PI * u));
-          g.addColorStop(u, `rgba(${FAMILIES[WINE_FAMILY].colour}, ${p.toFixed(3)})`);
+          g.addColorStop(u, `rgba(${colourFor(FAMILIES[WINE_FAMILY].colour)}, ${p.toFixed(3)})`);
         }
         return g;
       };
@@ -325,7 +363,7 @@ export function HeroField({
             ctx.strokeStyle = style;
           } else {
             ctx.globalAlpha = 1;
-            ctx.strokeStyle = `rgba(${f.colour}, ${alpha})`;
+            ctx.strokeStyle = `rgba(${colourFor(f.colour)}, ${alpha})`;
           }
           ctx.lineWidth = f.width[0] + (f.width[1] - f.width[0]) * shaped;
           ctx.stroke();
@@ -356,7 +394,7 @@ export function HeroField({
 
       applyFade(ctx, w, h, fade);
     },
-    [fade, opacity],
+    [fade, opacity, colourFor],
   );
 
   const ref = useFieldCanvas(draw);
