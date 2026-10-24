@@ -18,10 +18,13 @@ const COLUMNS = {
     cols: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
     sizes: "(min-width: 1024px) 200px, (min-width: 640px) 295px, 45vw",
   },
-  /** A strip of recent additions on the homepage. */
+  /** A strip of recent additions on the homepage. Three-wide below sm used
+      to squeeze a title and a director/author name into roughly a third of
+      a phone's width, wrapping both onto several lines; two-wide gives each
+      cover close to what `books`/`films` already use at the same width. */
   strip: {
-    cols: "grid-cols-3 sm:grid-cols-6",
-    sizes: "(min-width: 640px) 165px, 30vw",
+    cols: "grid-cols-2 sm:grid-cols-6",
+    sizes: "(min-width: 640px) 165px, 45vw",
   },
   /** Four recent works beneath each space on the Collection landing page. */
   recent: {

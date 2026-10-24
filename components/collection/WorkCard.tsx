@@ -30,7 +30,7 @@ export function WorkCard({
         />
         <div className="mt-3">
           {showKind ? (
-            <span className="label mb-1 block !text-ink-muted">
+            <span className="label mb-1 block">
               {item.collection === "books" ? "Book" : "Film"}
             </span>
           ) : null}
@@ -41,7 +41,7 @@ export function WorkCard({
             <span className="entry-title">{primary}</span>
           </h3>
           {second.length ? (
-            <p className="mt-0.5 flex flex-col gap-y-0.5 font-serif text-[0.875rem] leading-snug text-ink-muted italic">
+            <p className="mt-0.5 flex flex-col gap-y-0.5 font-serif text-[0.875rem] leading-snug text-ink-soft italic">
               {second.map((t) => (
                 <span key={t} lang={titleLang(t)}>
                   {t}
@@ -52,8 +52,8 @@ export function WorkCard({
           {item.creator || item.year ? (
             <p className="mt-1.5 font-sans text-[0.75rem] text-ink-soft">
               {item.creator}
-              {item.creator && item.year ? <span className="text-ink-muted"> · </span> : null}
-              {item.year ? <span className="text-ink-muted tnum">{item.year}</span> : null}
+              {item.creator && item.year ? <span className="text-ink-soft"> · </span> : null}
+              {item.year ? <span className="text-ink-soft tnum">{item.year}</span> : null}
             </p>
           ) : null}
           <VisibilityMark visibility={item.visibility} className="mt-2" />

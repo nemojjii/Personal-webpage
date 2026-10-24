@@ -26,15 +26,21 @@ export function Footer() {
             {[...navigation.slice(1), ...secondaryNavigation]
               .flatMap((item) => [
                 { ...item, nested: false },
-                ...(item.children ?? []).map((child) => ({ ...child, nested: true })),
+                // A child whose destination is identical to its own parent's
+                // (Little Laboratory's dropdown lists itself first, so a
+                // visitor without a hover-only desktop dropdown can still
+                // reach it — see components/site/NavDropdown.tsx) is already
+                // reachable by the parent link right above it here, so
+                // listing it again would repeat both the name and the link.
+                ...(item.children ?? [])
+                  .filter((child) => child.href !== item.href)
+                  .map((child) => ({ ...child, nested: true })),
               ])
               .map((item) => (
                 <li key={item.href} className={item.nested ? "pl-3" : ""}>
                   <Link
                     href={item.href}
-                    className={`font-sans text-[0.8125rem] transition-colors duration-200 hover:text-accent ${
-                      item.nested ? "text-ink-muted" : "text-ink-soft"
-                    }`}
+                    className={`font-sans text-[0.8125rem] text-ink-soft transition-colors duration-200 hover:text-accent`}
                   >
                     {item.label}
                   </Link>
@@ -62,7 +68,7 @@ export function Footer() {
               ))}
             </ul>
           ) : (
-            <p className="font-sans text-[0.8125rem] text-ink-muted">
+            <p className="font-sans text-[0.8125rem] text-ink-soft">
               <Link href="/contact" className="link-quiet">
                 Contact
               </Link>
@@ -72,7 +78,7 @@ export function Footer() {
       </div>
 
       <div className="shell flex items-center justify-between gap-4 border-t border-rule-soft py-6">
-        <p className="font-sans text-[0.75rem] text-ink-muted">
+        <p className="font-sans text-[0.75rem] text-ink-soft">
           © {year} {site.name}
         </p>
         <span aria-hidden="true" className="font-serif text-[0.75rem] tracking-[0.5em] text-rule">

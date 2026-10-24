@@ -29,6 +29,17 @@
      lighting, and neither does this. See the comment on the dark block below
      for why the *site's* own blue accent is a different, softer value. */
   --color-klein: #223bee;
+  /* The one place Klein Blue is drawn thin and small rather than bold and
+     large: the Selected Work homepage preview's rose-curve icon. At that
+     scale, against Dark's midnight paper, the true pigment measures 2.47:1
+     — next to the two wine/accent previews beside it (6.98:1 in Dark, the
+     same role, same stroke weight), it reads as faint rather than merely
+     a cooler colour. This token exists only to lighten *that one line* in
+     Dark (5.14:1, same hue and saturation, just lifted) — the Playground's
+     own three canvases keep drawing with --color-klein itself, unchanged,
+     per the reasoning above. Equal to --color-klein in Light, where the
+     true pigment already reads at 6.64:1. */
+  --color-klein-preview: #223bee;
 
   --font-serif: var(--font-garamond), "EB Garamond", "Iowan Old Style",
     "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
@@ -84,6 +95,7 @@
     --color-rule: #2e3a66;
     --color-rule-soft: #1f2847;
     --color-chart-extra: #c98f9c;
+    --color-klein-preview: #7180f4;
     color-scheme: dark;
   }
 }
@@ -99,6 +111,7 @@
   --color-rule: #2e3a66;
   --color-rule-soft: #1f2847;
   --color-chart-extra: #c98f9c;
+  --color-klein-preview: #7180f4;
   color-scheme: dark;
 }
 
@@ -218,6 +231,34 @@
   &:hover {
     text-decoration-color: var(--color-accent);
     color: var(--color-accent);
+  }
+}
+
+/* A disclosure that is a real, collapsed-by-default <details>/<summary> up
+   to lg, and a static, always-open block of text from lg — used on the
+   hero's mathematical caption, so a visitor on a phone reaches Selected
+   Work sooner without that caption's longer sentence ever being removed;
+   from lg, where the page already has the room, there is nothing to open —
+   it reads exactly as it always has. Native disclosure semantics throughout
+   (no JS, no hydration-dependent state): a screen reader or keyboard user
+   below lg gets a real, standard "collapsed/expanded" control; above it,
+   the <summary> itself is hidden and every child forced visible, overriding
+   the browser's own default of hiding non-summary content while closed. */
+@utility hero-disclosure {
+  & summary {
+    cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+  @media (width >= 64rem) {
+    & summary {
+      display: none;
+    }
+    & > :not(summary) {
+      display: block !important;
+    }
   }
 }
 

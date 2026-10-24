@@ -76,23 +76,40 @@ export default function HomePage() {
             <HeroField fade={{ left: 0.34, right: 0.04, top: 0.16, bottom: 0.18 }} />
           </div>
           <div
-            className="rise relative mt-12 ml-[calc(50%_-_50vw)] h-[clamp(13rem,54vw,22rem)] w-screen lg:hidden"
+            className="rise relative mt-8 ml-[calc(50%_-_50vw)] h-[clamp(9rem,40vw,15rem)] w-screen lg:hidden"
             style={{ animationDelay: "160ms" }}
             aria-hidden="true"
           >
             <HeroField fade={{ top: 0.2, bottom: 0.22, left: 0.05, right: 0.05 }} />
           </div>
 
-          <p className="mt-3 max-w-[22rem] font-sans text-[0.6875rem] leading-relaxed text-ink-muted">
-            <span className="font-mono text-ink-soft">
+          {/* The formula stays visible at every width, as before. Only the
+              sentence explaining it collapses below lg (see hero-disclosure),
+              so a visitor on a phone reaches Selected Work sooner; nothing
+              about its own wording changes, and from lg it is always open,
+              exactly as before. */}
+          <div className="mt-3 max-w-[22rem] font-sans text-[0.6875rem] leading-relaxed">
+            <p className="font-mono text-ink-soft">
               H = V·s/L + E·Σ Aᵢ cos(kᵢ·r − ωᵢt + φᵢ)
-            </span>
-            <br />
-            Three families of streamlines, each the level sets of its own stream
-            function: a bent, slowly turning drift that breathes along the flow,
-            with travelling waves under a slow envelope. Every line stays open;
-            where the families cross, weight and opacity give the depth.
-          </p>
+            </p>
+            <details className="hero-disclosure group mt-1">
+              <summary className="flex cursor-pointer items-baseline gap-1.5 text-ink-soft">
+                <span
+                  aria-hidden="true"
+                  className="inline-block text-[0.625rem] text-ink-muted transition-transform duration-200 group-open:rotate-90"
+                >
+                  ▸
+                </span>
+                More about this drawing
+              </summary>
+              <p className="mt-1 text-ink-soft">
+                Three families of streamlines, each the level sets of its own stream
+                function: a bent, slowly turning drift that breathes along the flow,
+                with travelling waves under a slow envelope. Every line stays open;
+                where the families cross, weight and opacity give the depth.
+              </p>
+            </details>
+          </div>
         </div>
       </section>
 

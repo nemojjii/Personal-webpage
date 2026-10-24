@@ -78,7 +78,12 @@ function WorkPanel({
   children: ReactNode;
 }) {
   return (
-    <Link href={href} className="entry-row group block">
+    // flex + h-full: a CSS grid row already stretches every panel to the
+    // tallest one's height; this plus mt-auto on "Explore" below is what
+    // lets that link land on the same baseline in all three columns even
+    // though the three descriptions run to different lengths — desktop
+    // only, since each row is its own natural height on a stacked mobile.
+    <Link href={href} className="entry-row group flex h-full flex-col">
       <div className="aspect-square border border-rule-soft bg-surface/40 p-5 transition-colors duration-300 group-hover:border-rule">
         {children}
       </div>
@@ -93,7 +98,7 @@ function WorkPanel({
         <span className="entry-title">{title}</span>
       </h3>
       <p className="mt-2 font-serif text-[0.9375rem] leading-[1.55] text-ink-soft">{description}</p>
-      <p className="mt-3 font-sans text-[0.75rem] text-ink">
+      <p className="mt-auto pt-3 font-sans text-[0.8125rem] text-ink">
         Explore
         <span aria-hidden="true"> →</span>
       </p>
@@ -154,7 +159,10 @@ function ArtPreview() {
       role="img"
       aria-label="A five-petal rose curve, r equals cosine of 5 theta — Generative Art Playground's default parametric form, in International Klein Blue."
     >
-      <path d={d} fill="none" stroke="var(--color-klein)" strokeWidth="1.6" strokeLinejoin="round" />
+      {/* --color-klein-preview: the true pigment in Light, a lightened tint
+          in Dark — see the token's own comment in app/globals.css for why
+          this one line needed it and the Playground's own canvases do not. */}
+      <path d={d} fill="none" stroke="var(--color-klein-preview)" strokeWidth="1.6" strokeLinejoin="round" />
     </svg>
   );
 }

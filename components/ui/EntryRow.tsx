@@ -20,14 +20,14 @@ function Marker({ entry }: { entry: Entry }) {
     return (
       <span className="font-sans text-[0.75rem] text-ink-soft">
         {entry.author}
-        {entry.year ? <span className="text-ink-muted"> · {entry.year}</span> : null}
+        {entry.year ? <span className="text-ink-soft"> · {entry.year}</span> : null}
       </span>
     );
   if (entry.collection === "films")
     return (
       <span className="font-sans text-[0.75rem] text-ink-soft">
         {entry.director}
-        {entry.year ? <span className="text-ink-muted"> · {entry.year}</span> : null}
+        {entry.year ? <span className="text-ink-soft"> · {entry.year}</span> : null}
       </span>
     );
   return null;
@@ -56,11 +56,11 @@ export function EntryRow({
           <VisibilityMark visibility={entry.visibility} />
           {entry.collection === "projects" && entry.period ? (
             // When the work happened, in the author's words.
-            <span className="font-sans text-[0.75rem] text-ink-muted">{entry.period}</span>
+            <span className="font-sans text-[0.75rem] text-ink-soft">{entry.period}</span>
           ) : entry.date ? (
             <time
               dateTime={entry.date}
-              className="font-sans text-[0.75rem] text-ink-muted"
+              className="font-sans text-[0.75rem] text-ink-soft"
             >
               {/* A project's date is the day its entry joined the site, and says so. */}
               {entry.collection === "projects" ? "Added " : ""}
@@ -91,7 +91,7 @@ export function EntryRow({
           {hasMeta ? (
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
               {hasArea ? (
-                <span className="font-sans text-[0.75rem] text-ink-muted">
+                <span className="font-sans text-[0.75rem] text-ink-soft">
                   {(entry as { area?: string }).area}
                 </span>
               ) : null}

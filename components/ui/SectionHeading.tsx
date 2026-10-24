@@ -15,7 +15,12 @@ export function SectionHeading({
 }) {
   return (
     <div className="flex items-baseline gap-4 border-b border-rule pb-2.5">
-      <Tag className="label !font-sans">{children}</Tag>
+      {/* A size and weight step above the shared `label` utility (used
+          as-is for tags, badges and stage markers elsewhere): this is the
+          one label on a page that introduces a whole section rather than
+          annotating an item within one, and at the smaller, lighter default
+          it read as weaker than the item titles beneath it. */}
+      <Tag className="label !font-sans !text-[0.75rem] !font-semibold">{children}</Tag>
       <span className="flex-1" aria-hidden="true" />
       {action ? (
         <Link

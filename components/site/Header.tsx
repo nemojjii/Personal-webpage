@@ -199,9 +199,16 @@ export function Header() {
                         </span>
                       ) : null}
                     </Link>
-                    {item.children?.length ? (
+                    {/* A child whose destination duplicates its own parent's
+                        (Little Laboratory's first child) is already reachable
+                        by the parent link right above — see Footer.tsx, which
+                        lists the same `children` and skips it for the same
+                        reason. */}
+                    {item.children?.filter((child) => child.href !== item.href).length ? (
                       <ul className="-mt-1 mb-3 flex flex-col">
-                        {item.children.map((child) => {
+                        {item.children
+                          .filter((child) => child.href !== item.href)
+                          .map((child) => {
                           const childActive = isUnder(pathname, child.href);
                           return (
                             <li key={child.href}>
