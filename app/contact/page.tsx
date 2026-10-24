@@ -31,8 +31,12 @@ export default function ContactPage() {
         <PageHeader eyebrow="Correspondence" title="Contact" intro={site.contactNote} />
 
         <dl className="mt-12">
-          {CHANNELS.map((channel) => {
-            const link = byKey.get(channel.key);
+          {/* Only channels that actually have a verified link render a row —
+              an unfilled one (no ORCID, say) is omitted outright rather than
+              shown as a dash, so the page never implies a profile exists
+              somewhere unlisted. */}
+          {CHANNELS.filter((channel) => byKey.has(channel.key)).map((channel) => {
+            const link = byKey.get(channel.key)!;
             return (
               <div
                 key={channel.key}
@@ -40,21 +44,15 @@ export default function ContactPage() {
               >
                 <dt className="label">{channel.label}</dt>
                 <dd className="min-w-0">
-                  {link ? (
-                    <a
-                      href={link.href}
-                      className="link-quiet break-words font-sans text-[0.9375rem] text-ink"
-                      {...(link.href.startsWith("mailto:")
-                        ? {}
-                        : { target: "_blank", rel: "noopener noreferrer" })}
-                    >
-                      {link.display}
-                    </a>
-                  ) : (
-                    <span className="font-sans text-[0.9375rem] text-ink-muted" aria-label="not listed">
-                      —
-                    </span>
-                  )}
+                  <a
+                    href={link.href}
+                    className="link-quiet break-words font-sans text-[0.9375rem] text-ink"
+                    {...(link.href.startsWith("mailto:")
+                      ? {}
+                      : { target: "_blank", rel: "noopener noreferrer" })}
+                  >
+                    {link.display}
+                  </a>
                 </dd>
               </div>
             );

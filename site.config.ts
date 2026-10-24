@@ -13,9 +13,12 @@ export const site = {
   /** Used in tight spaces (mobile header, footer mark). */
   shortName: "Iris",
   /** Institution or affiliation. */
-  affiliation: "Rutgers University",
-  /** A short academic position line. Leave empty to hide. */
-  position: "Undergraduate, Chemical Physics & Mathematics",
+  affiliation: "Rutgers University–New Brunswick",
+  /** A short academic position line. Leave empty to hide. Phrased as ongoing
+   * study rather than a declared major — no record on this site confirms
+   * the Chemical Physics / Mathematics pairing as a formally declared
+   * double major. */
+  position: "Undergraduate studying Chemical Physics and Mathematics",
   /** Where the site is deployed. Used for metadata, sitemap and Open Graph. */
   url: "https://www.itsmeiris.com",
   /** Browser tab / metadata title suffix. */
@@ -29,12 +32,13 @@ export const site = {
    * since the About page is where the longer account lives.
    */
   intro: [
-    "I’m an undergraduate student studying Chemical Physics and Mathematics at Rutgers University.",
+    "I’m an undergraduate student studying Chemical Physics and Mathematics at Rutgers University–New Brunswick.",
     "I’m interested in the mathematical structures underlying the physical world, the questions that emerge when we try to understand it, and the unexpected connections between science, philosophy, literature, and art.",
   ],
 
   /** One-line description used for search engines and link previews. */
-  description: "Iris (Jieun) Kim | Chemical Physics & Mathematics at Rutgers University.",
+  description:
+    "Iris (Jieun) Kim | Chemical Physics & Mathematics at Rutgers University–New Brunswick.",
 
   /**
    * Professional links. Leave a value as "" and it disappears from the
@@ -42,7 +46,7 @@ export const site = {
    */
   links: {
     email: "jk2575@scarletmail.rutgers.edu",
-    github: "",
+    github: "https://github.com/nemojjii",
     scholar: "",
     orcid: "",
     linkedin: "",
