@@ -126,6 +126,9 @@ export const navigation: readonly NavItem[] = [
 ];
 
 /** Shown after the primary navigation, separated by a hairline. */
-export const secondaryNavigation: readonly NavItem[] = [{ label: "Contact", href: "/contact" }];
+export const secondaryNavigation: readonly NavItem[] = [
+  { label: "Investigation Board", href: "/connected-ideas" },
+  { label: "Contact", href: "/contact" },
+];
 
 export type SiteConfig = typeof site;

@@ -59,11 +59,11 @@ export function ExperimentPage({ experiment, children }: { experiment: Experimen
           </Prose>
         </div>
 
-        {groups.length ? (
-          <section className="no-print mx-auto mt-16 max-w-[40rem]" aria-labelledby="connected-ideas">
-            <SectionHeading>
-              <span id="connected-ideas">Connected ideas</span>
-            </SectionHeading>
+        <section className="no-print mx-auto mt-16 max-w-[40rem]" aria-labelledby="connected-ideas">
+          <SectionHeading>
+            <span id="connected-ideas">Connected ideas</span>
+          </SectionHeading>
+          {groups.length ? (
             <div className="mt-7 flex flex-wrap gap-x-10 gap-y-8">
               {groups.map((group) => (
                 <div key={group.collection} className="min-w-[13rem] flex-1 basis-[17rem]">
@@ -98,8 +98,13 @@ export function ExperimentPage({ experiment, children }: { experiment: Experimen
                 </div>
               ))}
             </div>
-          </section>
-        ) : null}
+          ) : null}
+          <p className="mt-7">
+            <Link href="/connected-ideas" className="link-quiet font-sans text-[0.8125rem]">
+              See this on the full Investigation Board <span aria-hidden="true">→</span>
+            </Link>
+          </p>
+        </section>
 
         {previous || next ? (
           <nav

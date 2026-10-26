@@ -119,6 +119,12 @@ export function ConnectedIdeas({ entry }: { entry: Entry }) {
           </ul>
         </div>
       ) : null}
+
+      <p className="mt-8">
+        <Link href="/connected-ideas" className="link-quiet font-sans text-[0.8125rem]">
+          See this on the full Investigation Board <span aria-hidden="true">→</span>
+        </Link>
+      </p>
     </section>
   );
 }
