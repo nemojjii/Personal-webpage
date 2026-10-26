@@ -73,7 +73,7 @@ export function ExperimentGlyph({ slug, className = "" }: { slug: string; classN
             <line x1="25.2" y1="64" x2="25.2" y2="37" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.6" />
             <line x1="8" y1="37" x2="25.2" y2="37" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.6" />
           </>
-        ) : (
+        ) : slug === "fourier-explorer" ? (
           <>
             {/* A square wave's spectrum: odd harmonics only, falling off as 1/n. */}
             <line x1="8" y1="64" x2={W - 4} y2="64" strokeWidth="0.6" opacity="0.4" />
@@ -88,6 +88,25 @@ export function ExperimentGlyph({ slug, className = "" }: { slug: string; classN
                 </g>
               );
             })}
+          </>
+        ) : (
+          <>
+            {/* psi_3(x) = sin(3*pi*x/L) in an infinite well: the walls, and a
+                standing wave that is exactly zero at both of them and at its
+                two interior nodes — the n=3 particle-in-a-box eigenstate's
+                own shape, not a generic squiggle. */}
+            <line x1="8" y1="8" x2="8" y2="64" strokeWidth="1.2" />
+            <line x1={W - 8} y1="8" x2={W - 8} y2="64" strokeWidth="1.2" />
+            <line x1="8" y1="64" x2={W - 8} y2="64" strokeWidth="0.6" opacity="0.4" />
+            <path
+              d={Array.from({ length: 61 }, (_, i) => {
+                const xi = i / 60;
+                const x = 8 + xi * (W - 16);
+                const y = 36 - 24 * Math.sin(3 * Math.PI * xi);
+                return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ")}
+              strokeWidth="1.1"
+            />
           </>
         )}
       </g>

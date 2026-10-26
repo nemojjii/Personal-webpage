@@ -8,7 +8,7 @@ import { experiments } from "@/lib/laboratory";
 export const metadata: Metadata = {
   title: "Little Laboratory",
   description:
-    "A small space for mathematical curiosity — four interactive experiments in wave superposition, gradient descent, reaction kinetics and Fourier synthesis.",
+    "A small space for mathematical curiosity — five interactive experiments in wave superposition, gradient descent, reaction kinetics, Fourier synthesis and quantum mechanics.",
   alternates: { canonical: "/laboratory" },
 };
 
@@ -21,12 +21,12 @@ export default function LaboratoryPage() {
         intro={
           <>
             <em>A small space for mathematical curiosity — where equations become something to
-            explore.</em> Four instruments, each built on one standard model, each yours to move.
+            explore.</em> Five instruments, each built on one standard model, each yours to move.
           </>
         }
       />
 
-      <ul className="mt-12 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="mt-12 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {experiments.map((experiment) => (
           <li key={experiment.slug} className="entry-row flex flex-col">
             <Link href={experiment.href} className="group block">

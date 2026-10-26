@@ -1,7 +1,7 @@
 import type { EntryRef, RelationKind } from "./types";
 
 /**
- * The Little Laboratory's four experiments: what the landing page lists,
+ * The Little Laboratory's five experiments: what the landing page lists,
  * what the sitemap includes, and the model notes each page sets beneath its
  * instrument. The mathematics itself lives in lib/laboratory/*.ts.
  */
@@ -21,7 +21,7 @@ export interface ExperimentRelation {
 
 export interface Experiment {
   slug: string;
-  numeral: "I" | "II" | "III" | "IV";
+  numeral: "I" | "II" | "III" | "IV" | "V";
   title: string;
   /** The question the instrument lets you put to the model. */
   question: string;
@@ -281,6 +281,91 @@ time, if their harmonics are shifted relative to one another.
 
 Amplitude is in arbitrary units, as elsewhere in the Little Laboratory;
 frequency is in hertz and time in seconds.
+`,
+    related: [],
+  },
+  {
+    slug: "quantum-mechanics-explorer",
+    numeral: "V",
+    title: "Quantum Mechanics Explorer",
+    question: "What does it mean for a particle to be confined, in superposition, or measured?",
+    description:
+      "One particle in a one-dimensional box, put to four tests: its stationary states, a superposition of them evolving in time, its odds of crossing a barrier it classically couldn't, and what repeated measurement of its position actually samples.",
+    href: "/laboratory/quantum-mechanics-explorer",
+    summary:
+      "An interactive one-dimensional quantum particle: infinite-well eigenstates and their energies, a time-evolving superposition of a few of them, exact transmission and reflection off a finite rectangular barrier, and seeded, reproducible position measurements compared against the theoretical probability density.",
+    notes: String.raw`
+## The model
+
+A particle of mass $m$ confined to an infinite square well of width $L$ — a
+box with impenetrable walls at $x=0$ and $x=L$ — has stationary states
+
+$$
+\psi_n(x) = \sqrt{\tfrac{2}{L}}\,\sin\!\left(\frac{n\pi x}{L}\right), \qquad
+E_n = \frac{n^2\pi^2\hbar^2}{2mL^2}, \qquad n = 1, 2, 3, \dots
+$$
+
+each already normalized ($\int_0^L \psi_n^2\,dx = 1$) and mutually
+orthogonal. Natural units are used throughout — $\hbar = 1$ — so mass,
+length and energy are dimensionless sliders, not measured quantities; see
+OpenStax *University Physics Volume 3*, §7.4, "The Quantum Particle in a
+Box", for the same derivation worked from the boundary conditions up.
+
+**A. Particle in a Box** draws $\psi_n$ and $|\psi_n|^2$ directly from this,
+alongside the energy ladder — $E_n \propto n^2$, so the levels spread apart
+rather than stay evenly spaced, and $E_n \propto 1/mL^2$, so a wider well or
+heavier particle lowers every level at once. The panel distinguishes the two
+curves on purpose: $\psi_n$ changes sign $n-1$ times inside the well, while
+$|\psi_n|^2$ — what a measurement actually samples — never goes negative.
+
+**B. Superposition & Time Evolution** combines a few $\psi_n$ with
+independent, renormalized weights $c_n$ into
+$\Psi(x,t) = \sum_n c_n\,\psi_n(x)\,e^{-iE_nt}$, each term carrying its own
+energy-dependent phase. A single active term is a bare stationary state,
+whose density $|\Psi|^2 = \psi_n(x)^2$ never changes — $|e^{-i\theta}| = 1$
+for any real $\theta$ — which is the precise sense in which it is
+"stationary". With two or more terms of different energy the cross terms
+between them beat at $|E_n - E_m|$, and the density genuinely redistributes
+over time, repeating every $2\pi/|E_n-E_m|$.
+
+**C. Quantum Tunneling** replaces the well with a finite rectangular barrier
+of height $V_0$ and width $a$, and asks for the transmission and reflection
+probabilities of a particle of energy $E$ incident on it — solved exactly
+from the boundary-matched scattering state, not approximated:
+
+$$
+T = \left[1 + \frac{V_0^2 \sinh^2(\kappa a)}{4E(V_0-E)}\right]^{-1}\!\! (E<V_0), \quad
+T = \left[1 + \frac{V_0^2 \sin^2(k'a)}{4E(E-V_0)}\right]^{-1}\!\! (E>V_0),
+$$
+
+with $\kappa=\sqrt{2m(V_0-E)}$, $k'=\sqrt{2m(E-V_0)}$, and $R = 1-T$ exactly,
+by construction. At $E=V_0$ both expressions above divide by zero while
+their numerators also vanish; the instrument uses the closed-form limit,
+$T = \left[1+mV_0a^2/2\right]^{-1}$, confirmed to match the value either
+formula approaches as $E\to V_0$. Above the barrier ($E>V_0$) the particle is
+classically free to pass, yet $T<1$ still — part of the wave reflects even
+there, which a classical particle rolling over a rise never would. $T$ and
+$R$ are probabilities; they are not read off the height of the wavefunction
+plot, which shows an amplitude.
+
+**D. Measurement & Probability** draws simulated position measurements
+directly from $|\psi_n(x)|^2$ by rejection sampling — $\sin^2$'s maximum is
+exactly 1, so the sampling envelope is exact, not estimated — using a small
+seeded generator (mulberry32), so the same seed and count reproduce the
+exact same positions every time. The growing histogram is compared against
+the theoretical curve it was drawn from. This samples the distribution a
+measurement is already known to follow; it is not a simulation of a
+classical particle's trajectory inside the well, which quantum mechanics
+does not assign it.
+
+## What this does not claim
+
+Every quantity above is dimensionless and relative — nothing here is
+calibrated to a real material, trap, or laboratory measurement. The barrier
+in Mode C is an idealized rectangle, not any particular physical junction.
+"Measurement" in Mode D means sampling the Born-rule distribution; it says
+nothing about the physical process of measurement itself, a question this
+instrument does not take a position on.
 `,
     related: [],
   },
