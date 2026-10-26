@@ -53,17 +53,19 @@ export function BoardListView({
                       {node.summary}
                     </p>
                     {neighbors.length > 0 ? (
-                      <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                      <ul className="mt-2 flex flex-col gap-2">
                         {neighbors.map(({ node: other, edge }) => (
-                          <li key={edge.id}>
+                          <li key={edge.id} className="border-l-2 border-rule-soft pl-3">
                             <button
                               type="button"
                               onClick={() => onSelect(other.id)}
-                              className="link-quiet font-sans text-[0.75rem] text-ink-soft"
-                              title={edge.note}
+                              className="link-quiet text-left font-sans text-[0.8125rem] font-medium text-ink"
                             >
                               → {other.title}
                             </button>
+                            <p className="mt-0.5 font-serif text-[0.8125rem] leading-[1.4] text-ink-soft">
+                              {edge.note}
+                            </p>
                           </li>
                         ))}
                       </ul>

@@ -10,18 +10,22 @@ import {
   neighborsOf,
   searchNodes,
 } from "@/lib/board/graph.ts";
+import type { UserEdge } from "@/lib/board/localBoard";
+import type { BoardEdge } from "@/lib/board/types";
 import { useLocalBoard } from "@/lib/board/useLocalBoard.ts";
 
 import { BoardCanvas, type Transform, defaultTransform } from "./BoardCanvas";
 import { BoardControls } from "./BoardControls";
-import { BoardInspector } from "./BoardInspector";
+import { BoardInspector, type InspectorSelection } from "./BoardInspector";
 import { BoardListView } from "./BoardListView";
 import { fitTransform } from "./boardLayout";
 
 const ALL_NODE_IDS = new Set(graph.nodes.map((n) => n.id));
 
+type Selection = { kind: "node"; id: string } | { kind: "edge"; id: string } | null;
+
 export function InvestigationBoard() {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selection, setSelection] = useState<Selection>(null);
   const [focused, setFocused] = useState(false);
   const [search, setSearch] = useState("");
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
@@ -58,9 +62,25 @@ export function InvestigationBoard() {
     [activeCategories],
   );
 
+  const selectedNodeId = selection?.kind === "node" ? selection.id : null;
+
+  const findEdge = useCallback(
+    (id: string): { edge: BoardEdge; isUserEdge: false } | { edge: UserEdge; isUserEdge: true } | null => {
+      const curated = graph.edges.find((e) => e.id === id);
+      if (curated) return { edge: curated, isUserEdge: false };
+      const user = local.state.userEdges.find((e) => e.id === id);
+      if (user) return { edge: user, isUserEdge: true };
+      return null;
+    },
+    [local.state.userEdges],
+  );
+
+  const selectedEdgeId = selection?.kind === "edge" ? selection.id : null;
+  const selectedEdgeResolved = selectedEdgeId ? findEdge(selectedEdgeId) : null;
+
   const focusedIds = useMemo(
-    () => (focused && selectedId ? neighborhood(graph, selectedId) : null),
-    [focused, selectedId],
+    () => (focused && selectedNodeId ? neighborhood(graph, selectedNodeId) : null),
+    [focused, selectedNodeId],
   );
 
   const visibleNodes = useMemo(
@@ -78,24 +98,54 @@ export function InvestigationBoard() {
     return local.state.userEdges.filter((e) => ids.has(e.from) && ids.has(e.to));
   }, [visibleNodes, local.state.userEdges]);
 
+  const selectedNodeNeighborCount = selectedNodeId ? neighborsOf(graph, selectedNodeId).length : 0;
+
   const highlightIds = useMemo(() => {
-    if (selectedId) return neighborhood(graph, selectedId);
+    if (selectedNodeId) return neighborhood(graph, selectedNodeId);
+    if (selectedEdgeResolved) return new Set([selectedEdgeResolved.edge.from, selectedEdgeResolved.edge.to]);
     if (search.trim()) return searchMatchIds;
     return null;
-  }, [selectedId, search, searchMatchIds]);
+  }, [selectedNodeId, selectedEdgeResolved, search, searchMatchIds]);
 
-  const selectedNode = selectedId ? getNode(graph, selectedId) ?? null : null;
-  const selectedNeighbors = selectedId ? neighborsOf(graph, selectedId) : [];
-  const selectedUserEdges = selectedId
-    ? local.state.userEdges.filter((e) => e.from === selectedId || e.to === selectedId)
+  // An isolated node has nothing to dim toward, so selecting one leaves the whole board readable.
+  const dimOthers =
+    highlightIds !== null && !(selectedNodeId !== null && selectedNodeNeighborCount === 0);
+
+  const selectedNode = selectedNodeId ? getNode(graph, selectedNodeId) ?? null : null;
+  const selectedNeighbors = selectedNodeId ? neighborsOf(graph, selectedNodeId) : [];
+  const selectedUserEdges = selectedNodeId
+    ? local.state.userEdges.filter((e) => e.from === selectedNodeId || e.to === selectedNodeId)
     : [];
-  const selectedNote = selectedId ? local.state.notes[selectedId] ?? "" : "";
+  const selectedNote = selectedNodeId ? local.state.notes[selectedNodeId] ?? "" : "";
+
+  const inspectorSelection: InspectorSelection | null = selectedNode
+    ? {
+        kind: "node",
+        node: selectedNode,
+        neighbors: selectedNeighbors,
+        userEdges: selectedUserEdges,
+        note: selectedNote,
+      }
+    : selectedEdgeResolved
+      ? (() => {
+          const fromNode = getNode(graph, selectedEdgeResolved.edge.from);
+          const toNode = getNode(graph, selectedEdgeResolved.edge.to);
+          if (!fromNode || !toNode) return null;
+          return {
+            kind: "edge" as const,
+            edge: selectedEdgeResolved.edge,
+            isUserEdge: selectedEdgeResolved.isUserEdge,
+            fromNode,
+            toNode,
+          };
+        })()
+      : null;
 
   const handleMoveNode = useCallback((id: string, x: number, y: number) => {
     setSessionPositions((prev) => ({ ...prev, [id]: { x, y } }));
   }, []);
 
-  const handleSelect = useCallback(
+  const handleSelectNode = useCallback(
     (id: string) => {
       if (connectFrom && connectFrom !== id) {
         const label = window.prompt(
@@ -108,14 +158,24 @@ export function InvestigationBoard() {
         setConnectFrom(null);
         return;
       }
-      setSelectedId(id);
+      setSelection({ kind: "node", id });
       setFocused(false);
     },
     [connectFrom, local],
   );
 
+  const handleSelectEdge = useCallback((id: string) => {
+    setSelection({ kind: "edge", id });
+    setFocused(false);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setSelection(null);
+    setFocused(false);
+  }, []);
+
   const handleZoom = useCallback((factor: number) => {
-    setTransform((t) => ({ ...t, scale: Math.min(2.2, Math.max(0.4, t.scale * factor)) }));
+    setTransform((t) => ({ ...t, scale: Math.min(2.2, Math.max(0.35, t.scale * factor)) }));
   }, []);
 
   const handleFitToView = useCallback(() => {
@@ -130,7 +190,7 @@ export function InvestigationBoard() {
       maxX: Math.max(...points.map((p) => p.x)),
       maxY: Math.max(...points.map((p) => p.y)),
     };
-    setTransform(fitTransform(bounds, viewportSizeRef.current, 90));
+    setTransform(fitTransform(bounds, viewportSizeRef.current, 100));
   }, [focusedIds, visibleNodes, sessionPositions]);
 
   const handleResetLayout = useCallback(() => {
@@ -167,7 +227,7 @@ export function InvestigationBoard() {
         </p>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+      <div className="relative">
         {viewMode === "canvas" ? (
           <BoardCanvas
             nodes={visibleNodes}
@@ -175,10 +235,12 @@ export function InvestigationBoard() {
             userEdges={visibleUserEdges}
             positions={sessionPositions}
             onMoveNode={handleMoveNode}
-            selectedId={selectedId}
-            onSelect={handleSelect}
+            selectedNodeId={selectedNodeId}
+            selectedEdgeId={selectedEdgeId}
+            onSelectNode={handleSelectNode}
+            onSelectEdge={handleSelectEdge}
             highlightIds={highlightIds}
-            dimOthers={highlightIds !== null}
+            dimOthers={dimOthers}
             transform={transform}
             onTransformChange={setTransform}
             connectFrom={connectFrom}
@@ -186,24 +248,26 @@ export function InvestigationBoard() {
           />
         ) : (
           <div className="border border-rule bg-surface/20 p-5">
-            <BoardListView graph={graph} nodes={visibleNodes} selectedId={selectedId} onSelect={handleSelect} />
+            <BoardListView
+              graph={graph}
+              nodes={visibleNodes}
+              selectedId={selectedNodeId}
+              onSelect={handleSelectNode}
+            />
           </div>
         )}
 
         <BoardInspector
-          key={selectedId ?? "none"}
-          node={selectedNode}
-          neighbors={selectedNeighbors}
-          userEdges={selectedUserEdges}
+          selection={inspectorSelection}
           resolveNode={(id) => getNode(graph, id)}
-          note={selectedNote}
-          onSetNote={(text) => selectedId && local.setNoteFor(selectedId, text)}
-          onSelect={handleSelect}
+          onSetNote={(text) => selectedNodeId && local.setNoteFor(selectedNodeId, text)}
+          onSelectNode={handleSelectNode}
+          onClose={handleClose}
           onFocusNeighborhood={() => setFocused(true)}
           onClearFocus={() => setFocused(false)}
           focused={focused}
           connectFrom={connectFrom}
-          onStartConnect={() => selectedId && setConnectFrom(selectedId)}
+          onStartConnect={() => selectedNodeId && setConnectFrom(selectedNodeId)}
           onCancelConnect={() => setConnectFrom(null)}
           onRemoveUserEdge={local.removeConnection}
         />

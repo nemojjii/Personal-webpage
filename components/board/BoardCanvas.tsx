@@ -2,14 +2,23 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
+import { experiments } from "@/lib/laboratory.ts";
 import type { BoardEdge, BoardNode } from "@/lib/board/types";
 import type { UserEdge } from "@/lib/board/localBoard";
 
-import { WORLD_HEIGHT, WORLD_WIDTH, categoryLabel, clampScale, fitTransform } from "./boardLayout";
-
-const CARD_W = 168;
-const CARD_H = 64;
-const HUB_SIZE = 96;
+import {
+  CARD_H,
+  CARD_W,
+  DEFAULT_SCALE_FLOOR,
+  DEFAULT_VIEW_BOUNDS,
+  HUB_SIZE,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
+  categoryCode,
+  categoryLabel,
+  clampScale,
+  fitTransform,
+} from "./boardLayout";
 
 export interface Transform {
   panX: number;
@@ -18,12 +27,14 @@ export interface Transform {
 }
 
 export function defaultTransform(viewport: { width: number; height: number }): Transform {
-  return fitTransform({ minX: 0, minY: 0, maxX: WORLD_WIDTH, maxY: WORLD_HEIGHT }, viewport, 40);
+  return fitTransform(DEFAULT_VIEW_BOUNDS, viewport, 60, DEFAULT_SCALE_FLOOR);
 }
 
 function nodeCenter(node: BoardNode, positions: Record<string, { x: number; y: number }>) {
   return positions[node.id] ?? { x: node.x, y: node.y };
 }
+
+const numeralForSlug = new Map(experiments.map((e) => [e.slug, e.numeral]));
 
 export function BoardCanvas({
   nodes,
@@ -31,8 +42,10 @@ export function BoardCanvas({
   userEdges,
   positions,
   onMoveNode,
-  selectedId,
-  onSelect,
+  selectedNodeId,
+  selectedEdgeId,
+  onSelectNode,
+  onSelectEdge,
   highlightIds,
   dimOthers,
   transform,
@@ -45,8 +58,10 @@ export function BoardCanvas({
   userEdges: UserEdge[];
   positions: Record<string, { x: number; y: number }>;
   onMoveNode: (id: string, x: number, y: number) => void;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  selectedNodeId: string | null;
+  selectedEdgeId: string | null;
+  onSelectNode: (id: string) => void;
+  onSelectEdge: (id: string) => void;
   highlightIds: Set<string> | null;
   dimOthers: boolean;
   transform: Transform;
@@ -66,6 +81,7 @@ export function BoardCanvas({
     observer.observe(viewport);
     return () => observer.disconnect();
   }, [onViewportResize]);
+
   const panState = useRef<{ pointerId: number; startX: number; startY: number; origin: Transform } | null>(
     null,
   );
@@ -135,9 +151,9 @@ export function BoardCanvas({
       const drag = dragState.current;
       dragState.current = null;
       if (!drag || drag.pointerId !== e.pointerId) return;
-      if (!drag.moved) onSelect(node.id);
+      if (!drag.moved) onSelectNode(node.id);
     },
-    [onSelect],
+    [onSelectNode],
   );
 
   const handleWheel = useCallback(
@@ -166,14 +182,24 @@ export function BoardCanvas({
     <div
       ref={viewportRef}
       role="application"
-      aria-label="Investigation board canvas. Use the list view toggle for a keyboard-friendly alternative."
-      className="relative h-[70vh] min-h-[420px] touch-none overflow-hidden border border-rule bg-surface/30 select-none"
+      aria-label="Investigation board canvas. Drag to rearrange, scroll to zoom. Use the list view toggle for a keyboard-friendly alternative."
+      className="relative h-[72vh] min-h-[460px] touch-none overflow-hidden border border-rule bg-surface/25 select-none"
       onPointerDown={handleViewportPointerDown}
       onPointerMove={handleViewportPointerMove}
       onPointerUp={endViewportPan}
       onPointerCancel={endViewportPan}
       onWheel={handleWheel}
     >
+      {/* A faint registration grid — archival, not decorative noise. */}
+      <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.35]" aria-hidden="true">
+        <defs>
+          <pattern id="board-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+            <path d="M 36 0 L 0 0 0 36" fill="none" stroke="var(--color-rule-soft)" strokeWidth="1" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#board-grid)" />
+      </svg>
+
       <div
         className="absolute top-0 left-0"
         style={{
@@ -188,58 +214,99 @@ export function BoardCanvas({
           height={WORLD_HEIGHT}
           viewBox={`0 0 ${WORLD_WIDTH} ${WORLD_HEIGHT}`}
           className="absolute top-0 left-0 overflow-visible"
-          aria-hidden="true"
         >
-          {edges.map((edge) => {
-            const from = nodes.find((n) => n.id === edge.from);
-            const to = nodes.find((n) => n.id === edge.to);
-            if (!from || !to) return null;
-            const a = nodeCenter(from, positions);
-            const b = nodeCenter(to, positions);
-            const dimmed = isDimmed(edge.from) || isDimmed(edge.to);
-            const active = highlightIds !== null && highlightIds.has(edge.from) && highlightIds.has(edge.to);
-            return (
-              <line
-                key={edge.id}
-                x1={a.x}
-                y1={a.y}
-                x2={b.x}
-                y2={b.y}
-                stroke={active ? "var(--color-accent)" : "var(--color-rule)"}
-                strokeWidth={active ? 1.75 : 1}
-                opacity={dimmed ? 0.15 : active ? 0.9 : 0.55}
-              />
-            );
-          })}
-          {userEdges.map((edge) => {
-            const from = nodes.find((n) => n.id === edge.from);
-            const to = nodes.find((n) => n.id === edge.to);
-            if (!from || !to) return null;
-            const a = nodeCenter(from, positions);
-            const b = nodeCenter(to, positions);
-            return (
-              <line
-                key={edge.id}
-                x1={a.x}
-                y1={a.y}
-                x2={b.x}
-                y2={b.y}
-                stroke="var(--color-accent-soft)"
-                strokeWidth={1.25}
-                strokeDasharray="5 4"
-                opacity={0.8}
-              />
-            );
-          })}
+          <g aria-hidden="true">
+            {edges.map((edge) => {
+              const from = nodes.find((n) => n.id === edge.from);
+              const to = nodes.find((n) => n.id === edge.to);
+              if (!from || !to) return null;
+              const a = nodeCenter(from, positions);
+              const b = nodeCenter(to, positions);
+              const dimmed = isDimmed(edge.from) || isDimmed(edge.to);
+              const active =
+                highlightIds !== null && highlightIds.has(edge.from) && highlightIds.has(edge.to);
+              const chosen = edge.id === selectedEdgeId;
+              return (
+                <g key={edge.id}>
+                  {/* Wide, invisible hit area so a thin line stays easy to click. */}
+                  <line
+                    x1={a.x}
+                    y1={a.y}
+                    x2={b.x}
+                    y2={b.y}
+                    stroke="transparent"
+                    strokeWidth={16}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => onSelectEdge(edge.id)}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <line
+                    x1={a.x}
+                    y1={a.y}
+                    x2={b.x}
+                    y2={b.y}
+                    stroke={chosen || active ? "var(--color-accent)" : "var(--color-ink-muted)"}
+                    strokeWidth={chosen ? 2.5 : active ? 2 : 1.25}
+                    opacity={dimmed ? 0.22 : chosen ? 1 : active ? 0.95 : 0.6}
+                    pointerEvents="none"
+                  />
+                  {!dimmed ? (
+                    <>
+                      <circle cx={a.x} cy={a.y} r={chosen || active ? 3 : 2} fill="var(--color-ink-muted)" opacity={0.7} pointerEvents="none" />
+                      <circle cx={b.x} cy={b.y} r={chosen || active ? 3 : 2} fill="var(--color-ink-muted)" opacity={0.7} pointerEvents="none" />
+                    </>
+                  ) : null}
+                </g>
+              );
+            })}
+            {userEdges.map((edge) => {
+              const from = nodes.find((n) => n.id === edge.from);
+              const to = nodes.find((n) => n.id === edge.to);
+              if (!from || !to) return null;
+              const a = nodeCenter(from, positions);
+              const b = nodeCenter(to, positions);
+              const chosen = edge.id === selectedEdgeId;
+              return (
+                <g key={edge.id}>
+                  <line
+                    x1={a.x}
+                    y1={a.y}
+                    x2={b.x}
+                    y2={b.y}
+                    stroke="transparent"
+                    strokeWidth={16}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => onSelectEdge(edge.id)}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <line
+                    x1={a.x}
+                    y1={a.y}
+                    x2={b.x}
+                    y2={b.y}
+                    stroke="var(--color-accent-soft)"
+                    strokeWidth={chosen ? 2.25 : 1.5}
+                    strokeDasharray="6 5"
+                    opacity={chosen ? 1 : 0.85}
+                    pointerEvents="none"
+                  />
+                </g>
+              );
+            })}
+          </g>
         </svg>
 
-        {nodes.map((node) => {
+        {nodes.map((node, index) => {
           const center = nodeCenter(node, positions);
           const isConcept = node.category === "concept";
+          const isBook = node.category === "book";
+          const isLab = node.category === "laboratory";
           const size = isConcept ? HUB_SIZE : undefined;
           const dimmed = isDimmed(node.id);
-          const selected = node.id === selectedId;
+          const selected = node.id === selectedNodeId;
           const isConnectTarget = connectFrom !== null && connectFrom !== node.id;
+          const numeral = isLab ? numeralForSlug.get(node.id.replace("laboratory/", "")) : undefined;
+
           return (
             <button
               key={node.id}
@@ -248,14 +315,18 @@ export function BoardCanvas({
               onPointerUp={(e) => handleNodePointerUp(e, node)}
               aria-pressed={selected}
               aria-label={`${categoryLabel[node.category]}: ${node.title}`}
-              className={`absolute flex flex-col items-center justify-center border px-3 py-2 text-center font-sans shadow-none transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                isConcept ? "rounded-full" : "rounded-[2px]"
-              } ${
+              className={`absolute flex flex-col justify-center text-left font-sans shadow-sm transition-[opacity,border-color,box-shadow] ${
+                isConcept
+                  ? "items-center rounded-full border-2 text-center"
+                  : isBook
+                    ? "items-start border-y border-r border-l-[3px] pr-3 pl-4"
+                    : "items-start rounded-[2px] border px-4"
+              } py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                 selected
-                  ? "border-accent bg-surface text-ink"
+                  ? "border-accent bg-paper shadow-md ring-1 ring-accent/40"
                   : isConnectTarget
-                    ? "border-dashed border-accent-soft bg-surface/90 text-ink"
-                    : "border-rule bg-paper/95 text-ink hover:border-accent-soft"
+                    ? "border-dashed border-accent-soft bg-surface text-ink"
+                    : "border-rule bg-paper/[0.97] text-ink hover:border-accent-soft hover:shadow-md"
               }`}
               style={{
                 left: center.x,
@@ -263,18 +334,43 @@ export function BoardCanvas({
                 width: size ?? CARD_W,
                 height: size ?? CARD_H,
                 transform: "translate(-50%, -50%)",
-                opacity: dimmed ? 0.3 : 1,
+                opacity: dimmed ? 0.55 : 1,
                 cursor: "grab",
+                zIndex: selected ? 5 : dimmed ? 1 : 2,
               }}
             >
-              <span className="label line-clamp-1 text-ink-muted">{categoryLabel[node.category]}</span>
-              <span className="mt-0.5 line-clamp-2 text-[0.8125rem] leading-[1.2] font-medium">
+              {!isConcept ? (
+                <span className="pointer-events-none absolute top-1.5 right-2 font-sans text-[0.625rem] tracking-[0.08em] text-ink-muted/70 tabular-nums">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+              ) : null}
+              <span className="label flex items-center gap-1.5 text-ink-muted">
+                <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[0.5625rem] leading-none">
+                  {categoryCode[node.category]}
+                </span>
+                {isLab && numeral ? <span className="text-ink-muted">{numeral}</span> : null}
+                {!isConcept ? <span className="line-clamp-1">{categoryLabel[node.category]}</span> : null}
+              </span>
+              <span
+                className={`mt-1 line-clamp-2 leading-[1.22] font-medium text-ink ${
+                  isConcept ? "font-serif text-[0.9375rem]" : "font-serif text-[1rem]"
+                }`}
+              >
                 {node.title}
               </span>
+              {!isConcept ? (
+                <span className="mt-1 line-clamp-1 font-sans text-[0.6875rem] leading-tight text-ink-soft">
+                  {node.subtitle}
+                </span>
+              ) : null}
             </button>
           );
         })}
       </div>
+
+      <p className="pointer-events-none absolute bottom-3 left-3 max-w-[22rem] font-sans text-[0.6875rem] leading-snug text-ink-muted italic">
+        Drag to rearrange · Scroll to zoom · Select a connection to see why it exists.
+      </p>
     </div>
   );
 }
