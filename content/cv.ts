@@ -217,6 +217,24 @@ export const cvSections: CvSection[] = [
         period: "2024–2025",
         href: "https://ftc-events.firstinspires.org/team/26039",
       },
+      // Verified directly against https://www.challengeu.org/winners-c
+      // (fetched 2026-10-26): the page lists "Jieun Kim, The Stony Brook
+      // School" under its "Gold Award" heading, for the "International
+      // Peace and Security Challenge" — an essay competition (the page's
+      // own intro: "reviewing more than 180 outstanding essay
+      // submissions"), not a publication. No year is given anywhere on
+      // the page for this entry; its only year is a site-wide "© 2023 by
+      // ChallengeU" footer, which is not an award date and is not used as
+      // one here — `period` is left unset rather than asserting a year
+      // ("2024") the source does not confirm. Flag this to Iris: if a
+      // correct year is known from elsewhere (certificate, notification
+      // email), add it as `period` below.
+      {
+        title: "Gold Award — International Peace and Security Challenge",
+        organisation: "ChallengeU",
+        location: "The Stony Brook School",
+        href: "https://www.challengeu.org/winners-c",
+      },
     ],
   },
   {
