@@ -187,6 +187,8 @@ export const boardNodes: BoardNode[] = [
     summary:
       "Credited on the About page with giving words to a sense of belonging to the universe — 'we are made of the same matter as the stars.'",
     href: "/bookshelf/cosmos",
+    // The same Open Library cover already used on this book's own Bookshelf page (content/books/cosmos.mdx).
+    coverImage: "https://covers.openlibrary.org/b/id/10601318-L.jpg",
     x: 430,
     y: 560,
   },

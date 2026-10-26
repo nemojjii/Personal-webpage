@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 import { experiments } from "@/lib/laboratory.ts";
 import type { BoardEdge, BoardNode } from "@/lib/board/types";
 import type { UserEdge } from "@/lib/board/localBoard";
 
 import {
-  CARD_H,
-  CARD_W,
+  CARD_SIZE,
   DEFAULT_SCALE_FLOOR,
   DEFAULT_VIEW_BOUNDS,
   HUB_SIZE,
@@ -18,7 +18,9 @@ import {
   categoryLabel,
   clampScale,
   fitTransform,
+  neighborhoodLabels,
 } from "./boardLayout";
+import { INSTRUMENT_GLYPH_VIEWBOX, instrumentGlyphs } from "./instrumentGlyphs";
 
 export interface Transform {
   panX: number;
@@ -35,6 +37,152 @@ function nodeCenter(node: BoardNode, positions: Record<string, { x: number; y: n
 }
 
 const numeralForSlug = new Map(experiments.map((e) => [e.slug, e.numeral]));
+
+const EDGE_KIND_DASH: Record<string, string | undefined> = {
+  mathematical: undefined,
+  conceptual: undefined,
+  thematic: "1 4",
+  personal: "1 3 6 3",
+};
+
+function ArchivalNumber({ index }: { index: number }) {
+  return (
+    <span className="pointer-events-none absolute top-1.5 right-2 font-sans text-[0.625rem] tracking-[0.08em] text-ink-muted/70 tabular-nums">
+      {String(index + 1).padStart(2, "0")}
+    </span>
+  );
+}
+
+function CategoryMark({ node }: { node: BoardNode }) {
+  return (
+    <span className="label flex items-center gap-1.5 text-ink-muted">
+      <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[0.5625rem] leading-none">
+        {categoryCode[node.category]}
+      </span>
+      <span className="line-clamp-1">{categoryLabel[node.category]}</span>
+    </span>
+  );
+}
+
+function BookCardContents({ node, index }: { node: BoardNode; index: number }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showCover = node.coverImage && !imageFailed;
+  return (
+    <>
+      <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-accent/60" aria-hidden="true" />
+      <ArchivalNumber index={index} />
+      {showCover ? (
+        // Decorative: the title and author beneath already name the book for assistive technology.
+        <div className="relative h-[72%] w-full border border-rule-soft" aria-hidden="true">
+          <Image
+            src={node.coverImage!}
+            alt=""
+            fill
+            sizes="110px"
+            className="object-cover"
+            // Not lazy: inside a CSS-transformed, panned canvas, the browser's
+            // native viewport-intersection check for `loading="lazy"` does not
+            // reliably fire, so the one small cover on this board loads eagerly.
+            priority
+            onError={() => setImageFailed(true)}
+          />
+        </div>
+      ) : (
+        <span className="h-[72%] w-full border border-rule-soft bg-surface" aria-hidden="true" />
+      )}
+      <span className="mt-1.5 line-clamp-1 font-serif text-[0.875rem] leading-tight font-medium text-ink">
+        {node.title}
+      </span>
+      <span className="line-clamp-1 font-sans text-[0.625rem] text-ink-soft italic">{node.subtitle}</span>
+    </>
+  );
+}
+
+function NodeCardContents({ node, index }: { node: BoardNode; index: number }) {
+  switch (node.category) {
+    case "research":
+      return (
+        <>
+          <span className="pointer-events-none absolute top-0 left-0 h-[3px] w-full bg-accent/70" aria-hidden="true" />
+          <ArchivalNumber index={index} />
+          <CategoryMark node={node} />
+          <span className="mt-1.5 line-clamp-3 font-serif text-[1.0625rem] leading-[1.22] font-medium text-ink">
+            {node.title}
+          </span>
+          <span className="mt-auto line-clamp-2 border-t border-rule-soft pt-1.5 font-sans text-[0.6875rem] leading-tight text-ink-soft italic">
+            {node.subtitle}
+          </span>
+        </>
+      );
+
+    case "laboratory": {
+      const numeral = numeralForSlug.get(node.id.replace("laboratory/", ""));
+      const glyph = instrumentGlyphs[node.id];
+      return (
+        <>
+          <ArchivalNumber index={index} />
+          <span className="label flex items-center gap-1.5 text-ink-muted">
+            <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[0.5625rem] leading-none">
+              {categoryCode.laboratory}
+            </span>
+            {numeral ? <span className="font-serif text-ink-soft">{numeral}</span> : null}
+            <span className="line-clamp-1">Instrument</span>
+          </span>
+          {glyph ? (
+            <svg viewBox={INSTRUMENT_GLYPH_VIEWBOX} className="mt-1 h-7 w-full" aria-hidden="true" preserveAspectRatio="none">
+              <path d={glyph} fill="none" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.8" />
+            </svg>
+          ) : null}
+          <span className="mt-auto line-clamp-2 font-serif text-[0.9375rem] leading-[1.2] font-medium text-ink">
+            {node.title}
+          </span>
+        </>
+      );
+    }
+
+    case "project": {
+      const glyph = instrumentGlyphs[node.id];
+      return (
+        <>
+          <ArchivalNumber index={index} />
+          <CategoryMark node={node} />
+          <span className="mt-1.5 line-clamp-2 font-serif text-[1rem] leading-[1.22] font-medium text-ink">
+            {node.title}
+          </span>
+          {glyph ? (
+            <svg viewBox={INSTRUMENT_GLYPH_VIEWBOX} className="mt-auto h-6 w-full opacity-70" aria-hidden="true" preserveAspectRatio="none">
+              <path d={glyph} fill="none" stroke="var(--color-accent-soft)" strokeWidth="1.25" />
+            </svg>
+          ) : (
+            <span className="mt-auto line-clamp-1 font-sans text-[0.6875rem] leading-tight text-ink-soft">
+              {node.subtitle}
+            </span>
+          )}
+        </>
+      );
+    }
+
+    case "book":
+      return <BookCardContents node={node} index={index} />;
+
+    case "concept":
+      return (
+        <>
+          <span
+            className="pointer-events-none absolute inset-[6px] rounded-full border border-rule-soft"
+            aria-hidden="true"
+          />
+          <span className="label text-ink-muted">{categoryCode.concept}</span>
+          <span className="mt-1 line-clamp-3 px-3 text-center font-serif text-[1rem] leading-[1.18] font-medium text-ink">
+            {node.title}
+          </span>
+        </>
+      );
+
+    default:
+      return null;
+  }
+}
 
 export function BoardCanvas({
   nodes,
@@ -70,6 +218,7 @@ export function BoardCanvas({
   onViewportResize?: (size: { width: number; height: number }) => void;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -209,6 +358,18 @@ export function BoardCanvas({
           transformOrigin: "0 0",
         }}
       >
+        {/* Faint neighborhood labels — organisational, not a claim of connection. */}
+        {neighborhoodLabels.map((label) => (
+          <span
+            key={label.text}
+            aria-hidden="true"
+            className="pointer-events-none absolute font-sans text-[0.8125rem] font-medium tracking-[0.16em] text-ink-muted/35 uppercase"
+            style={{ left: label.x, top: label.y }}
+          >
+            {label.text}
+          </span>
+        ))}
+
         <svg
           width={WORLD_WIDTH}
           height={WORLD_HEIGHT}
@@ -226,6 +387,9 @@ export function BoardCanvas({
               const active =
                 highlightIds !== null && highlightIds.has(edge.from) && highlightIds.has(edge.to);
               const chosen = edge.id === selectedEdgeId;
+              const showLabel = chosen || edge.id === hoveredEdgeId;
+              const mx = (a.x + b.x) / 2;
+              const my = (a.y + b.y) / 2;
               return (
                 <g key={edge.id}>
                   {/* Wide, invisible hit area so a thin line stays easy to click. */}
@@ -237,6 +401,8 @@ export function BoardCanvas({
                     stroke="transparent"
                     strokeWidth={16}
                     onPointerDown={(e) => e.stopPropagation()}
+                    onPointerEnter={() => setHoveredEdgeId(edge.id)}
+                    onPointerLeave={() => setHoveredEdgeId((id) => (id === edge.id ? null : id))}
                     onClick={() => onSelectEdge(edge.id)}
                     style={{ cursor: "pointer" }}
                   />
@@ -247,6 +413,7 @@ export function BoardCanvas({
                     y2={b.y}
                     stroke={chosen || active ? "var(--color-accent)" : "var(--color-ink-muted)"}
                     strokeWidth={chosen ? 2.5 : active ? 2 : 1.25}
+                    strokeDasharray={EDGE_KIND_DASH[edge.kind]}
                     opacity={dimmed ? 0.22 : chosen ? 1 : active ? 0.95 : 0.6}
                     pointerEvents="none"
                   />
@@ -255,6 +422,30 @@ export function BoardCanvas({
                       <circle cx={a.x} cy={a.y} r={chosen || active ? 3 : 2} fill="var(--color-ink-muted)" opacity={0.7} pointerEvents="none" />
                       <circle cx={b.x} cy={b.y} r={chosen || active ? 3 : 2} fill="var(--color-ink-muted)" opacity={0.7} pointerEvents="none" />
                     </>
+                  ) : null}
+                  {showLabel ? (
+                    <g pointerEvents="none">
+                      <rect
+                        x={mx - 42}
+                        y={my - 9}
+                        width={84}
+                        height={16}
+                        fill="var(--color-paper)"
+                        stroke="var(--color-accent)"
+                        strokeWidth={0.75}
+                      />
+                      <text
+                        x={mx}
+                        y={my + 3}
+                        textAnchor="middle"
+                        fontSize="9"
+                        letterSpacing="0.08em"
+                        fill="var(--color-accent)"
+                        style={{ fontFamily: "var(--font-sans)", textTransform: "uppercase" }}
+                      >
+                        {edge.kind}
+                      </text>
+                    </g>
                   ) : null}
                 </g>
               );
@@ -300,12 +491,10 @@ export function BoardCanvas({
           const center = nodeCenter(node, positions);
           const isConcept = node.category === "concept";
           const isBook = node.category === "book";
-          const isLab = node.category === "laboratory";
-          const size = isConcept ? HUB_SIZE : undefined;
+          const size = isConcept ? { w: HUB_SIZE, h: HUB_SIZE } : CARD_SIZE[node.category];
           const dimmed = isDimmed(node.id);
           const selected = node.id === selectedNodeId;
           const isConnectTarget = connectFrom !== null && connectFrom !== node.id;
-          const numeral = isLab ? numeralForSlug.get(node.id.replace("laboratory/", "")) : undefined;
 
           return (
             <button
@@ -315,13 +504,13 @@ export function BoardCanvas({
               onPointerUp={(e) => handleNodePointerUp(e, node)}
               aria-pressed={selected}
               aria-label={`${categoryLabel[node.category]}: ${node.title}`}
-              className={`absolute flex flex-col justify-center text-left font-sans shadow-sm transition-[opacity,border-color,box-shadow] ${
+              className={`absolute flex flex-col justify-center overflow-hidden text-left font-sans shadow-sm transition-[opacity,border-color,box-shadow] ${
                 isConcept
                   ? "items-center rounded-full border-2 text-center"
                   : isBook
-                    ? "items-start border-y border-r border-l-[3px] pr-3 pl-4"
-                    : "items-start rounded-[2px] border px-4"
-              } py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                    ? "items-center border border-rule px-2.5"
+                    : "items-start rounded-[2px] border px-3.5"
+              } py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                 selected
                   ? "border-accent bg-paper shadow-md ring-1 ring-accent/40"
                   : isConnectTarget
@@ -331,44 +520,31 @@ export function BoardCanvas({
               style={{
                 left: center.x,
                 top: center.y,
-                width: size ?? CARD_W,
-                height: size ?? CARD_H,
+                width: size.w,
+                height: size.h,
                 transform: "translate(-50%, -50%)",
                 opacity: dimmed ? 0.55 : 1,
                 cursor: "grab",
                 zIndex: selected ? 5 : dimmed ? 1 : 2,
               }}
             >
-              {!isConcept ? (
-                <span className="pointer-events-none absolute top-1.5 right-2 font-sans text-[0.625rem] tracking-[0.08em] text-ink-muted/70 tabular-nums">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-              ) : null}
-              <span className="label flex items-center gap-1.5 text-ink-muted">
-                <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[0.5625rem] leading-none">
-                  {categoryCode[node.category]}
-                </span>
-                {isLab && numeral ? <span className="text-ink-muted">{numeral}</span> : null}
-                {!isConcept ? <span className="line-clamp-1">{categoryLabel[node.category]}</span> : null}
-              </span>
-              <span
-                className={`mt-1 line-clamp-2 leading-[1.22] font-medium text-ink ${
-                  isConcept ? "font-serif text-[0.9375rem]" : "font-serif text-[1rem]"
-                }`}
-              >
-                {node.title}
-              </span>
-              {!isConcept ? (
-                <span className="mt-1 line-clamp-1 font-sans text-[0.6875rem] leading-tight text-ink-soft">
-                  {node.subtitle}
-                </span>
-              ) : null}
+              <NodeCardContents node={node} index={index} />
             </button>
           );
         })}
       </div>
 
-      <p className="pointer-events-none absolute bottom-3 left-3 max-w-[22rem] font-sans text-[0.6875rem] leading-snug text-ink-muted italic">
+      {/* A soft vignette at the edges — a visual cue that the atlas continues beyond the frame. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          boxShadow: "inset 0 0 70px 10px var(--color-surface)",
+          opacity: 0.55,
+        }}
+      />
+
+      <p className="pointer-events-none absolute bottom-3 left-3 max-w-[22rem] bg-paper/90 px-2 py-1 font-sans text-[0.6875rem] leading-snug text-ink-muted italic">
         Drag to rearrange · Scroll to zoom · Select a connection to see why it exists.
       </p>
     </div>

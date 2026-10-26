@@ -24,6 +24,9 @@ export function validateGraph(g: BoardGraph): string[] {
     if (node.href && !node.href.startsWith("/")) {
       problems.push(`node "${node.id}" has a non-relative href "${node.href}"`);
     }
+    if (node.coverImage && !node.coverImage.startsWith("https://")) {
+      problems.push(`node "${node.id}" has a non-https coverImage "${node.coverImage}"`);
+    }
   }
 
   const edgeIds = new Set<string>();

@@ -5,9 +5,19 @@ export const WORLD_HEIGHT = 1000;
 export const MIN_SCALE = 0.35;
 export const MAX_SCALE = 2.2;
 
-export const CARD_W = 212;
-export const CARD_H = 100;
-export const HUB_SIZE = 140;
+/**
+ * Each category gets its own card proportions — a research document reads
+ * tall and narrow, a book cover taller still, a concept hub is a circle.
+ * Nothing here is arbitrary variation; it is what each kind of evidence
+ * actually looks like.
+ */
+export const CARD_SIZE: Record<string, { w: number; h: number }> = {
+  research: { w: 218, h: 124 },
+  project: { w: 200, h: 114 },
+  laboratory: { w: 218, h: 120 },
+  book: { w: 138, h: 190 },
+};
+export const HUB_SIZE = 152;
 
 export const categoryLabel: Record<string, string> = {
   research: "Research",
@@ -56,13 +66,29 @@ export function fitTransform(
 }
 
 /** The default initial view never shrinks cards below this — "Fit to view" is the explicit way to see everything at once. */
-export const DEFAULT_SCALE_FLOOR = 0.78;
+export const DEFAULT_SCALE_FLOOR = 0.82;
 
 /**
- * The default view composes around the connected core of the graph, not
- * its full bounds — the two deliberately isolated nodes (reaction kinetics,
- * αsymptote) sit further out and peek in at the edge rather than forcing
- * the whole board to shrink to fit them in on first load. "Fit to view"
- * uses the real bounds and shows everything.
+ * The default view composes around one compelling area rather than the
+ * graph's full bounds: the EEG research, the two Fourier-adjacent
+ * instruments and their concept hubs — a real, verified relationship
+ * (laboratory/fourier-explorer and research/power-spectral-density-eeg-
+ * signal-quality both connect to concept/fourier-frequency-domain). The
+ * rest of the atlas sits just off-screen, reachable by panning or an
+ * explicit "Fit to view".
  */
-export const DEFAULT_VIEW_BOUNDS = { minX: 150, minY: 70, maxX: 1290, maxY: 910 };
+export const DEFAULT_VIEW_BOUNDS = { minX: 90, minY: 30, maxX: 1360, maxY: 480 };
+
+/**
+ * Faint, non-interactive neighborhood labels — organisational aids placed
+ * in the open space around each loose cluster, not claims that every
+ * nearby node is connected to every other. Positions are hand-placed
+ * against the curated layout in lib/board/nodes.ts.
+ */
+export const neighborhoodLabels: { text: string; x: number; y: number }[] = [
+  { text: "Signal & Frequency", x: 190, y: 30 },
+  { text: "Physics & Superposition", x: 1030, y: 30 },
+  { text: "Mathematics & Perception", x: 580, y: 950 },
+  { text: "Literary & Scientific Imagination", x: 190, y: 710 },
+  { text: "Independent Investigations", x: 1420, y: 390 },
+];

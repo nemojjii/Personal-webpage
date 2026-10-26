@@ -33,6 +33,8 @@ export interface BoardNode {
   summary: string;
   /** The real site route this node opens. Concept nodes have none. */
   href?: string;
+  /** A real, already-published cover image URL (books only) — never a fabricated or placeholder cover. */
+  coverImage?: string;
   /** Hand-placed default layout position, in an arbitrary board unit square. */
   x: number;
   y: number;

@@ -59,6 +59,19 @@ test("every real-content node points at a file that actually exists", () => {
   }
 });
 
+test("a node's cover image, if any, is the exact URL already published on its real content page", () => {
+  const withCover = boardNodes.filter((n) => n.coverImage);
+  assert.ok(withCover.length > 0, "expected at least one node to exercise this check");
+  for (const node of withCover) {
+    const [collection, slug] = node.id.split("/");
+    const file = path.join(CONTENT_ROOT, collection, `${slug}.mdx`);
+    const source = fs.readFileSync(file, "utf8");
+    const match = source.match(/^image:\s*"([^"]+)"/m);
+    assert.ok(match, `${file} has no image: field to compare against`);
+    assert.equal(node.coverImage, match![1], `${node.id}'s coverImage must match its own content file exactly`);
+  }
+});
+
 test("concept nodes have no href; every other node does", () => {
   for (const node of boardNodes) {
     if (node.category === "concept") assert.equal(node.href, undefined);
