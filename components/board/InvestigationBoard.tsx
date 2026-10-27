@@ -14,9 +14,10 @@ import type { UserEdge } from "@/lib/board/localBoard";
 import type { BoardEdge } from "@/lib/board/types";
 import { useLocalBoard } from "@/lib/board/useLocalBoard.ts";
 
+import { ArtifactCaseFile } from "./ArtifactCaseFile";
 import { BoardCanvas, type Transform, defaultTransform } from "./BoardCanvas";
 import { BoardControls } from "./BoardControls";
-import { BoardInspector, type InspectorSelection } from "./BoardInspector";
+import { BoardInspector } from "./BoardInspector";
 import { BoardListView } from "./BoardListView";
 import { ConnectionDossier } from "./ConnectionDossier";
 import { fitTransform } from "./boardLayout";
@@ -131,28 +132,18 @@ export function InvestigationBoard() {
         })()
       : null;
 
-  const inspectorSelection: InspectorSelection | null = selectedNode
-    ? {
-        kind: "node",
-        node: selectedNode,
-        neighbors: selectedNeighbors,
-        userEdges: selectedUserEdges,
-        note: selectedNote,
-      }
-    : selectedEdgeResolved && selectedEdgeResolved.isUserEdge
+  const userEdgeQuickView =
+    selectedEdgeResolved && selectedEdgeResolved.isUserEdge
       ? (() => {
           const fromNode = getNode(graph, selectedEdgeResolved.edge.from);
           const toNode = getNode(graph, selectedEdgeResolved.edge.to);
           if (!fromNode || !toNode) return null;
-          return {
-            kind: "edge" as const,
-            edge: selectedEdgeResolved.edge,
-            isUserEdge: true as const,
-            fromNode,
-            toNode,
-          };
+          return { edge: selectedEdgeResolved.edge, fromNode, toNode };
         })()
       : null;
+
+  // Matches the archival number shown on the wall card itself, which is based on the currently visible/filtered set.
+  const selectedNodeIndex = selectedNodeId ? visibleNodes.findIndex((n) => n.id === selectedNodeId) : -1;
 
   const handleMoveNode = useCallback((id: string, x: number, y: number) => {
     setSessionPositions((prev) => ({ ...prev, [id]: { x, y } }));
@@ -271,8 +262,24 @@ export function InvestigationBoard() {
         )}
 
         <BoardInspector
-          selection={inspectorSelection}
+          edge={userEdgeQuickView?.edge ?? null}
+          fromNode={userEdgeQuickView?.fromNode ?? null}
+          toNode={userEdgeQuickView?.toNode ?? null}
+          onSelectNode={handleSelectNode}
+          onClose={handleClose}
+          onRemoveUserEdge={local.removeConnection}
+        />
+      </div>
+
+      {selectedNode ? (
+        <ArtifactCaseFile
+          key={selectedNode.id}
+          node={selectedNode}
+          index={selectedNodeIndex}
+          neighbors={selectedNeighbors}
+          userEdges={selectedUserEdges}
           resolveNode={(id) => getNode(graph, id)}
+          note={selectedNote}
           onSetNote={(text) => selectedNodeId && local.setNoteFor(selectedNodeId, text)}
           onSelectNode={handleSelectNode}
           onClose={handleClose}
@@ -284,7 +291,7 @@ export function InvestigationBoard() {
           onCancelConnect={() => setConnectFrom(null)}
           onRemoveUserEdge={local.removeConnection}
         />
-      </div>
+      ) : null}
 
       {editorialDossier ? (
         <ConnectionDossier

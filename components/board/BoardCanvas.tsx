@@ -19,7 +19,9 @@ import {
   neighborhoodLabels,
   rotationFor,
   sizeFor,
+  tapeFor,
   threadSagFor,
+  tierOf,
   wobbleCirclePath,
 } from "./boardLayout";
 import { INSTRUMENT_GLYPH_VIEWBOX, instrumentGlyphs } from "./instrumentGlyphs";
@@ -45,6 +47,12 @@ function anchorPoint(node: BoardNode, center: { x: number; y: number }): { x: nu
   return { x: center.x, y: center.y - size.h / 2 + 9 };
 }
 
+/** Where the decorative pin sits — every artifact gets one, pinned or not, concept notes included. */
+function pinPoint(node: BoardNode, center: { x: number; y: number }): { x: number; y: number } {
+  const size = sizeFor(node.id, node.category);
+  return { x: center.x, y: center.y - size.h / 2 + 8 };
+}
+
 function threadPath(a: { x: number; y: number }, b: { x: number; y: number }, sag: number): string {
   const mx = (a.x + b.x) / 2;
   const my = (a.y + b.y) / 2 + sag;
@@ -65,6 +73,48 @@ function ArchivalNumber({ index }: { index: number }) {
     <span className="pointer-events-none absolute top-1.5 right-2 font-sans text-[0.625rem] tracking-[0.08em] text-ink-muted/70 tabular-nums">
       {String(index + 1).padStart(2, "0")}
     </span>
+  );
+}
+
+/**
+ * A second and third sheet peeking out behind a research document — several
+ * pages, not one card. Rendered as a sibling of the card button, in the
+ * same coordinate space, so it can extend past the top sheet's edges
+ * without being clipped by the card's own overflow-hidden.
+ */
+function LayeredPages({
+  center,
+  size,
+  rotation,
+  dimmed,
+}: {
+  center: { x: number; y: number };
+  size: { w: number; h: number };
+  rotation: number;
+  dimmed: boolean;
+}) {
+  return (
+    <>
+      {[
+        { dx: 5, dy: 6, extra: 2.3 },
+        { dx: 2.5, dy: 3.5, extra: 1.1 },
+      ].map(({ dx, dy, extra }, i) => (
+        <span
+          key={i}
+          aria-hidden="true"
+          className="pointer-events-none absolute border border-rule bg-paper"
+          style={{
+            left: center.x,
+            top: center.y,
+            width: size.w,
+            height: size.h,
+            opacity: dimmed ? 0.4 : 1,
+            transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rotation + extra}deg)`,
+            zIndex: 1,
+          }}
+        />
+      ))}
+    </>
   );
 }
 
@@ -361,30 +411,31 @@ export function BoardCanvas({
     <div
       ref={viewportRef}
       role="application"
-      aria-label="Investigation board canvas. Drag to rearrange, scroll to zoom. Use the list view toggle for a keyboard-friendly alternative."
-      className="relative h-[74vh] min-h-[480px] touch-none overflow-hidden border border-rule bg-surface/25 select-none"
+      aria-label="Investigation board canvas — a wall of pinned evidence. Drag to rearrange, scroll to zoom. Use the list view toggle for a keyboard-friendly alternative."
+      className="relative h-[76vh] min-h-[500px] touch-none overflow-hidden border border-[var(--board-wall-line)] select-none"
+      style={{ background: "var(--board-wall)" }}
       onPointerDown={handleViewportPointerDown}
       onPointerMove={handleViewportPointerMove}
       onPointerUp={endViewportPan}
       onPointerCancel={endViewportPan}
       onWheel={handleWheel}
     >
-      {/* Archival paper grain, very faint — texture, not a corkboard photograph. */}
-      <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.05]" aria-hidden="true">
+      {/* Wall grain — texture, not a literal corkboard photograph. */}
+      <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.12]" aria-hidden="true">
         <filter id="board-grain">
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" stitchTiles="stitch" />
           <feColorMatrix type="saturate" values="0" />
         </filter>
         <rect width="100%" height="100%" filter="url(#board-grain)" />
       </svg>
-      {/* A faint registration grid — archival, not decorative noise. */}
-      <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.3]" aria-hidden="true">
+      {/* A faint dot lattice — a pinboard's own texture, not a decorative grid. */}
+      <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.5]" aria-hidden="true">
         <defs>
-          <pattern id="board-grid" width="36" height="36" patternUnits="userSpaceOnUse">
-            <path d="M 36 0 L 0 0 0 36" fill="none" stroke="var(--color-rule-soft)" strokeWidth="1" />
+          <pattern id="board-dots" width="28" height="28" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1" fill="var(--board-wall-line)" />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#board-grid)" />
+        <rect width="100%" height="100%" fill="url(#board-dots)" />
       </svg>
 
       <div
@@ -448,19 +499,13 @@ export function BoardCanvas({
                   <path
                     d={d}
                     fill="none"
-                    stroke={chosen || active ? "var(--color-accent)" : "var(--color-ink-muted)"}
-                    strokeWidth={chosen ? 2.25 : active ? 1.75 : 1.1}
+                    stroke="var(--color-accent)"
+                    strokeWidth={chosen ? 2.75 : active ? 2.25 : 1.6}
                     strokeDasharray={EDGE_KIND_DASH[edge.kind]}
                     strokeLinecap="round"
-                    opacity={dimmed ? 0.22 : chosen ? 1 : active ? 0.95 : 0.58}
+                    opacity={dimmed ? 0.25 : chosen ? 1 : active ? 1 : 0.78}
                     pointerEvents="none"
                   />
-                  {!dimmed ? (
-                    <>
-                      <circle cx={a.x} cy={a.y} r={chosen || active ? 3.25 : 2.25} fill="var(--color-accent)" opacity={0.75} pointerEvents="none" />
-                      <circle cx={b.x} cy={b.y} r={chosen || active ? 3.25 : 2.25} fill="var(--color-accent)" opacity={0.75} pointerEvents="none" />
-                    </>
-                  ) : null}
                   {showLabel ? (
                     <g pointerEvents="none">
                       <rect
@@ -527,6 +572,7 @@ export function BoardCanvas({
           const center = nodeCenter(node, positions);
           const isConcept = node.category === "concept";
           const isBook = node.category === "book";
+          const isResearch = node.category === "research";
           const size = sizeFor(node.id, node.category);
           const dimmed = isDimmed(node.id);
           const selected = node.id === selectedNodeId;
@@ -534,46 +580,90 @@ export function BoardCanvas({
           const isConnectTarget = connectFrom !== null && connectFrom !== node.id;
           const rotation = selected ? 0 : rotationFor(node.id, node.category);
           const scale = dragging ? 1.045 : selected ? 1.03 : 1;
+          const tier = tierOf(node.id);
+          const showTape = isBook || tier === "primary";
+          const tape = tapeFor(node.id);
+          const tapeX = tape.corner === "left" ? center.x - size.w / 2 + 14 : center.x + size.w / 2 - 14;
 
           return (
-            <button
-              key={node.id}
-              type="button"
-              onPointerDown={(e) => handleNodePointerDown(e, node)}
-              onPointerUp={(e) => handleNodePointerUp(e, node)}
-              aria-pressed={selected}
-              aria-label={`${categoryLabel[node.category]}: ${node.title}`}
-              className={`absolute flex flex-col justify-center overflow-hidden text-left font-sans motion-safe:transition-[transform,box-shadow,opacity] motion-safe:duration-200 motion-safe:ease-out ${
-                isConcept
-                  ? "items-center rounded-full border-0 bg-transparent text-center"
-                  : isBook
-                    ? "items-center border border-rule bg-paper/[0.97] px-2.5 shadow-[0_3px_10px_rgba(20,15,10,0.18)]"
-                    : "items-start rounded-[1px] border bg-paper/[0.97] px-3.5 shadow-[0_2px_7px_rgba(20,15,10,0.14)]"
-              } py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                selected
-                  ? "border-accent shadow-[0_10px_24px_rgba(20,15,10,0.26)]"
-                  : isConnectTarget
-                    ? "border-dashed border-accent-soft"
-                    : isConcept
-                      ? ""
-                      : "border-rule hover:border-accent-soft"
-              } ${dragging ? "shadow-[0_14px_30px_rgba(20,15,10,0.3)]" : ""}`}
-              style={{
-                left: center.x,
-                top: center.y,
-                width: size.w,
-                height: size.h,
-                transform: `translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`,
-                opacity: dimmed ? 0.55 : 1,
-                cursor: dragging ? "grabbing" : "grab",
-                zIndex: dragging ? 6 : selected ? 5 : dimmed ? 1 : 2,
-                color: "var(--color-ink)",
-              }}
-            >
-              <NodeCardContents node={node} index={index} selected={selected} />
-            </button>
+            <div key={node.id}>
+              {isResearch ? (
+                <LayeredPages center={center} size={size} rotation={rotation} dimmed={dimmed} />
+              ) : null}
+
+              <button
+                type="button"
+                onPointerDown={(e) => handleNodePointerDown(e, node)}
+                onPointerUp={(e) => handleNodePointerUp(e, node)}
+                aria-pressed={selected}
+                aria-label={`${categoryLabel[node.category]}: ${node.title}`}
+                className={`absolute flex flex-col justify-center overflow-hidden text-left font-sans motion-safe:transition-[transform,box-shadow,opacity] motion-safe:duration-200 motion-safe:ease-out ${
+                  isConcept
+                    ? "items-center rounded-full border-0 bg-transparent text-center"
+                    : isBook
+                      ? "items-center border border-rule bg-paper/[0.97] px-2.5 shadow-[0_4px_14px_rgba(0,0,0,0.4)]"
+                      : "items-start rounded-[1px] border bg-paper/[0.97] px-3.5 shadow-[0_4px_14px_rgba(0,0,0,0.4)]"
+                } py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                  selected
+                    ? "border-accent shadow-[0_14px_30px_rgba(0,0,0,0.5)]"
+                    : isConnectTarget
+                      ? "border-dashed border-accent-soft"
+                      : isConcept
+                        ? ""
+                        : "border-rule hover:border-accent-soft"
+                } ${dragging ? "shadow-[0_18px_36px_rgba(0,0,0,0.55)]" : ""}`}
+                style={{
+                  left: center.x,
+                  top: center.y,
+                  width: size.w,
+                  height: size.h,
+                  transform: `translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`,
+                  opacity: dimmed ? 0.55 : 1,
+                  cursor: dragging ? "grabbing" : "grab",
+                  zIndex: dragging ? 6 : selected ? 5 : dimmed ? 1 : 2,
+                  color: "var(--color-ink)",
+                }}
+              >
+                <NodeCardContents node={node} index={index} selected={selected} />
+              </button>
+
+              {showTape && !dimmed ? (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute h-[16px] w-[42px] border border-[rgba(0,0,0,0.08)] bg-[rgba(230,218,196,0.6)] shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
+                  style={{
+                    left: tapeX,
+                    top: center.y - size.h / 2 + 2,
+                    transform: `translate(-50%, -50%) rotate(${tape.angle}deg)`,
+                    zIndex: (dragging ? 6 : selected ? 5 : 2) + 1,
+                  }}
+                />
+              ) : null}
+            </div>
           );
         })}
+
+        {/* Pins — every artifact is pinned to the wall, isolated artifacts included. On top of the paper, drawn last. */}
+        <svg
+          width={WORLD_WIDTH}
+          height={WORLD_HEIGHT}
+          viewBox={`0 0 ${WORLD_WIDTH} ${WORLD_HEIGHT}`}
+          className="pointer-events-none absolute top-0 left-0 overflow-visible"
+          aria-hidden="true"
+        >
+          {nodes.map((node) => {
+            if (isDimmed(node.id)) return null;
+            const p = pinPoint(node, nodeCenter(node, positions));
+            const big = node.id === selectedNodeId || node.id === draggingId;
+            return (
+              <g key={node.id} opacity={0.95}>
+                <ellipse cx={p.x} cy={p.y + 1.6} rx={big ? 3.4 : 2.6} ry={1.3} fill="rgba(0,0,0,0.35)" />
+                <circle cx={p.x} cy={p.y} r={big ? 3.6 : 2.8} fill="var(--color-accent)" />
+                <circle cx={p.x - 0.8} cy={p.y - 0.8} r={big ? 1.2 : 0.9} fill="rgba(255,255,255,0.55)" />
+              </g>
+            );
+          })}
+        </svg>
       </div>
 
       {/* A soft vignette at the edges — a visual cue that the wall continues beyond the frame. */}
@@ -581,8 +671,8 @@ export function BoardCanvas({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
-          boxShadow: "inset 0 0 70px 10px var(--color-surface)",
-          opacity: 0.55,
+          boxShadow: "inset 0 0 90px 16px var(--board-wall)",
+          opacity: 0.8,
         }}
       />
 

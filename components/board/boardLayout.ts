@@ -48,7 +48,7 @@ export const nodeTier: Record<string, Tier> = {
   "projects/asymptote-ftc-robotics": "peripheral",
 };
 
-const TIER_SCALE: Record<Tier, number> = { primary: 1.22, secondary: 1, peripheral: 0.82 };
+const TIER_SCALE: Record<Tier, number> = { primary: 1.42, secondary: 1, peripheral: 0.8 };
 
 export function tierOf(id: string): Tier {
   return nodeTier[id] ?? "secondary";
@@ -163,6 +163,14 @@ export function rotationFor(id: string, category: string): number {
 /** How far a thread sags downward under its own weight — a pinned string, not a ruled line. Always positive: gravity has one direction. */
 export function threadSagFor(edgeId: string): number {
   return 9 + rand01(`sag:${edgeId}`) * 13;
+}
+
+/** Which corner a tape strip sits in, and how it tilts — deterministic per id. */
+export function tapeFor(id: string): { corner: "left" | "right"; angle: number } {
+  return {
+    corner: rand01(`tape-side:${id}`) < 0.5 ? "left" : "right",
+    angle: rand01(`tape-angle:${id}`) * 10 - 5,
+  };
 }
 
 /**

@@ -21,6 +21,12 @@
   --color-rule-soft: #e7e2d9; /* faintest dividers                     */
   --color-chart-extra: #9a6b73; /* a 6th series colour, off the main palette */
 
+  /* The Investigation Board's own wall — deliberately darker and warmer
+     than the site's paper, so pinned documents read as objects on a wall
+     rather than cards on a page. Used only inside components/board/. */
+  --board-wall: #2b2017;
+  --board-wall-line: #4a3a28;
+
   /* The Generative Art Playground's one deliberately theme-invariant colour:
      International Klein Blue, used boldly inside its three artwork canvases
      and nowhere else on the site. Everything else here adapts between Light
@@ -96,6 +102,8 @@
     --color-rule-soft: #1f2847;
     --color-chart-extra: #c98f9c;
     --color-klein-preview: #7180f4;
+    --board-wall: #060910;
+    --board-wall-line: #141b30;
     color-scheme: dark;
   }
 }
@@ -112,6 +120,8 @@
   --color-rule-soft: #1f2847;
   --color-chart-extra: #c98f9c;
   --color-klein-preview: #7180f4;
+  --board-wall: #060910;
+  --board-wall-line: #141b30;
   color-scheme: dark;
 }
 
