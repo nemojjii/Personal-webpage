@@ -28,7 +28,8 @@ test("the curated graph has no referential-integrity problems", () => {
 });
 
 test("curated counts match the audited set (no silent drift)", () => {
-  assert.equal(boardNodes.length, 15);
+  // Fifteen evidence nodes plus the case file itself (Phase 20.7).
+  assert.equal(boardNodes.length, 16);
   assert.equal(boardEdges.length, 11);
 });
 
@@ -46,7 +47,7 @@ test("every edge has a non-empty, real explanation", () => {
 test("every real-content node points at a file that actually exists", () => {
   for (const node of boardNodes) {
     const [collection, slug] = node.id.split("/");
-    if (collection === "concept") continue;
+    if (collection === "concept" || collection === "case") continue;
     if (collection === "laboratory") {
       assert.ok(
         experiments.some((e) => e.slug === slug),
@@ -72,9 +73,9 @@ test("a node's cover image, if any, is the exact URL already published on its re
   }
 });
 
-test("concept nodes have no href; every other node does", () => {
+test("concept and case nodes have no href; every other node does", () => {
   for (const node of boardNodes) {
-    if (node.category === "concept") assert.equal(node.href, undefined);
+    if (node.category === "concept" || node.category === "case") assert.equal(node.href, undefined);
     else assert.ok(node.href && node.href.startsWith("/"));
   }
 });
@@ -94,9 +95,13 @@ test("neighborhood includes the node itself plus its neighbors, nothing further"
   assert.ok(!ids.has("concept/fourier-frequency-domain"));
 });
 
-test("isolatedNodes finds exactly the two deliberately unconnected real nodes", () => {
+test("isolatedNodes finds exactly the two deliberately unconnected real nodes, plus the case file", () => {
   const isolated = isolatedNodes(graph).map((n) => n.id).sort();
-  assert.deepEqual(isolated, ["laboratory/reaction-kinetics", "projects/asymptote-ftc-robotics"]);
+  assert.deepEqual(isolated, [
+    "case/iris-kim",
+    "laboratory/reaction-kinetics",
+    "projects/asymptote-ftc-robotics",
+  ]);
 });
 
 test("edgesTouching only returns edges with both ends in the given set", () => {

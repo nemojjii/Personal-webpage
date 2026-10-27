@@ -229,6 +229,43 @@ function NodeCardContents({ node, index, selected }: { node: BoardNode; index: n
     case "book":
       return <BookCardContents node={node} index={index} />;
 
+    case "case": {
+      const size = sizeFor(node.id, node.category);
+      const r = Math.min(size.w, size.h) / 2 - 18;
+      const path = wobbleCirclePath(size.w / 2, size.h * 0.4, r, node.id);
+      return (
+        <>
+          <span
+            className="pointer-events-none absolute top-0 left-0 h-[4px] w-full"
+            style={{ background: "var(--board-thread)" }}
+            aria-hidden="true"
+          />
+          {/* A quiet echo of the concept hubs' hand-drawn circle — not a face
+              or a profile, just the same investigative-annotation motif this
+              wall already uses, behind the file's own title. */}
+          <svg
+            viewBox={`0 0 ${size.w} ${size.h}`}
+            className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.22]"
+            aria-hidden="true"
+          >
+            <path d={path} fill="none" stroke="var(--board-thread)" strokeWidth="1.25" />
+          </svg>
+          <span className="label flex items-center gap-1.5" style={{ color: "var(--board-thread)" }}>
+            <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[0.5625rem] leading-none">
+              {categoryCode.case}
+            </span>
+            <span className="line-clamp-1">Case file № IK-001</span>
+          </span>
+          <span className="mt-3 line-clamp-3 font-serif text-[1.3125rem] leading-[1.18] font-semibold text-ink">
+            {node.title}
+          </span>
+          <span className="mt-auto line-clamp-2 border-t border-rule-soft pt-1.5 font-serif text-[0.8125rem] leading-tight text-ink-soft italic">
+            {node.subtitle}
+          </span>
+        </>
+      );
+    }
+
     case "concept": {
       const size = sizeFor(node.id, node.category);
       const r = size.w / 2 - 7;
@@ -691,6 +728,7 @@ export function BoardCanvas({
           const isConcept = node.category === "concept";
           const isBook = node.category === "book";
           const isResearch = node.category === "research";
+          const isCase = node.category === "case";
           const size = sizeFor(node.id, node.category);
           const dimmed = isDimmed(node.id);
           const selected = node.id === selectedNodeId;
@@ -699,14 +737,38 @@ export function BoardCanvas({
           const rotation = selected ? 0 : rotationFor(node.id, node.category);
           const scale = dragging ? 1.045 : selected ? 1.03 : 1;
           const tier = tierOf(node.id);
-          const showTape = isBook || tier === "primary";
+          // The case file gets its own projecting tab below instead — the
+          // small corner tape used for books and the primary tier would
+          // read as one more artifact among many, not the investigation's
+          // own file.
+          const showTape = (isBook || tier === "primary") && !isCase;
           const tape = tapeFor(node.id);
           const tapeX = tape.corner === "left" ? center.x - size.w / 2 + 14 : center.x + size.w / 2 - 14;
 
           return (
             <div key={node.id}>
-              {isResearch ? (
+              {isResearch || isCase ? (
                 <LayeredPages center={center} size={size} rotation={rotation} dimmed={dimmed} />
+              ) : null}
+
+              {isCase && !dimmed ? (
+                // A projecting archive tab — the one visual cue this file is
+                // not just another artifact, same restraint as the rest of
+                // the wall: text and a case number, no badges or stamps.
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute flex items-center justify-center border border-rule bg-paper px-3 py-1 font-sans text-[0.625rem] font-semibold tracking-[0.14em] whitespace-nowrap uppercase shadow-[0_2px_6px_rgba(0,0,0,0.35)]"
+                  style={{
+                    left: center.x,
+                    top: center.y - size.h / 2 - 2,
+                    color: "var(--board-thread)",
+                    clipPath: "polygon(6% 0%, 94% 0%, 100% 100%, 0% 100%)",
+                    transform: `translate(-50%, -100%) rotate(${rotation}deg)`,
+                    zIndex: (dragging ? 6 : selected ? 5 : 2) + 1,
+                  }}
+                >
+                  Case IK-001
+                </span>
               ) : null}
 
               <button
@@ -743,6 +805,7 @@ export function BoardCanvas({
                   zIndex: dragging ? 6 : selected ? 5 : dimmed ? 1 : 2,
                   color: "var(--color-ink)",
                   background: isConcept ? "var(--board-wall-line)" : undefined,
+                  borderColor: isCase && !selected && !isConnectTarget ? "var(--board-thread)" : undefined,
                 }}
               >
                 <NodeCardContents node={node} index={index} selected={selected} />

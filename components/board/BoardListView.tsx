@@ -5,7 +5,7 @@ import { neighborsOf } from "@/lib/board/graph.ts";
 
 import { categoryLabel } from "./boardLayout";
 
-const CATEGORY_ORDER = ["research", "project", "laboratory", "concept", "book"] as const;
+const CATEGORY_ORDER = ["case", "research", "project", "laboratory", "concept", "book"] as const;
 
 /**
  * A flat, fully keyboard-operable alternative to the canvas: every node and

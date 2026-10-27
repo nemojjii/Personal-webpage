@@ -1,11 +1,13 @@
 import type { BoardNode } from "./types.ts";
 
 /**
- * Fifteen curated nodes — not every page on the site, only the ones with a
- * real, citable connection to at least one other, plus two deliberately
- * isolated real projects kept for the board's honesty rather than its
- * density. See lib/board/edges.ts for what connects them and why, and the
- * Phase 20 audit notes for what was left out and why (the Bookshelf and
+ * Fifteen curated evidence nodes — not every page on the site, only the
+ * ones with a real, citable connection to at least one other, plus two
+ * deliberately isolated real projects kept for the board's honesty rather
+ * than its density — plus, as of Phase 20.7, a sixteenth node that is not
+ * evidence at all: the case file for the investigation itself (IK-001, see
+ * below). See lib/board/edges.ts for what connects the fifteen and why, and
+ * the Phase 20 audit notes for what was left out and why (the Bookshelf and
  * Screening Room have no reviewed/interpretive text to connect from, with
  * the single exception of Cosmos, which the About page does discuss).
  *
@@ -23,6 +25,24 @@ import type { BoardNode } from "./types.ts";
  * framing and neighborhoodLabels for where each area is labelled.
  */
 export const boardNodes: BoardNode[] = [
+  // The case file — the board's narrative anchor (Phase 20.7). Placed just
+  // below-left of the featured cluster, inside the default camera framing,
+  // so it is one of the first things a visitor sees — without sitting at a
+  // geometric centre the rest of the wall radiates from. Deliberately has
+  // no editorial edges: see lib/board/edges.ts's header comment and
+  // components/board/InvestigationBoard.tsx, where selecting it opens
+  // IrisKimCaseFile rather than the generic ArtifactCaseFile.
+  {
+    id: "case/iris-kim",
+    category: "case",
+    title: "Who is Iris Kim?",
+    subtitle: "An unfinished investigation.",
+    summary:
+      "The case file for the investigation itself — who pursues the research, mathematics, and art pinned up elsewhere on this wall. Built only from this site's own verified About, CV and content pages; still being written.",
+    x: 40,
+    y: 430,
+  },
+
   // Research
   {
     id: "research/power-spectral-density-eeg-signal-quality",

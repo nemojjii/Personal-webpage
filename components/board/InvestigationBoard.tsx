@@ -20,6 +20,7 @@ import { BoardControls } from "./BoardControls";
 import { BoardInspector } from "./BoardInspector";
 import { BoardListView } from "./BoardListView";
 import { ConnectionDossier } from "./ConnectionDossier";
+import { IrisKimCaseFile } from "./IrisKimCaseFile";
 import { fitTransform, zoomAt } from "./boardLayout";
 
 const ALL_NODE_IDS = new Set(graph.nodes.map((n) => n.id));
@@ -283,7 +284,15 @@ export function InvestigationBoard() {
         />
       </div>
 
-      {selectedNode ? (
+      {selectedNode && selectedNode.category === "case" ? (
+        <IrisKimCaseFile
+          key={selectedNode.id}
+          resolveNode={(id) => getNode(graph, id)}
+          onSelectNode={handleSelectNode}
+          onClose={handleClose}
+          originRect={originRect}
+        />
+      ) : selectedNode ? (
         <ArtifactCaseFile
           key={selectedNode.id}
           node={selectedNode}

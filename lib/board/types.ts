@@ -10,7 +10,14 @@ export type BoardCategory =
   | "project"
   | "laboratory"
   | "concept"
-  | "book";
+  | "book"
+  /**
+   * The board's single narrative anchor (Phase 20.7's "case/iris-kim"), not
+   * another artifact: a case file for the investigation itself rather than
+   * a page it investigates. Like a concept node, it has no href — opening
+   * it shows a bespoke casebook, not a link to elsewhere.
+   */
+  | "case";
 
 /**
  * How two nodes relate. "mathematical" and "conceptual" match the

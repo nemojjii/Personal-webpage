@@ -17,6 +17,10 @@ export const CARD_SIZE: Record<string, { w: number; h: number }> = {
   project: { w: 196, h: 114 },
   laboratory: { w: 246, h: 104 },
   book: { w: 134, h: 186 },
+  // Tall and narrow — a dossier profile, not another wide printed strip —
+  // and already large enough on its own that it is never tier-scaled (see
+  // nodeTier below, which deliberately omits "case/iris-kim").
+  case: { w: 190, h: 250 },
 };
 export const HUB_SIZE = 150;
 
@@ -66,6 +70,7 @@ export const categoryLabel: Record<string, string> = {
   laboratory: "Little Laboratory",
   concept: "Concept",
   book: "Bookshelf",
+  case: "Case File",
 };
 
 /** A short archival code for each category — used on cards, restrained rather than a color key. */
@@ -75,6 +80,7 @@ export const categoryCode: Record<string, string> = {
   laboratory: "L",
   concept: "C",
   book: "B",
+  case: "IK",
 };
 
 export function clampScale(scale: number): number {
@@ -141,17 +147,22 @@ export const DEFAULT_SCALE_FLOOR = 0.85;
 
 /**
  * The default view composes around one compelling, tight area rather than
- * the graph's full bounds: the EEG research, Fourier Explorer, Wave
- * Superposition and both concept hubs — five artifacts, all genuinely
- * connected (laboratory/fourier-explorer and research/power-spectral-
- * density-eeg-signal-quality both reach concept/fourier-frequency-domain;
- * laboratory/wave-superposition reaches concept/superposition and the EEG
- * research itself). Tight bounds in a wide viewport mean this cluster
- * renders large and legible without any hardcoded zoom value. The rest of
- * the wall sits just off-screen, reachable by panning or an explicit
- * "Fit to view".
+ * the graph's full bounds: the case file (IK-001), the EEG research,
+ * Fourier Explorer, Wave Superposition and both concept hubs — the case
+ * file is the one deliberately unconnected artifact in this group, kept
+ * close by composition rather than by thread, so the investigation's own
+ * case file is one of the first things a visitor sees; the rest are
+ * genuinely connected (laboratory/fourier-explorer and research/power-
+ * spectral-density-eeg-signal-quality both reach concept/fourier-frequency-
+ * domain; laboratory/wave-superposition reaches concept/superposition and
+ * the EEG research itself). Tight bounds in a wide viewport mean this
+ * cluster renders large and legible without any hardcoded zoom value. The
+ * rest of the wall sits just off-screen, reachable by panning or an
+ * explicit "Fit to view". Widened left of the original (Phase 20.6) bounds
+ * by exactly the case file's own footprint plus a margin — not a general
+ * rescale.
  */
-export const DEFAULT_VIEW_BOUNDS = { minX: 10, minY: 30, maxX: 910, maxY: 640 };
+export const DEFAULT_VIEW_BOUNDS = { minX: -80, minY: 30, maxX: 910, maxY: 640 };
 
 /**
  * Faint, non-interactive neighborhood labels — organisational aids placed
@@ -189,9 +200,9 @@ function rand01(seed: string): number {
   return (hash(seed) % 100000) / 100000;
 }
 
-/** A small tilt, in degrees — concept anchors stay upright; everything else is "placed by hand". */
+/** A small tilt, in degrees — concept anchors and the case file stay upright; everything else is "placed by hand". */
 export function rotationFor(id: string, category: string): number {
-  if (category === "concept") return 0;
+  if (category === "concept" || category === "case") return 0;
   return rand01(`rot:${id}`) * 4.4 - 2.2;
 }
 

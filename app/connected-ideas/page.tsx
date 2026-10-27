@@ -4,9 +4,9 @@ import { InvestigationBoard } from "@/components/board/InvestigationBoard";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export const metadata: Metadata = {
-  title: "Investigation Board",
+  title: "The Iris Kim Case",
   description:
-    "A curated map of how this site's research, projects, Little Laboratory instruments and a handful of other pages connect — and, just as deliberately, where they don't.",
+    "Who is Iris Kim? An investigation into the person behind the research, mathematics, scientific explorations, literature and art on this site — through the connections between them, and a case file that is still being written.",
   alternates: { canonical: "/connected-ideas" },
 };
 
@@ -16,11 +16,13 @@ export default function ConnectedIdeasPage() {
       <div className="shell">
         <PageHeader
           eyebrow="Connected Ideas"
-          title="Investigation Board"
+          title="Who is Iris Kim?"
           intro={
             <em>
-              Fifteen pages from across this site, pinned up and threaded together — eleven connections
-              between them that are actually true.
+              An investigation through research, mathematics, scientific computing, art, literature and
+              cinema. Fifteen pages from across this site, pinned up and threaded together by eleven
+              connections that are actually true — follow the evidence; every thread leads to another
+              question.
             </em>
           }
         />
@@ -55,6 +57,15 @@ export default function ConnectedIdeasPage() {
             the About page actually discusses. A pre-existing link between two research entries, flagged
             in that research&apos;s own notes as resting on an unconfirmed citation, is left off this
             board until it is confirmed.
+          </p>
+          <p className="mt-4 font-serif text-[0.9375rem] leading-[1.6] text-ink-soft">
+            The sixteenth card, Case IK-001, is different: it is the investigation&apos;s own case file,
+            not another piece of evidence, and it has no edges at all — not because the connection is
+            unconfirmed, but because a thread from one person to every piece of her own work would say
+            nothing a straight list couldn&apos;t. Its pages link out to real evidence on this wall, built
+            only from this site&apos;s own About page, CV and content entries, and close with what it
+            cannot yet say: original reflections on books and films aren&apos;t written yet, so the case
+            stays open rather than pretending to a conclusion.
           </p>
         </details>
       </div>

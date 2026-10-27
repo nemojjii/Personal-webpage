@@ -18,8 +18,8 @@ export function validateGraph(g: BoardGraph): string[] {
     ids.add(node.id);
     if (!node.title.trim()) problems.push(`node "${node.id}" has no title`);
     if (!node.summary.trim()) problems.push(`node "${node.id}" has no summary`);
-    if (node.category !== "concept" && !node.href) {
-      problems.push(`node "${node.id}" is not a concept node but has no href`);
+    if (node.category !== "concept" && node.category !== "case" && !node.href) {
+      problems.push(`node "${node.id}" is not a concept or case node but has no href`);
     }
     if (node.href && !node.href.startsWith("/")) {
       problems.push(`node "${node.id}" has a non-relative href "${node.href}"`);

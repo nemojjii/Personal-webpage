@@ -127,7 +127,7 @@ export const navigation: readonly NavItem[] = [
 
 /** Shown after the primary navigation, separated by a hairline. */
 export const secondaryNavigation: readonly NavItem[] = [
-  { label: "Investigation Board", href: "/connected-ideas" },
+  { label: "The Iris Kim Case", href: "/connected-ideas" },
   { label: "Contact", href: "/contact" },
 ];
 

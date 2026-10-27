@@ -122,7 +122,7 @@ export function ConnectedIdeas({ entry }: { entry: Entry }) {
 
       <p className="mt-8">
         <Link href="/connected-ideas" className="link-quiet font-sans text-[0.8125rem]">
-          See this on the full Investigation Board <span aria-hidden="true">→</span>
+          See this on the full investigation wall <span aria-hidden="true">→</span>
         </Link>
       </p>
     </section>
