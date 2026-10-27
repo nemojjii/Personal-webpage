@@ -17,12 +17,10 @@ export default function ConnectedIdeasPage() {
         eyebrow="Connected Ideas"
         title="Investigation Board"
         intro={
-          <>
-            <em>Fifteen pages from across this site, and the eleven connections between them that are
-            actually true.</em> Drag a card to rearrange it, pan and zoom the canvas, select a card or a
-            connecting line to see what it is and why it exists, and draw your own connections if you see
-            one this board missed — kept only in this browser, never published.
-          </>
+          <em>
+            Fifteen pages from across this site, pinned up and threaded together — eleven connections
+            between them that are actually true.
+          </em>
         }
       />
 

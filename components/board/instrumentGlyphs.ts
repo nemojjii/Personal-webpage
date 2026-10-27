@@ -12,8 +12,8 @@ import { sampleEigenfunction } from "@/lib/laboratory/quantum.ts";
 import { WAVE_DEFAULTS, sampleWaves } from "@/lib/laboratory/wave.ts";
 import { ROSE_DEFAULTS, sampleCurve } from "@/lib/art/parametric.ts";
 
-const W = 100;
-const H = 36;
+const W = 140;
+const H = 34;
 const PAD = 3;
 
 function pathFrom(points: { x: number; y: number }[]): string {

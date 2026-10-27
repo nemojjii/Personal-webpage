@@ -18,6 +18,7 @@ import { BoardCanvas, type Transform, defaultTransform } from "./BoardCanvas";
 import { BoardControls } from "./BoardControls";
 import { BoardInspector, type InspectorSelection } from "./BoardInspector";
 import { BoardListView } from "./BoardListView";
+import { ConnectionDossier } from "./ConnectionDossier";
 import { fitTransform } from "./boardLayout";
 
 const ALL_NODE_IDS = new Set(graph.nodes.map((n) => n.id));
@@ -118,6 +119,18 @@ export function InvestigationBoard() {
     : [];
   const selectedNote = selectedNodeId ? local.state.notes[selectedNodeId] ?? "" : "";
 
+  // A verified editorial connection opens the full dossier instead of the quick panel;
+  // a visitor's own annotation — a private, casual note — stays in the quick panel.
+  const editorialDossier =
+    selectedEdgeResolved && !selectedEdgeResolved.isUserEdge
+      ? (() => {
+          const fromNode = getNode(graph, selectedEdgeResolved.edge.from);
+          const toNode = getNode(graph, selectedEdgeResolved.edge.to);
+          if (!fromNode || !toNode) return null;
+          return { edge: selectedEdgeResolved.edge, fromNode, toNode };
+        })()
+      : null;
+
   const inspectorSelection: InspectorSelection | null = selectedNode
     ? {
         kind: "node",
@@ -126,7 +139,7 @@ export function InvestigationBoard() {
         userEdges: selectedUserEdges,
         note: selectedNote,
       }
-    : selectedEdgeResolved
+    : selectedEdgeResolved && selectedEdgeResolved.isUserEdge
       ? (() => {
           const fromNode = getNode(graph, selectedEdgeResolved.edge.from);
           const toNode = getNode(graph, selectedEdgeResolved.edge.to);
@@ -134,7 +147,7 @@ export function InvestigationBoard() {
           return {
             kind: "edge" as const,
             edge: selectedEdgeResolved.edge,
-            isUserEdge: selectedEdgeResolved.isUserEdge,
+            isUserEdge: true as const,
             fromNode,
             toNode,
           };
@@ -272,6 +285,17 @@ export function InvestigationBoard() {
           onRemoveUserEdge={local.removeConnection}
         />
       </div>
+
+      {editorialDossier ? (
+        <ConnectionDossier
+          key={editorialDossier.edge.id}
+          edge={editorialDossier.edge}
+          fromNode={editorialDossier.fromNode}
+          toNode={editorialDossier.toNode}
+          onSelectNode={handleSelectNode}
+          onClose={handleClose}
+        />
+      ) : null}
     </div>
   );
 }

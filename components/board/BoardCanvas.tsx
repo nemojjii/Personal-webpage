@@ -8,10 +8,8 @@ import type { BoardEdge, BoardNode } from "@/lib/board/types";
 import type { UserEdge } from "@/lib/board/localBoard";
 
 import {
-  CARD_SIZE,
   DEFAULT_SCALE_FLOOR,
   DEFAULT_VIEW_BOUNDS,
-  HUB_SIZE,
   WORLD_HEIGHT,
   WORLD_WIDTH,
   categoryCode,
@@ -19,6 +17,10 @@ import {
   clampScale,
   fitTransform,
   neighborhoodLabels,
+  rotationFor,
+  sizeFor,
+  threadSagFor,
+  wobbleCirclePath,
 } from "./boardLayout";
 import { INSTRUMENT_GLYPH_VIEWBOX, instrumentGlyphs } from "./instrumentGlyphs";
 
@@ -34,6 +36,19 @@ export function defaultTransform(viewport: { width: number; height: number }): T
 
 function nodeCenter(node: BoardNode, positions: Record<string, { x: number; y: number }>) {
   return positions[node.id] ?? { x: node.x, y: node.y };
+}
+
+/** Where a thread pins to a node — near the top edge for a physical artifact, the true centre for a concept anchor. */
+function anchorPoint(node: BoardNode, center: { x: number; y: number }): { x: number; y: number } {
+  if (node.category === "concept") return center;
+  const size = sizeFor(node.id, node.category);
+  return { x: center.x, y: center.y - size.h / 2 + 9 };
+}
+
+function threadPath(a: { x: number; y: number }, b: { x: number; y: number }, sag: number): string {
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2 + sag;
+  return `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
 }
 
 const numeralForSlug = new Map(experiments.map((e) => [e.slug, e.numeral]));
@@ -69,11 +84,10 @@ function BookCardContents({ node, index }: { node: BoardNode; index: number }) {
   const showCover = node.coverImage && !imageFailed;
   return (
     <>
-      <span className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-accent/60" aria-hidden="true" />
       <ArchivalNumber index={index} />
       {showCover ? (
         // Decorative: the title and author beneath already name the book for assistive technology.
-        <div className="relative h-[72%] w-full border border-rule-soft" aria-hidden="true">
+        <div className="relative h-[70%] w-full border-[3px] border-paper bg-paper shadow-[0_1px_3px_rgba(0,0,0,0.25)]" aria-hidden="true">
           <Image
             src={node.coverImage!}
             alt=""
@@ -88,7 +102,7 @@ function BookCardContents({ node, index }: { node: BoardNode; index: number }) {
           />
         </div>
       ) : (
-        <span className="h-[72%] w-full border border-rule-soft bg-surface" aria-hidden="true" />
+        <span className="h-[70%] w-full border border-rule-soft bg-surface" aria-hidden="true" />
       )}
       <span className="mt-1.5 line-clamp-1 font-serif text-[0.875rem] leading-tight font-medium text-ink">
         {node.title}
@@ -98,7 +112,7 @@ function BookCardContents({ node, index }: { node: BoardNode; index: number }) {
   );
 }
 
-function NodeCardContents({ node, index }: { node: BoardNode; index: number }) {
+function NodeCardContents({ node, index, selected }: { node: BoardNode; index: number; selected: boolean }) {
   switch (node.category) {
     case "research":
       return (
@@ -129,11 +143,11 @@ function NodeCardContents({ node, index }: { node: BoardNode; index: number }) {
             <span className="line-clamp-1">Instrument</span>
           </span>
           {glyph ? (
-            <svg viewBox={INSTRUMENT_GLYPH_VIEWBOX} className="mt-1 h-7 w-full" aria-hidden="true" preserveAspectRatio="none">
-              <path d={glyph} fill="none" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.8" />
+            <svg viewBox={INSTRUMENT_GLYPH_VIEWBOX} className="mt-1 h-9 w-full" aria-hidden="true" preserveAspectRatio="none">
+              <path d={glyph} fill="none" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.85" />
             </svg>
           ) : null}
-          <span className="mt-auto line-clamp-2 font-serif text-[0.9375rem] leading-[1.2] font-medium text-ink">
+          <span className="mt-auto line-clamp-1 font-serif text-[0.9375rem] leading-[1.2] font-medium text-ink">
             {node.title}
           </span>
         </>
@@ -165,19 +179,32 @@ function NodeCardContents({ node, index }: { node: BoardNode; index: number }) {
     case "book":
       return <BookCardContents node={node} index={index} />;
 
-    case "concept":
+    case "concept": {
+      const size = sizeFor(node.id, node.category);
+      const r = size.w / 2 - 7;
+      const path = wobbleCirclePath(size.w / 2, size.h / 2, r, node.id);
       return (
         <>
-          <span
-            className="pointer-events-none absolute inset-[6px] rounded-full border border-rule-soft"
+          <svg
+            viewBox={`0 0 ${size.w} ${size.h}`}
+            className="pointer-events-none absolute inset-0 h-full w-full"
             aria-hidden="true"
-          />
+          >
+            <path
+              d={path}
+              fill="none"
+              stroke="var(--color-accent)"
+              strokeWidth={selected ? 2 : 1.25}
+              opacity={selected ? 0.95 : 0.65}
+            />
+          </svg>
           <span className="label text-ink-muted">{categoryCode.concept}</span>
-          <span className="mt-1 line-clamp-3 px-3 text-center font-serif text-[1rem] leading-[1.18] font-medium text-ink">
+          <span className="mt-1 line-clamp-3 px-3 text-center font-serif text-[1.0625rem] leading-[1.2] font-medium text-ink">
             {node.title}
           </span>
         </>
       );
+    }
 
     default:
       return null;
@@ -219,6 +246,7 @@ export function BoardCanvas({
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -290,6 +318,7 @@ export function BoardCanvas({
         startWorld: center,
         moved: false,
       };
+      setDraggingId(node.id);
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     },
     [positions],
@@ -299,6 +328,7 @@ export function BoardCanvas({
     (e: React.PointerEvent, node: BoardNode) => {
       const drag = dragState.current;
       dragState.current = null;
+      setDraggingId(null);
       if (!drag || drag.pointerId !== e.pointerId) return;
       if (!drag.moved) onSelectNode(node.id);
     },
@@ -332,15 +362,23 @@ export function BoardCanvas({
       ref={viewportRef}
       role="application"
       aria-label="Investigation board canvas. Drag to rearrange, scroll to zoom. Use the list view toggle for a keyboard-friendly alternative."
-      className="relative h-[72vh] min-h-[460px] touch-none overflow-hidden border border-rule bg-surface/25 select-none"
+      className="relative h-[74vh] min-h-[480px] touch-none overflow-hidden border border-rule bg-surface/25 select-none"
       onPointerDown={handleViewportPointerDown}
       onPointerMove={handleViewportPointerMove}
       onPointerUp={endViewportPan}
       onPointerCancel={endViewportPan}
       onWheel={handleWheel}
     >
+      {/* Archival paper grain, very faint — texture, not a corkboard photograph. */}
+      <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.05]" aria-hidden="true">
+        <filter id="board-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#board-grain)" />
+      </svg>
       {/* A faint registration grid — archival, not decorative noise. */}
-      <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.35]" aria-hidden="true">
+      <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.3]" aria-hidden="true">
         <defs>
           <pattern id="board-grid" width="36" height="36" patternUnits="userSpaceOnUse">
             <path d="M 36 0 L 0 0 0 36" fill="none" stroke="var(--color-rule-soft)" strokeWidth="1" />
@@ -381,23 +419,24 @@ export function BoardCanvas({
               const from = nodes.find((n) => n.id === edge.from);
               const to = nodes.find((n) => n.id === edge.to);
               if (!from || !to) return null;
-              const a = nodeCenter(from, positions);
-              const b = nodeCenter(to, positions);
+              const a = anchorPoint(from, nodeCenter(from, positions));
+              const b = anchorPoint(to, nodeCenter(to, positions));
               const dimmed = isDimmed(edge.from) || isDimmed(edge.to);
               const active =
                 highlightIds !== null && highlightIds.has(edge.from) && highlightIds.has(edge.to);
               const chosen = edge.id === selectedEdgeId;
               const showLabel = chosen || edge.id === hoveredEdgeId;
+              const sag = threadSagFor(edge.id);
+              const d = threadPath(a, b, sag);
               const mx = (a.x + b.x) / 2;
-              const my = (a.y + b.y) / 2;
+              const my = (a.y + b.y) / 2 + sag * 0.5;
               return (
                 <g key={edge.id}>
-                  {/* Wide, invisible hit area so a thin line stays easy to click. */}
-                  <line
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
+                  {/* Wide, invisible hit area so a thin thread stays easy to click. */}
+                  <path
+                    data-edge-id={edge.id}
+                    d={d}
+                    fill="none"
                     stroke="transparent"
                     strokeWidth={16}
                     onPointerDown={(e) => e.stopPropagation()}
@@ -406,21 +445,20 @@ export function BoardCanvas({
                     onClick={() => onSelectEdge(edge.id)}
                     style={{ cursor: "pointer" }}
                   />
-                  <line
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
+                  <path
+                    d={d}
+                    fill="none"
                     stroke={chosen || active ? "var(--color-accent)" : "var(--color-ink-muted)"}
-                    strokeWidth={chosen ? 2.5 : active ? 2 : 1.25}
+                    strokeWidth={chosen ? 2.25 : active ? 1.75 : 1.1}
                     strokeDasharray={EDGE_KIND_DASH[edge.kind]}
-                    opacity={dimmed ? 0.22 : chosen ? 1 : active ? 0.95 : 0.6}
+                    strokeLinecap="round"
+                    opacity={dimmed ? 0.22 : chosen ? 1 : active ? 0.95 : 0.58}
                     pointerEvents="none"
                   />
                   {!dimmed ? (
                     <>
-                      <circle cx={a.x} cy={a.y} r={chosen || active ? 3 : 2} fill="var(--color-ink-muted)" opacity={0.7} pointerEvents="none" />
-                      <circle cx={b.x} cy={b.y} r={chosen || active ? 3 : 2} fill="var(--color-ink-muted)" opacity={0.7} pointerEvents="none" />
+                      <circle cx={a.x} cy={a.y} r={chosen || active ? 3.25 : 2.25} fill="var(--color-accent)" opacity={0.75} pointerEvents="none" />
+                      <circle cx={b.x} cy={b.y} r={chosen || active ? 3.25 : 2.25} fill="var(--color-accent)" opacity={0.75} pointerEvents="none" />
                     </>
                   ) : null}
                   {showLabel ? (
@@ -454,30 +492,28 @@ export function BoardCanvas({
               const from = nodes.find((n) => n.id === edge.from);
               const to = nodes.find((n) => n.id === edge.to);
               if (!from || !to) return null;
-              const a = nodeCenter(from, positions);
-              const b = nodeCenter(to, positions);
+              const a = anchorPoint(from, nodeCenter(from, positions));
+              const b = anchorPoint(to, nodeCenter(to, positions));
               const chosen = edge.id === selectedEdgeId;
+              const d = threadPath(a, b, threadSagFor(edge.id));
               return (
                 <g key={edge.id}>
-                  <line
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
+                  <path
+                    d={d}
+                    fill="none"
                     stroke="transparent"
                     strokeWidth={16}
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => onSelectEdge(edge.id)}
                     style={{ cursor: "pointer" }}
                   />
-                  <line
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
+                  <path
+                    d={d}
+                    fill="none"
                     stroke="var(--color-accent-soft)"
-                    strokeWidth={chosen ? 2.25 : 1.5}
-                    strokeDasharray="6 5"
+                    strokeWidth={chosen ? 2.1 : 1.4}
+                    strokeDasharray="5 5"
+                    strokeLinecap="round"
                     opacity={chosen ? 1 : 0.85}
                     pointerEvents="none"
                   />
@@ -491,10 +527,13 @@ export function BoardCanvas({
           const center = nodeCenter(node, positions);
           const isConcept = node.category === "concept";
           const isBook = node.category === "book";
-          const size = isConcept ? { w: HUB_SIZE, h: HUB_SIZE } : CARD_SIZE[node.category];
+          const size = sizeFor(node.id, node.category);
           const dimmed = isDimmed(node.id);
           const selected = node.id === selectedNodeId;
+          const dragging = node.id === draggingId;
           const isConnectTarget = connectFrom !== null && connectFrom !== node.id;
+          const rotation = selected ? 0 : rotationFor(node.id, node.category);
+          const scale = dragging ? 1.045 : selected ? 1.03 : 1;
 
           return (
             <button
@@ -504,37 +543,40 @@ export function BoardCanvas({
               onPointerUp={(e) => handleNodePointerUp(e, node)}
               aria-pressed={selected}
               aria-label={`${categoryLabel[node.category]}: ${node.title}`}
-              className={`absolute flex flex-col justify-center overflow-hidden text-left font-sans shadow-sm transition-[opacity,border-color,box-shadow] ${
+              className={`absolute flex flex-col justify-center overflow-hidden text-left font-sans motion-safe:transition-[transform,box-shadow,opacity] motion-safe:duration-200 motion-safe:ease-out ${
                 isConcept
-                  ? "items-center rounded-full border-2 text-center"
+                  ? "items-center rounded-full border-0 bg-transparent text-center"
                   : isBook
-                    ? "items-center border border-rule px-2.5"
-                    : "items-start rounded-[2px] border px-3.5"
+                    ? "items-center border border-rule bg-paper/[0.97] px-2.5 shadow-[0_3px_10px_rgba(20,15,10,0.18)]"
+                    : "items-start rounded-[1px] border bg-paper/[0.97] px-3.5 shadow-[0_2px_7px_rgba(20,15,10,0.14)]"
               } py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                 selected
-                  ? "border-accent bg-paper shadow-md ring-1 ring-accent/40"
+                  ? "border-accent shadow-[0_10px_24px_rgba(20,15,10,0.26)]"
                   : isConnectTarget
-                    ? "border-dashed border-accent-soft bg-surface text-ink"
-                    : "border-rule bg-paper/[0.97] text-ink hover:border-accent-soft hover:shadow-md"
-              }`}
+                    ? "border-dashed border-accent-soft"
+                    : isConcept
+                      ? ""
+                      : "border-rule hover:border-accent-soft"
+              } ${dragging ? "shadow-[0_14px_30px_rgba(20,15,10,0.3)]" : ""}`}
               style={{
                 left: center.x,
                 top: center.y,
                 width: size.w,
                 height: size.h,
-                transform: "translate(-50%, -50%)",
+                transform: `translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`,
                 opacity: dimmed ? 0.55 : 1,
-                cursor: "grab",
-                zIndex: selected ? 5 : dimmed ? 1 : 2,
+                cursor: dragging ? "grabbing" : "grab",
+                zIndex: dragging ? 6 : selected ? 5 : dimmed ? 1 : 2,
+                color: "var(--color-ink)",
               }}
             >
-              <NodeCardContents node={node} index={index} />
+              <NodeCardContents node={node} index={index} selected={selected} />
             </button>
           );
         })}
       </div>
 
-      {/* A soft vignette at the edges — a visual cue that the atlas continues beyond the frame. */}
+      {/* A soft vignette at the edges — a visual cue that the wall continues beyond the frame. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -545,7 +587,7 @@ export function BoardCanvas({
       />
 
       <p className="pointer-events-none absolute bottom-3 left-3 max-w-[22rem] bg-paper/90 px-2 py-1 font-sans text-[0.6875rem] leading-snug text-ink-muted italic">
-        Drag to rearrange · Scroll to zoom · Select a connection to see why it exists.
+        Follow a thread · Drag to rearrange · Scroll to zoom.
       </p>
     </div>
   );
