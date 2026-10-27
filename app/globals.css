@@ -33,6 +33,19 @@
      selected. Used only for threads and pins inside components/board/. */
   --board-thread: #e0493c;
 
+  /* Text drawn directly on the wall (concept-node titles, neighbourhood
+     headings) cannot borrow --color-ink/-soft/-muted: those flip with the
+     *site's* theme, while the wall is dark in both Light and Dark. Fixed,
+     wall-tuned foreground tiers instead, each independently verified at
+     ≥4.5:1 against both --board-wall values (Light's warmer, lighter brown
+     is the binding case at 13.3:1 / 7.2:1 / 5.4:1 respectively; Dark clears
+     every tier with more room to spare). Used only inside components/board/,
+     only for text/strokes sitting straight on the wall — paper-backed cards
+     keep using the ordinary --color-ink tiers. */
+  --board-ink: #f3ead9; /* primary — concept-node titles */
+  --board-ink-soft: #b9ad94; /* secondary — concept category marks */
+  --board-label: #a39577; /* tertiary — neighbourhood headings, deliberately a step dimmer so they stay subordinate to evidence */
+
   /* The case folder taken off the wall — a manila tone, distinct from both
      the wall and the site's own paper, so the open file reads as a
      physical object rather than another page. Used only inside the

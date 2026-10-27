@@ -70,7 +70,7 @@ const EDGE_KIND_DASH: Record<string, string | undefined> = {
 
 function ArchivalNumber({ index }: { index: number }) {
   return (
-    <span className="pointer-events-none absolute top-1.5 right-2 font-sans text-[0.625rem] tracking-[0.08em] text-ink-muted/70 tabular-nums">
+    <span className="pointer-events-none absolute top-1.5 right-2 font-sans text-[0.625rem] tracking-[0.08em] text-ink-soft tabular-nums">
       {String(index + 1).padStart(2, "0")}
     </span>
   );
@@ -120,7 +120,7 @@ function LayeredPages({
 
 function CategoryMark({ node }: { node: BoardNode }) {
   return (
-    <span className="label flex items-center gap-1.5 text-ink-muted">
+    <span className="label flex items-center gap-1.5">
       <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[0.5625rem] leading-none">
         {categoryCode[node.category]}
       </span>
@@ -185,7 +185,7 @@ function NodeCardContents({ node, index, selected }: { node: BoardNode; index: n
       return (
         <>
           <ArchivalNumber index={index} />
-          <span className="label flex items-center gap-1.5 text-ink-muted">
+          <span className="label flex items-center gap-1.5">
             <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-current text-[0.5625rem] leading-none">
               {categoryCode.laboratory}
             </span>
@@ -243,13 +243,18 @@ function NodeCardContents({ node, index, selected }: { node: BoardNode; index: n
             <path
               d={path}
               fill="none"
-              stroke="var(--color-accent)"
+              stroke="var(--board-thread)"
               strokeWidth={selected ? 2 : 1.25}
-              opacity={selected ? 0.95 : 0.65}
+              opacity={selected ? 1 : 0.75}
             />
           </svg>
-          <span className="label text-ink-muted">{categoryCode.concept}</span>
-          <span className="mt-1 line-clamp-3 px-3 text-center font-serif text-[1.0625rem] leading-[1.2] font-medium text-ink">
+          <span className="label" style={{ color: "var(--board-ink-soft)" }}>
+            {categoryCode.concept}
+          </span>
+          <span
+            className="mt-1 line-clamp-3 px-3 text-center font-serif text-[1.0625rem] leading-[1.2] font-medium"
+            style={{ color: "var(--board-ink)" }}
+          >
             {node.title}
           </span>
         </>
@@ -387,6 +392,9 @@ export function BoardCanvas({
 
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
+      // Ordinary wheel/trackpad scrolling must move the page, not the canvas —
+      // only an explicit Ctrl/Cmd+wheel is a deliberate request to zoom.
+      if (!(e.ctrlKey || e.metaKey)) return;
       e.preventDefault();
       const viewport = viewportRef.current;
       if (!viewport) return;
@@ -411,7 +419,7 @@ export function BoardCanvas({
     <div
       ref={viewportRef}
       role="application"
-      aria-label="Investigation board canvas — a wall of pinned evidence. Drag to rearrange, scroll to zoom. Use the list view toggle for a keyboard-friendly alternative."
+      aria-label="Investigation board canvas — a wall of pinned evidence. Drag empty space to pan, drag evidence to rearrange, use the zoom controls above the board to zoom. Use the list view toggle for a keyboard-friendly alternative."
       className="relative h-[80vh] max-h-[54rem] min-h-[520px] touch-none overflow-hidden border border-[var(--board-wall-line)] select-none"
       style={{ background: "var(--board-wall)" }}
       onPointerDown={handleViewportPointerDown}
@@ -452,8 +460,8 @@ export function BoardCanvas({
           <span
             key={label.text}
             aria-hidden="true"
-            className="pointer-events-none absolute font-sans text-[0.8125rem] font-medium tracking-[0.16em] text-ink-muted/35 uppercase"
-            style={{ left: label.x, top: label.y }}
+            className="pointer-events-none absolute font-sans text-[0.8125rem] font-medium tracking-[0.16em] uppercase"
+            style={{ left: label.x, top: label.y, color: "var(--board-label)" }}
           >
             {label.text}
           </span>
@@ -599,11 +607,13 @@ export function BoardCanvas({
                 aria-label={`${categoryLabel[node.category]}: ${node.title}`}
                 className={`absolute flex flex-col justify-center overflow-hidden text-left font-sans motion-safe:transition-[transform,box-shadow,opacity] motion-safe:duration-200 motion-safe:ease-out ${
                   isConcept
-                    ? "items-center rounded-full border-0 bg-transparent text-center"
+                    ? "items-center rounded-full border-0 text-center"
                     : isBook
                       ? "items-center border border-rule bg-paper/[0.97] px-2.5 shadow-[0_4px_14px_rgba(0,0,0,0.4)]"
                       : "items-start rounded-[1px] border bg-paper/[0.97] px-3.5 shadow-[0_4px_14px_rgba(0,0,0,0.4)]"
-                } py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                } py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                  isConcept ? "focus-visible:outline-[var(--board-thread)]" : "focus-visible:outline-accent"
+                } ${
                   selected
                     ? "border-accent shadow-[0_14px_30px_rgba(0,0,0,0.5)]"
                     : isConnectTarget
@@ -622,6 +632,7 @@ export function BoardCanvas({
                   cursor: dragging ? "grabbing" : "grab",
                   zIndex: dragging ? 6 : selected ? 5 : dimmed ? 1 : 2,
                   color: "var(--color-ink)",
+                  background: isConcept ? "var(--board-wall-line)" : undefined,
                 }}
               >
                 <NodeCardContents node={node} index={index} selected={selected} />
@@ -676,8 +687,8 @@ export function BoardCanvas({
         }}
       />
 
-      <p className="pointer-events-none absolute bottom-3 left-3 max-w-[22rem] bg-paper/90 px-2 py-1 font-sans text-[0.6875rem] leading-snug text-ink-muted italic">
-        Follow a thread · Drag to rearrange · Scroll to zoom.
+      <p className="pointer-events-none absolute bottom-3 left-3 max-w-[22rem] bg-paper/90 px-2 py-1 font-sans text-[0.6875rem] leading-snug text-ink-soft italic">
+        Drag the wall to explore · Use +/− to zoom · Select evidence to open a case file.
       </p>
     </div>
   );

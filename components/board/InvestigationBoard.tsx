@@ -202,6 +202,9 @@ export function InvestigationBoard() {
 
   const handleResetLayout = useCallback(() => {
     setSessionPositions({});
+  }, []);
+
+  const handleResetView = useCallback(() => {
     setTransform(defaultTransform(viewportSizeRef.current));
   }, []);
 
@@ -219,6 +222,7 @@ export function InvestigationBoard() {
         onZoomIn={() => handleZoom(1.2)}
         onZoomOut={() => handleZoom(1 / 1.2)}
         onResetLayout={handleResetLayout}
+        onResetView={handleResetView}
         onFitToView={handleFitToView}
         hasPersonalData={hasPersonalData}
         onClearPersonal={() => {
