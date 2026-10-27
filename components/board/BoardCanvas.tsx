@@ -412,7 +412,7 @@ export function BoardCanvas({
       ref={viewportRef}
       role="application"
       aria-label="Investigation board canvas — a wall of pinned evidence. Drag to rearrange, scroll to zoom. Use the list view toggle for a keyboard-friendly alternative."
-      className="relative h-[76vh] min-h-[500px] touch-none overflow-hidden border border-[var(--board-wall-line)] select-none"
+      className="relative h-[80vh] max-h-[54rem] min-h-[520px] touch-none overflow-hidden border border-[var(--board-wall-line)] select-none"
       style={{ background: "var(--board-wall)" }}
       onPointerDown={handleViewportPointerDown}
       onPointerMove={handleViewportPointerMove}
@@ -499,11 +499,11 @@ export function BoardCanvas({
                   <path
                     d={d}
                     fill="none"
-                    stroke="var(--color-accent)"
-                    strokeWidth={chosen ? 2.75 : active ? 2.25 : 1.6}
+                    stroke="var(--board-thread)"
+                    strokeWidth={chosen ? 3 : active ? 2.5 : 2}
                     strokeDasharray={EDGE_KIND_DASH[edge.kind]}
                     strokeLinecap="round"
-                    opacity={dimmed ? 0.25 : chosen ? 1 : active ? 1 : 0.78}
+                    opacity={dimmed ? 0.25 : chosen ? 1 : active ? 1 : 0.9}
                     pointerEvents="none"
                   />
                   {showLabel ? (
@@ -514,7 +514,7 @@ export function BoardCanvas({
                         width={84}
                         height={16}
                         fill="var(--color-paper)"
-                        stroke="var(--color-accent)"
+                        stroke="var(--board-thread)"
                         strokeWidth={0.75}
                       />
                       <text
@@ -523,7 +523,7 @@ export function BoardCanvas({
                         textAnchor="middle"
                         fontSize="9"
                         letterSpacing="0.08em"
-                        fill="var(--color-accent)"
+                        fill="var(--board-thread)"
                         style={{ fontFamily: "var(--font-sans)", textTransform: "uppercase" }}
                       >
                         {edge.kind}
@@ -658,7 +658,7 @@ export function BoardCanvas({
             return (
               <g key={node.id} opacity={0.95}>
                 <ellipse cx={p.x} cy={p.y + 1.6} rx={big ? 3.4 : 2.6} ry={1.3} fill="rgba(0,0,0,0.35)" />
-                <circle cx={p.x} cy={p.y} r={big ? 3.6 : 2.8} fill="var(--color-accent)" />
+                <circle cx={p.x} cy={p.y} r={big ? 3.6 : 2.8} fill="var(--board-thread)" />
                 <circle cx={p.x - 0.8} cy={p.y - 0.8} r={big ? 1.2 : 0.9} fill="rgba(255,255,255,0.55)" />
               </g>
             );

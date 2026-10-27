@@ -27,6 +27,12 @@
   --board-wall: #2b2017;
   --board-wall-line: #4a3a28;
 
+  /* The evidence board's own thread colour — a brighter, more saturated
+     red than the site's --color-accent, chosen so a pinned string reads
+     clearly against the dark wall from across the room, not just once
+     selected. Used only for threads and pins inside components/board/. */
+  --board-thread: #e0493c;
+
   /* The case folder taken off the wall — a manila tone, distinct from both
      the wall and the site's own paper, so the open file reads as a
      physical object rather than another page. Used only inside the
@@ -111,6 +117,7 @@
     --color-klein-preview: #7180f4;
     --board-wall: #060910;
     --board-wall-line: #141b30;
+    --board-thread: #d97a6c;
     --folder-cover: #2a2f45;
     --folder-cover-line: #4a5278;
     color-scheme: dark;
@@ -131,6 +138,7 @@
   --color-klein-preview: #7180f4;
   --board-wall: #060910;
   --board-wall-line: #141b30;
+  --board-thread: #d97a6c;
   --folder-cover: #2a2f45;
   --folder-cover-line: #4a5278;
   color-scheme: dark;

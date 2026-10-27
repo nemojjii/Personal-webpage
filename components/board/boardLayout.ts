@@ -1,7 +1,7 @@
 /** Shared geometry for the Investigation Board's canvas — board units are plain pixels at scale 1. */
 
-export const WORLD_WIDTH = 1500;
-export const WORLD_HEIGHT = 1000;
+export const WORLD_WIDTH = 1760;
+export const WORLD_HEIGHT = 1220;
 export const MIN_SCALE = 0.35;
 export const MAX_SCALE = 2.2;
 
@@ -106,32 +106,45 @@ export function fitTransform(
   return { panX, panY, scale };
 }
 
-/** The default initial view never shrinks cards below this — "Fit to view" is the explicit way to see everything at once. */
-export const DEFAULT_SCALE_FLOOR = 0.8;
+/**
+ * The default initial view never shrinks cards below this. It is a
+ * minimum, not the thing driving the composition — fitTransform computes
+ * the real scale from the actual measured viewport against
+ * DEFAULT_VIEW_BOUNDS below, and only falls back to this floor on a
+ * viewport too small to fit the bounds comfortably (a phone, mainly),
+ * where showing one artifact at a readable size matters more than fitting
+ * the whole cluster. "Fit to view" is the explicit way to see everything.
+ */
+export const DEFAULT_SCALE_FLOOR = 0.85;
 
 /**
- * The default view composes around one compelling area rather than the
- * graph's full bounds: the EEG research, the two Fourier-adjacent
- * instruments and their concept hubs — a real, verified relationship
- * (laboratory/fourier-explorer and research/power-spectral-density-eeg-
- * signal-quality both connect to concept/fourier-frequency-domain). The
- * rest of the wall sits just off-screen, reachable by panning or an
- * explicit "Fit to view".
+ * The default view composes around one compelling, tight area rather than
+ * the graph's full bounds: the EEG research, Fourier Explorer, Wave
+ * Superposition and both concept hubs — five artifacts, all genuinely
+ * connected (laboratory/fourier-explorer and research/power-spectral-
+ * density-eeg-signal-quality both reach concept/fourier-frequency-domain;
+ * laboratory/wave-superposition reaches concept/superposition and the EEG
+ * research itself). Tight bounds in a wide viewport mean this cluster
+ * renders large and legible without any hardcoded zoom value. The rest of
+ * the wall sits just off-screen, reachable by panning or an explicit
+ * "Fit to view".
  */
-export const DEFAULT_VIEW_BOUNDS = { minX: 70, minY: 10, maxX: 1380, maxY: 500 };
+export const DEFAULT_VIEW_BOUNDS = { minX: 10, minY: 30, maxX: 910, maxY: 640 };
 
 /**
  * Faint, non-interactive neighborhood labels — organisational aids placed
  * in the open space around each loose cluster, not claims that every
  * nearby node is connected to every other. Positions are hand-placed
- * against the curated layout in lib/board/nodes.ts.
+ * against the curated layout in lib/board/nodes.ts (Phase 20.6
+ * recomposition).
  */
 export const neighborhoodLabels: { text: string; x: number; y: number }[] = [
-  { text: "Signal & Frequency", x: 180, y: 15 },
-  { text: "Physics & Superposition", x: 1040, y: 15 },
-  { text: "Mathematics & Perception", x: 580, y: 955 },
-  { text: "Literary & Scientific Imagination", x: 180, y: 715 },
-  { text: "Independent Investigations", x: 1420, y: 395 },
+  { text: "Signal & Frequency", x: 20, y: 10 },
+  { text: "Physics & Superposition", x: 980, y: 480 },
+  { text: "Mathematical Modeling", x: 30, y: 740 },
+  { text: "Mathematics & Perception", x: 470, y: 840 },
+  { text: "Literary & Scientific Imagination", x: 1080, y: 605 },
+  { text: "Independent Investigations", x: 1460, y: 130 },
 ];
 
 /* ---------------------------------------------------------------------- */
