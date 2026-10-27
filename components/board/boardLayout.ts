@@ -82,6 +82,28 @@ export function clampScale(scale: number): number {
 }
 
 /**
+ * The single pointer/focal-centered zoom implementation shared by every
+ * zoom input — wheel, trackpad pinch (Chromium ctrl+wheel and Safari
+ * gesture events), touch pinch, and the explicit +/- buttons (anchored on
+ * the viewport center) — so every one of them zooms toward the same point
+ * it was asked to, rather than drifting toward the world origin.
+ */
+export function zoomAt(
+  transform: { panX: number; panY: number; scale: number },
+  focal: { x: number; y: number },
+  factor: number,
+): { panX: number; panY: number; scale: number } {
+  const nextScale = clampScale(transform.scale * factor);
+  const worldX = (focal.x - transform.panX) / transform.scale;
+  const worldY = (focal.y - transform.panY) / transform.scale;
+  return {
+    scale: nextScale,
+    panX: focal.x - worldX * nextScale,
+    panY: focal.y - worldY * nextScale,
+  };
+}
+
+/**
  * A transform (pan + scale) that fits the given world-space bounds inside a
  * viewport of the given size, with margin. `minScale` is a readability
  * floor: below it, cards stop shrinking and the view centers on the bounds

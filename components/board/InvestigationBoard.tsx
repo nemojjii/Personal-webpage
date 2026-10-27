@@ -20,7 +20,7 @@ import { BoardControls } from "./BoardControls";
 import { BoardInspector } from "./BoardInspector";
 import { BoardListView } from "./BoardListView";
 import { ConnectionDossier } from "./ConnectionDossier";
-import { fitTransform } from "./boardLayout";
+import { fitTransform, zoomAt } from "./boardLayout";
 
 const ALL_NODE_IDS = new Set(graph.nodes.map((n) => n.id));
 
@@ -181,8 +181,13 @@ export function InvestigationBoard() {
     setOriginRect(null);
   }, []);
 
+  // Shares the same pointer/focal-centered math as wheel and pinch zoom
+  // (zoomAt in boardLayout.ts), anchored on the viewport center instead of a
+  // cursor position — the one sensible default focal point for a click.
   const handleZoom = useCallback((factor: number) => {
-    setTransform((t) => ({ ...t, scale: Math.min(2.2, Math.max(0.35, t.scale * factor)) }));
+    setTransform((t) =>
+      zoomAt(t, { x: viewportSizeRef.current.width / 2, y: viewportSizeRef.current.height / 2 }, factor),
+    );
   }, []);
 
   const handleFitToView = useCallback(() => {

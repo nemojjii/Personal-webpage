@@ -14,7 +14,6 @@ import {
   WORLD_WIDTH,
   categoryCode,
   categoryLabel,
-  clampScale,
   fitTransform,
   neighborhoodLabels,
   rotationFor,
@@ -23,6 +22,7 @@ import {
   threadSagFor,
   tierOf,
   wobbleCirclePath,
+  zoomAt,
 } from "./boardLayout";
 import { INSTRUMENT_GLYPH_VIEWBOX, instrumentGlyphs } from "./instrumentGlyphs";
 
@@ -295,7 +295,11 @@ export function BoardCanvas({
   highlightIds: Set<string> | null;
   dimOthers: boolean;
   transform: Transform;
-  onTransformChange: (t: Transform) => void;
+  // Also accepts a React-style functional update (prev => next) — needed by
+  // the wheel handler below, which must compound onto whatever transform is
+  // actually latest rather than a value it closed over, since a fast
+  // trackpad pinch can deliver wheel events faster than React re-renders.
+  onTransformChange: (update: Transform | ((prev: Transform) => Transform)) => void;
   connectFrom: string | null;
   onViewportResize?: (size: { width: number; height: number }) => void;
 }) {
@@ -326,17 +330,64 @@ export function BoardCanvas({
     moved: boolean;
   } | null>(null);
 
+  // Two-finger touch pinch-to-zoom. Tracked separately from `panState` —
+  // a second touch pointer landing while one finger is already panning
+  // promotes the gesture to a pinch instead of silently stealing the pan.
+  const touchPoints = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchState = useRef<{
+    pointerIds: [number, number];
+    startDistance: number;
+    startFocal: { x: number; y: number };
+    startTransform: Transform;
+  } | null>(null);
+
   const handleViewportPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (e.button !== 0 && e.pointerType === "mouse") return;
-      panState.current = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, origin: transform };
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+
+      if (e.pointerType === "touch") {
+        touchPoints.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (touchPoints.current.size === 2) {
+          const ids = [...touchPoints.current.keys()] as [number, number];
+          const [p1, p2] = ids.map((id) => touchPoints.current.get(id)!);
+          const rect = viewportRef.current?.getBoundingClientRect();
+          panState.current = null;
+          pinchState.current = {
+            pointerIds: ids,
+            startDistance: Math.hypot(p1.x - p2.x, p1.y - p2.y),
+            startFocal: { x: (p1.x + p2.x) / 2 - (rect?.left ?? 0), y: (p1.y + p2.y) / 2 - (rect?.top ?? 0) },
+            startTransform: transform,
+          };
+          return;
+        }
+        if (touchPoints.current.size > 2) return;
+      }
+
+      if (pinchState.current) return;
+      panState.current = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, origin: transform };
     },
     [transform],
   );
 
   const handleViewportPointerMove = useCallback(
     (e: React.PointerEvent) => {
+      if (e.pointerType === "touch" && touchPoints.current.has(e.pointerId)) {
+        touchPoints.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+
+      const pinch = pinchState.current;
+      if (pinch && pinch.pointerIds.includes(e.pointerId)) {
+        const [id1, id2] = pinch.pointerIds;
+        const p1 = touchPoints.current.get(id1);
+        const p2 = touchPoints.current.get(id2);
+        if (p1 && p2 && pinch.startDistance > 0) {
+          const distance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+          onTransformChange(zoomAt(pinch.startTransform, pinch.startFocal, distance / pinch.startDistance));
+        }
+        return;
+      }
+
       const pan = panState.current;
       if (pan && pan.pointerId === e.pointerId) {
         onTransformChange({
@@ -358,6 +409,8 @@ export function BoardCanvas({
   );
 
   const endViewportPan = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === "touch") touchPoints.current.delete(e.pointerId);
+    if (pinchState.current?.pointerIds.includes(e.pointerId)) pinchState.current = null;
     if (panState.current?.pointerId === e.pointerId) panState.current = null;
   }, []);
 
@@ -390,28 +443,85 @@ export function BoardCanvas({
     [onSelectNode],
   );
 
+  // Chromium delivers trackpad pinch as wheel events with ctrlKey synthesized
+  // true — the same signal an explicit Ctrl/Cmd+wheel sends — so one proportional,
+  // deltaY-scaled zoom (rather than a fixed per-event step) smoothly handles both
+  // a deliberate held-Ctrl mouse-wheel notch and a continuous pinch's many small deltas.
+  const WHEEL_ZOOM_SENSITIVITY = 0.0012;
+
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       // Ordinary wheel/trackpad scrolling must move the page, not the canvas —
-      // only an explicit Ctrl/Cmd+wheel is a deliberate request to zoom.
+      // only an explicit Ctrl/Cmd+wheel (or a trackpad pinch, see above) is a
+      // deliberate request to zoom.
       if (!(e.ctrlKey || e.metaKey)) return;
       e.preventDefault();
       const viewport = viewportRef.current;
       if (!viewport) return;
       const rect = viewport.getBoundingClientRect();
-      const cursorX = e.clientX - rect.left;
-      const cursorY = e.clientY - rect.top;
-      const nextScale = clampScale(transform.scale * (e.deltaY > 0 ? 0.9 : 1.1));
-      const worldX = (cursorX - transform.panX) / transform.scale;
-      const worldY = (cursorY - transform.panY) / transform.scale;
-      onTransformChange({
-        scale: nextScale,
-        panX: cursorX - worldX * nextScale,
-        panY: cursorY - worldY * nextScale,
-      });
+      const focal = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      const clampedDeltaY = Math.max(-180, Math.min(180, e.deltaY));
+      const factor = Math.exp(-clampedDeltaY * WHEEL_ZOOM_SENSITIVITY);
+      // A functional update, not a value computed from the `transform` prop:
+      // a fast pinch can fire several wheel events before React re-renders,
+      // and each must compound onto the latest scale, not a stale snapshot.
+      onTransformChange((prev) => zoomAt(prev, focal, factor));
     },
-    [transform, onTransformChange],
+    [onTransformChange],
   );
+
+  // Safari/WebKit never sets ctrlKey on a trackpad pinch's wheel events — it
+  // delivers the gesture through its own non-standard gesturestart/change/end
+  // events instead, which React has no synthetic prop for, so they are wired
+  // up directly. Feature-detected: every other browser simply never fires them.
+  const latestTransformRef = useRef(transform);
+  useEffect(() => {
+    latestTransformRef.current = transform;
+  }, [transform]);
+  const latestOnTransformChangeRef = useRef(onTransformChange);
+  useEffect(() => {
+    latestOnTransformChangeRef.current = onTransformChange;
+  }, [onTransformChange]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || typeof window === "undefined" || !("GestureEvent" in window)) return;
+
+    type WebKitGestureEvent = Event & { scale?: number; clientX?: number; clientY?: number };
+
+    const focalFromEvent = (e: WebKitGestureEvent) => {
+      const rect = viewport.getBoundingClientRect();
+      if (typeof e.clientX === "number" && typeof e.clientY === "number") {
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
+      return { x: rect.width / 2, y: rect.height / 2 };
+    };
+
+    let gestureStartTransform = latestTransformRef.current;
+    let gestureFocal = { x: 0, y: 0 };
+
+    const handleGestureStart = (e: Event) => {
+      e.preventDefault();
+      gestureStartTransform = latestTransformRef.current;
+      gestureFocal = focalFromEvent(e as WebKitGestureEvent);
+    };
+    const handleGestureChange = (e: Event) => {
+      e.preventDefault();
+      const scale = (e as WebKitGestureEvent).scale;
+      if (typeof scale !== "number" || !Number.isFinite(scale) || scale <= 0) return;
+      latestOnTransformChangeRef.current(zoomAt(gestureStartTransform, gestureFocal, scale));
+    };
+    const handleGestureEnd = (e: Event) => e.preventDefault();
+
+    viewport.addEventListener("gesturestart", handleGestureStart, { passive: false });
+    viewport.addEventListener("gesturechange", handleGestureChange, { passive: false });
+    viewport.addEventListener("gestureend", handleGestureEnd, { passive: false });
+    return () => {
+      viewport.removeEventListener("gesturestart", handleGestureStart);
+      viewport.removeEventListener("gesturechange", handleGestureChange);
+      viewport.removeEventListener("gestureend", handleGestureEnd);
+    };
+  }, []);
 
   const isDimmed = (id: string) => dimOthers && highlightIds !== null && !highlightIds.has(id);
 
