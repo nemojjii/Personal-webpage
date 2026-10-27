@@ -27,6 +27,13 @@
   --board-wall: #2b2017;
   --board-wall-line: #4a3a28;
 
+  /* The case folder taken off the wall — a manila tone, distinct from both
+     the wall and the site's own paper, so the open file reads as a
+     physical object rather than another page. Used only inside the
+     Investigation Board's CaseFolder component. */
+  --folder-cover: #c9a872;
+  --folder-cover-line: #93723d;
+
   /* The Generative Art Playground's one deliberately theme-invariant colour:
      International Klein Blue, used boldly inside its three artwork canvases
      and nowhere else on the site. Everything else here adapts between Light
@@ -104,6 +111,8 @@
     --color-klein-preview: #7180f4;
     --board-wall: #060910;
     --board-wall-line: #141b30;
+    --folder-cover: #2a2f45;
+    --folder-cover-line: #4a5278;
     color-scheme: dark;
   }
 }
@@ -122,6 +131,8 @@
   --color-klein-preview: #7180f4;
   --board-wall: #060910;
   --board-wall-line: #141b30;
+  --folder-cover: #2a2f45;
+  --folder-cover-line: #4a5278;
   color-scheme: dark;
 }
 

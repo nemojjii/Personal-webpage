@@ -34,6 +34,7 @@ export function InvestigationBoard() {
   const [viewMode, setViewMode] = useState<"canvas" | "list">("canvas");
   const [sessionPositions, setSessionPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [transform, setTransform] = useState<Transform>(() => defaultTransform({ width: 900, height: 560 }));
   const viewportSizeRef = useRef({ width: 900, height: 560 });
   const hasMeasuredViewport = useRef(false);
@@ -150,7 +151,7 @@ export function InvestigationBoard() {
   }, []);
 
   const handleSelectNode = useCallback(
-    (id: string) => {
+    (id: string, rect?: DOMRect) => {
       if (connectFrom && connectFrom !== id) {
         const label = window.prompt(
           `Why does ${getNode(graph, connectFrom)?.title ?? connectFrom} connect to ${getNode(graph, id)?.title ?? id}? (Shown only to you, in this browser.)`,
@@ -162,6 +163,7 @@ export function InvestigationBoard() {
         setConnectFrom(null);
         return;
       }
+      setOriginRect(rect ?? null);
       setSelection({ kind: "node", id });
       setFocused(false);
     },
@@ -176,6 +178,7 @@ export function InvestigationBoard() {
   const handleClose = useCallback(() => {
     setSelection(null);
     setFocused(false);
+    setOriginRect(null);
   }, []);
 
   const handleZoom = useCallback((factor: number) => {
@@ -290,6 +293,7 @@ export function InvestigationBoard() {
           onStartConnect={() => selectedNodeId && setConnectFrom(selectedNodeId)}
           onCancelConnect={() => setConnectFrom(null)}
           onRemoveUserEdge={local.removeConnection}
+          originRect={originRect}
         />
       ) : null}
 

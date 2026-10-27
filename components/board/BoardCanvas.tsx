@@ -285,7 +285,7 @@ export function BoardCanvas({
   onMoveNode: (id: string, x: number, y: number) => void;
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
-  onSelectNode: (id: string) => void;
+  onSelectNode: (id: string, originRect?: DOMRect) => void;
   onSelectEdge: (id: string) => void;
   highlightIds: Set<string> | null;
   dimOthers: boolean;
@@ -380,7 +380,7 @@ export function BoardCanvas({
       dragState.current = null;
       setDraggingId(null);
       if (!drag || drag.pointerId !== e.pointerId) return;
-      if (!drag.moved) onSelectNode(node.id);
+      if (!drag.moved) onSelectNode(node.id, (e.currentTarget as HTMLElement).getBoundingClientRect());
     },
     [onSelectNode],
   );

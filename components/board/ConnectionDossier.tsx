@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import type { BoardEdge, BoardNode } from "@/lib/board/types";
 
-import { CaseFileShell } from "./CaseFileShell";
+import { CaseFolder, type OriginRect, type Spread } from "./CaseFolder";
 import { categoryLabel } from "./boardLayout";
 import { INSTRUMENT_GLYPH_VIEWBOX, instrumentGlyphs } from "./instrumentGlyphs";
 
@@ -21,46 +21,55 @@ export function ConnectionDossier({
   toNode,
   onSelectNode,
   onClose,
+  originRect,
 }: {
   edge: BoardEdge;
   fromNode: BoardNode;
   toNode: BoardNode;
   onSelectNode: (id: string) => void;
   onClose: () => void;
+  originRect?: OriginRect | null;
 }) {
+  const spreads: Spread[] = [
+    {
+      key: "finding",
+      srLabel: "The finding",
+      left: (
+        <div>
+          <p className="label text-accent">{edge.kind} connection</p>
+          <h2 className="mt-2 max-w-[22ch] font-serif text-[1.375rem] leading-[1.2] tracking-[-0.01em] text-ink sm:text-[1.5rem]">
+            {fromNode.title} <span className="text-ink-muted">↔</span> {toNode.title}
+          </h2>
+          <blockquote className="mt-5 border-l-2 border-accent/60 pl-4 font-serif text-[1rem] leading-[1.6] text-ink italic">
+            {edge.note}
+          </blockquote>
+        </div>
+      ),
+      right: <Exhibit node={fromNode} onOpen={() => onSelectNode(fromNode.id)} />,
+    },
+    {
+      key: "exhibits",
+      srLabel: "The two artifacts",
+      left: <Exhibit node={toNode} onOpen={() => onSelectNode(toNode.id)} />,
+      right: (
+        <div className="border-l-2 border-rule-soft pl-4">
+          <p className="font-sans text-[0.75rem] text-ink-muted italic">
+            Grounded in text already published on this site — nothing here is a new interpretation.
+          </p>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <CaseFileShell
+    <CaseFolder
       tabLabel="Relationship file"
+      fileLabel="Relationship file"
       ariaLabel={`Examining the connection between ${fromNode.title} and ${toNode.title}`}
+      spreads={spreads}
       onClose={onClose}
-    >
-      <p className="label text-accent">{edge.kind} connection</p>
-      <h2 className="mt-2 max-w-[34ch] font-serif text-[1.5rem] leading-[1.18] tracking-[-0.01em] text-ink sm:text-[1.75rem]">
-        {fromNode.title} <span className="text-ink-muted">↔</span> {toNode.title}
-      </h2>
-
-      <blockquote className="mt-6 border-l-2 border-accent/60 pl-4 font-serif text-[1.0625rem] leading-[1.6] text-ink italic sm:text-[1.1875rem]">
-        {edge.note}
-      </blockquote>
-
-      <div className="mt-8 grid gap-6 border-t border-rule-soft pt-6 sm:grid-cols-2">
-        <Exhibit node={fromNode} onOpen={() => onSelectNode(fromNode.id)} />
-        <Exhibit node={toNode} onOpen={() => onSelectNode(toNode.id)} />
-      </div>
-
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-rule-soft pt-5">
-        <p className="font-sans text-[0.75rem] text-ink-muted italic">
-          Grounded in text already published on this site — nothing here is a new interpretation.
-        </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="font-sans text-[0.8125rem] text-ink underline decoration-rule underline-offset-[0.25em] transition-colors hover:text-accent hover:decoration-accent"
-        >
-          Return to the wall
-        </button>
-      </div>
-    </CaseFileShell>
+      originRect={originRect}
+    />
   );
 }
 

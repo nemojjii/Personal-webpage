@@ -2,7 +2,12 @@
 
 import { type RefObject, useEffect, useRef } from "react";
 
-const FOCUSABLE = 'button, a[href], textarea, input, select, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'button, a[href], textarea, input, select, [tabindex]';
+
+/** Excludes anything disabled or explicitly pulled out of tab order (tabIndex={-1}) — a decorative button is still a `<button>`, so the selector alone cannot tell the two apart. */
+function isTabbable(el: HTMLElement): boolean {
+  return !el.hasAttribute("disabled") && el.tabIndex !== -1;
+}
 
 /**
  * The accessibility contract every case file and connection dossier shares:
@@ -15,8 +20,10 @@ export function useDialogA11y(containerRef: RefObject<HTMLElement | null>, onClo
 
   useEffect(() => {
     previouslyFocused.current = document.activeElement as HTMLElement | null;
-    const focusable = containerRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE);
-    (focusable?.[0] ?? containerRef.current)?.focus();
+    const focusable = Array.from(containerRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(
+      isTabbable,
+    );
+    (focusable[0] ?? containerRef.current)?.focus();
     return () => {
       previouslyFocused.current?.focus?.();
     };
@@ -31,7 +38,7 @@ export function useDialogA11y(containerRef: RefObject<HTMLElement | null>, onClo
       }
       if (e.key !== "Tab" || !containerRef.current) return;
       const focusable = Array.from(containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => !el.hasAttribute("disabled"),
+        isTabbable,
       );
       if (focusable.length === 0) return;
       const first = focusable[0];
