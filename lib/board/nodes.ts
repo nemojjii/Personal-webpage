@@ -12,24 +12,28 @@ import type { BoardNode } from "./types.ts";
  * the single exception of Cosmos, which the About page does discuss).
  *
  * Positions (x, y) are a hand-composed default layout, not a force
- * simulation (Phase 20.6 recomposition): a dense featured-investigation
- * cluster in the upper-left quadrant — the EEG research, Fourier Explorer,
- * Wave Superposition and both concept hubs, the only five-node group small
- * enough to frame as the board's default camera — with five further
- * neighborhoods arranged around it: Physics & Superposition (lower-right of
- * the hub), Mathematical Modeling (lower-left), Mathematics & Perception
- * (bottom-centre), Literary & Scientific Imagination (right, bridging the
- * featured cluster and Cosmos), and the two genuinely independent projects
- * kept apart in their own corner, far from any other evidence (Phase
- * 20.1). See boardLayout.ts's DEFAULT_VIEW_BOUNDS for the exact camera
- * framing and neighborhoodLabels for where each area is labelled.
+ * simulation. Phase 20.7.1 put IK-001 at the centre of its own ring — the
+ * EEG research, Fourier Explorer, Wave Superposition and both concept
+ * hubs, at varied distances and angles (solved by a small AABB-separation
+ * script so none of the six overlap; never a uniform radial spoke
+ * pattern) — and left everything outside that ring exactly where Phase
+ * 20.6 put it: Science & Physics (right, around Quantum Mechanics Explorer
+ * and Gravitational Waves), Mathematics & Computation's outer pair,
+ * Gradient Descent and Consensus Dynamics (lower-left), Art & Perception
+ * (bottom-centre), Literature & Cinema's one entry, Cosmos (right), and the
+ * two genuinely independent, deliberately unconnected projects kept apart
+ * in their own corner (Phase 20.1). See boardLayout.ts's
+ * DEFAULT_VIEW_BOUNDS for the exact camera framing (computed from this
+ * ring's own rendered footprint, not eyeballed) and neighborhoodLabels for
+ * where each outer area is labelled.
  */
 export const boardNodes: BoardNode[] = [
-  // The case file — the board's narrative anchor (Phase 20.7). Placed just
-  // below-left of the featured cluster, inside the default camera framing,
-  // so it is one of the first things a visitor sees — without sitting at a
-  // geometric centre the rest of the wall radiates from. Deliberately has
-  // no editorial edges: see lib/board/edges.ts's header comment and
+  // The case file — the board's narrative anchor and, as of Phase 20.7.1,
+  // its physical centre. Fixed at this point first; the five nodes below
+  // that make up its ring (EEG, Fourier Explorer, both concept hubs, Wave
+  // Superposition) were then placed around it, asymmetrically, close
+  // enough that none of the six overlap. Deliberately has no editorial
+  // edges: see lib/board/edges.ts's header comment and
   // components/board/InvestigationBoard.tsx, where selecting it opens
   // IrisKimCaseFile rather than the generic ArtifactCaseFile.
   {
@@ -39,8 +43,8 @@ export const boardNodes: BoardNode[] = [
     subtitle: "An unfinished investigation.",
     summary:
       "The case file for the investigation itself — who pursues the research, mathematics, and art pinned up elsewhere on this wall. Built only from this site's own verified About, CV and content pages; still being written.",
-    x: 40,
-    y: 430,
+    x: 470,
+    y: 330,
   },
 
   // Research
@@ -52,8 +56,9 @@ export const boardNodes: BoardNode[] = [
     summary:
       "Measuring the area under the alpha band of an EEG spectrum as a quantitative index of restfulness, with an autoencoder trained to denoise the signal before the spectrum is taken.",
     href: "/research/power-spectral-density-eeg-signal-quality",
-    x: 160,
-    y: 190,
+    // Upper-left of IK-001, closest of the ring (Phase 20.7.1).
+    x: 140,
+    y: 160,
   },
   {
     id: "research/consensus-dynamics-in-networks",
@@ -133,8 +138,9 @@ export const boardNodes: BoardNode[] = [
     summary:
       "Two travelling sine waves and their sum, drawn on the same string: amplitudes, wave numbers, relative phase, and the constructive and destructive regions of their sum.",
     href: "/laboratory/wave-superposition",
-    x: 280,
-    y: 560,
+    // Lower-left of IK-001, the furthest of the ring (Phase 20.7.1).
+    x: 110,
+    y: 550,
   },
   {
     id: "laboratory/gradient-descent",
@@ -166,8 +172,9 @@ export const boardNodes: BoardNode[] = [
     summary:
       "A finite sum of sine waves, built one harmonic at a time, with the time-domain sum and the discrete amplitude spectrum shown side by side.",
     href: "/laboratory/fourier-explorer",
-    x: 700,
-    y: 130,
+    // Upper-right of IK-001 (Phase 20.7.1).
+    x: 801,
+    y: 100,
   },
   {
     id: "laboratory/quantum-mechanics-explorer",
@@ -190,8 +197,9 @@ export const boardNodes: BoardNode[] = [
     subtitle: "Adding solutions together to get another solution",
     summary:
       "The same linear structure — a sum of basis terms, each with its own coefficient — underlies a classical wave sum, a finite Fourier series, and a quantum state, even though what the coefficients mean differs in each.",
-    x: 780,
-    y: 430,
+    // Right of IK-001, close (Phase 20.7.1).
+    x: 840,
+    y: 420,
   },
   {
     id: "concept/fourier-frequency-domain",
@@ -200,8 +208,9 @@ export const boardNodes: BoardNode[] = [
     subtitle: "Reading a signal by its frequencies rather than its timeline",
     summary:
       "Building a periodic signal from its harmonics, and reading a recorded signal's frequency content back out of it, are the forward and reverse sides of the same analysis.",
-    x: 430,
-    y: 300,
+    // Below IK-001, slightly left (Phase 20.7.1).
+    x: 410,
+    y: 630,
   },
 
   // Books

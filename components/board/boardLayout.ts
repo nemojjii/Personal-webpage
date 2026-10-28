@@ -17,10 +17,14 @@ export const CARD_SIZE: Record<string, { w: number; h: number }> = {
   project: { w: 196, h: 114 },
   laboratory: { w: 246, h: 104 },
   book: { w: 134, h: 186 },
-  // Tall and narrow — a dossier profile, not another wide printed strip —
-  // and already large enough on its own that it is never tier-scaled (see
-  // nodeTier below, which deliberately omits "case/iris-kim").
-  case: { w: 190, h: 250 },
+  // Tall and narrow — a dossier profile, not another wide printed strip.
+  // Deliberately the single largest footprint on the wall (bigger than a
+  // primary-tier research card at 304×182) so IK-001 reads as the
+  // investigation's main folder, not one more artifact among equals (Phase
+  // 20.7.1). It is never tier-scaled (see nodeTier below, which
+  // deliberately omits "case/iris-kim") — this absolute size already does
+  // the job TIER_SCALE does for everything else.
+  case: { w: 260, h: 330 },
 };
 export const HUB_SIZE = 150;
 
@@ -147,37 +151,47 @@ export const DEFAULT_SCALE_FLOOR = 0.85;
 
 /**
  * The default view composes around one compelling, tight area rather than
- * the graph's full bounds: the case file (IK-001), the EEG research,
- * Fourier Explorer, Wave Superposition and both concept hubs — the case
- * file is the one deliberately unconnected artifact in this group, kept
- * close by composition rather than by thread, so the investigation's own
- * case file is one of the first things a visitor sees; the rest are
- * genuinely connected (laboratory/fourier-explorer and research/power-
+ * the graph's full bounds: IK-001 at its centre, encircled — asymmetrically,
+ * not radially — by the EEG research, Fourier Explorer, Wave Superposition
+ * and both concept hubs (Phase 20.7.1 recomposition; lib/board/nodes.ts has
+ * the exact positions and the reasoning for each one's distance and angle).
+ * The case file is the one deliberately unconnected artifact in this ring,
+ * kept close by composition rather than by thread; the rest are genuinely
+ * connected to each other (laboratory/fourier-explorer and research/power-
  * spectral-density-eeg-signal-quality both reach concept/fourier-frequency-
  * domain; laboratory/wave-superposition reaches concept/superposition and
- * the EEG research itself). Tight bounds in a wide viewport mean this
- * cluster renders large and legible without any hardcoded zoom value. The
- * rest of the wall sits just off-screen, reachable by panning or an
- * explicit "Fit to view". Widened left of the original (Phase 20.6) bounds
- * by exactly the case file's own footprint plus a margin — not a general
- * rescale.
+ * the EEG research itself). These bounds are this ring's own bounding box
+ * plus margin — computed from the nodes' actual rendered footprints (see
+ * the layout note in nodes.ts), not eyeballed — so IK-001's centre sits
+ * within a few dozen units of this box's own centre, and the fitTransform
+ * camera therefore renders it at the middle of the opening view. Tight
+ * bounds in a wide viewport mean this cluster renders large and legible
+ * without any hardcoded zoom value. The rest of the wall sits just
+ * off-screen, reachable by panning or an explicit "Fit to view".
  */
-export const DEFAULT_VIEW_BOUNDS = { minX: -80, minY: 30, maxX: 910, maxY: 640 };
+export const DEFAULT_VIEW_BOUNDS = { minX: -20, minY: 10, maxX: 985, maxY: 745 };
 
 /**
  * Faint, non-interactive neighborhood labels — organisational aids placed
  * in the open space around each loose cluster, not claims that every
  * nearby node is connected to every other. Positions are hand-placed
- * against the curated layout in lib/board/nodes.ts (Phase 20.6
- * recomposition).
+ * against the curated layout in lib/board/nodes.ts.
+ *
+ * Phase 20.7.1 renames these to the five areas the case file's own
+ * "Explore on the wall" links use, and drops a label for the ring directly
+ * around IK-001 — EEG research, Fourier Explorer, Wave Superposition and
+ * both concept hubs — since that ring is already legible as "the evidence
+ * immediately surrounding the case file" without its own caption.
+ * Mathematics & Computation keeps a label of its own further out, where
+ * Gradient Descent and Consensus Dynamics sit without a concept hub nearby
+ * to make the connection visually obvious.
  */
 export const neighborhoodLabels: { text: string; x: number; y: number }[] = [
-  { text: "Signal & Frequency", x: 20, y: 10 },
-  { text: "Physics & Superposition", x: 980, y: 480 },
-  { text: "Mathematical Modeling", x: 30, y: 740 },
-  { text: "Mathematics & Perception", x: 470, y: 840 },
-  { text: "Literary & Scientific Imagination", x: 1080, y: 605 },
-  { text: "Independent Investigations", x: 1460, y: 130 },
+  { text: "Mathematics & Computation", x: 30, y: 740 },
+  { text: "Art & Perception", x: 560, y: 870 },
+  { text: "Science & Physics", x: 1040, y: 460 },
+  { text: "Literature & Cinema", x: 1300, y: 760 },
+  { text: "Independent Explorations", x: 1460, y: 130 },
 ];
 
 /* ---------------------------------------------------------------------- */
