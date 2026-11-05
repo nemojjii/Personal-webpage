@@ -194,7 +194,7 @@ function NodeCardContents({ node, index, selected }: { node: BoardNode; index: n
           </span>
           {glyph ? (
             <svg viewBox={INSTRUMENT_GLYPH_VIEWBOX} className="mt-1 h-9 w-full" aria-hidden="true" preserveAspectRatio="none">
-              <path d={glyph} fill="none" stroke="var(--color-accent)" strokeWidth="1.5" opacity="0.85" />
+              <path d={glyph} fill="none" stroke="var(--color-plot)" strokeWidth="1.5" opacity="0.85" />
             </svg>
           ) : null}
           <span className="mt-auto line-clamp-1 font-serif text-[0.9375rem] leading-[1.2] font-medium text-ink">
@@ -215,7 +215,7 @@ function NodeCardContents({ node, index, selected }: { node: BoardNode; index: n
           </span>
           {glyph ? (
             <svg viewBox={INSTRUMENT_GLYPH_VIEWBOX} className="mt-auto h-6 w-full opacity-70" aria-hidden="true" preserveAspectRatio="none">
-              <path d={glyph} fill="none" stroke="var(--color-accent-soft)" strokeWidth="1.25" />
+              <path d={glyph} fill="none" stroke="var(--color-plot-soft)" strokeWidth="1.25" />
             </svg>
           ) : (
             <span className="mt-auto line-clamp-1 font-sans text-[0.6875rem] leading-tight text-ink-soft">

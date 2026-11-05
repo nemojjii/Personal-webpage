@@ -143,12 +143,12 @@ export function GradientDescent() {
               <path key={i} d={d} fill="none" stroke="var(--color-ink-muted)" strokeWidth="0.7" opacity="0.55" />
             ))}
             <circle cx={sx(0)} cy={sy(0)} r="2" fill="var(--color-ink-muted)" />
-            <path d={pathD} fill="none" stroke="var(--color-accent)" strokeWidth="1.2" strokeLinejoin="round" />
+            <path d={pathD} fill="none" stroke="var(--color-plot)" strokeWidth="1.2" strokeLinejoin="round" />
             {trajectory.path.slice(0, index + 1).map((pt, i) => (
-              <circle key={i} cx={sx(pt.x)} cy={sy(pt.y)} r="1.6" fill="var(--color-accent)" opacity="0.7" />
+              <circle key={i} cx={sx(pt.x)} cy={sy(pt.y)} r="1.6" fill="var(--color-plot)" opacity="0.7" />
             ))}
             <circle cx={sx(start.x)} cy={sy(start.y)} r="4.5" fill="none" stroke="var(--color-ink)" strokeWidth="1" />
-            <circle cx={sx(current.x)} cy={sy(current.y)} r="4.5" fill="var(--color-accent)" />
+            <circle cx={sx(current.x)} cy={sy(current.y)} r="4.5" fill="var(--color-plot)" />
           </g>
           {[-2, 0, 2].map((v) => (
             <g key={v}>
@@ -162,7 +162,7 @@ export function GradientDescent() {
           <Legend
             items={[
               { label: "level curves of f", color: "var(--color-ink-muted)", width: 0.8 },
-              { label: "path", color: "var(--color-accent)", width: 1.4 },
+              { label: "path", color: "var(--color-plot)", width: 1.4 },
             ]}
           />
           <div className="mt-5 grid gap-y-5">

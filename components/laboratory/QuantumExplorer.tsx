@@ -45,7 +45,7 @@ const plotW = PW - PAD.l - PAD.r;
 const plotH = PH - PAD.t - PAD.b;
 
 const INK_SOFT = "var(--color-ink-soft)";
-const ACCENT = "var(--color-accent)";
+const ACCENT = "var(--color-plot)";
 const RULE = "var(--color-rule)";
 const MUTED = "var(--color-ink-muted)";
 
@@ -214,7 +214,7 @@ function BoxMode({ well, n, setWell, setN }: { well: WellParams; n: number; setW
 
 /* ──────────────────────── B. Superposition & time evolution ────────────── */
 
-const SUPER_COLORS = ["var(--color-accent)", "var(--color-klein-preview, var(--color-accent-soft))", "var(--color-chart-extra)"];
+const SUPER_COLORS = ["var(--color-plot)", "var(--color-klein-preview, var(--color-plot-soft))", "var(--color-chart-extra)"];
 
 function SuperpositionMode({ well, state, setState }: { well: WellParams; state: SuperpositionState; setState: (s: SuperpositionState) => void }) {
   const beatFreqs = useMemo(() => beatAngularFrequencies(state, well), [state, well]);

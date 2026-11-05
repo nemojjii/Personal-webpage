@@ -10,16 +10,34 @@
    ─────────────────────────────────────────────────────────────────────── */
 
 @theme {
-  --color-paper: #f8f6f0; /* page background — warm ivory          */
-  --color-surface: #f0ede5; /* secondary surface                     */
-  --color-ink: #242320; /* primary text — near black             */
-  --color-ink-soft: #6e6a62; /* secondary text (AA on paper)          */
-  --color-ink-muted: #8c877e; /* tertiary / decorative text            */
-  --color-accent: #702f3b; /* muted wine                            */
-  --color-accent-soft: #8e4a55; /* wine, lightened for hairlines         */
-  --color-rule: #d9d4ca; /* dividers                              */
-  --color-rule-soft: #e7e2d9; /* faintest dividers                     */
-  --color-chart-extra: #9a6b73; /* a 6th series colour, off the main palette */
+  /* Phase 22.1 — Light mode's own design language (DESIGN_SYSTEM.md): a
+     grayscale foundation (Toss-inspired) with a single deliberate blue
+     accent, replacing the earlier warm-ivory/wine palette. Dark mode below
+     is untouched — these are Light's values only; the dark overrides keep
+     their own, separately. */
+  --color-paper: #f2f4f6; /* page background — grey 100             */
+  --color-surface: #f9fafb; /* card / content surface — grey 50       */
+  --color-ink: #191f28; /* primary text — grey 900 (15:1 on paper)  */
+  --color-ink-soft: #4e5968; /* secondary text — grey 700 (6.5:1)      */
+  --color-ink-muted: #64707e; /* tertiary text — between grey 600/700, the darkest point that still reads as a lighter tier while clearing 4.5:1 on both paper and surface */
+  --color-accent: #1b64da; /* blue, deepened past the reference doc's blue-500 so link/label TEXT clears 4.5:1 on paper (blue-500 itself is only 3.4:1 — fine as a background or hairline, not as text) */
+  --color-accent-soft: #3182f6; /* the reference doc's blue-500 itself — for hairlines, borders and other non-text accents, where 3:1 is the bar */
+  --color-rule: #d1d6db; /* dividers — grey 300 */
+  --color-rule-soft: #e5e8eb; /* faintest dividers — grey 200 */
+  --color-chart-extra: #9a6b73; /* a 6th series colour, off the main palette — a scientific-visualisation colour, deliberately left as it was, see --color-plot below */
+
+  /* The *mathematical content itself* — every literal curve a Little
+     Laboratory instrument, the Research consensus-dynamics explorer, or a
+     homepage Selected Work preview draws — keeps its original wine tone
+     rather than following --color-accent's move to blue: Phase 22.1's own
+     brief calls out "preserve existing scientific visualization colours"
+     and "do not change mathematical plot colours solely for aesthetic
+     consistency" by name. Equal to Light's *old* --color-accent/-soft
+     values, verbatim; the dark blocks below set these equal to *their*
+     old --color-accent/-soft values for the same reason, so every one of
+     these plots renders pixel-identically to before, in both themes. */
+  --color-plot: #702f3b;
+  --color-plot-soft: #8e4a55;
 
   /* The Investigation Board's own wall — deliberately darker and warmer
      than the site's paper, so pinned documents read as objects on a wall
@@ -70,7 +88,9 @@
      Dark (5.14:1, same hue and saturation, just lifted) — the Playground's
      own three canvases keep drawing with --color-klein itself, unchanged,
      per the reasoning above. Equal to --color-klein in Light, where the
-     true pigment already reads at 6.64:1. */
+     true pigment reads at 6.50:1 against Phase 22.1's new, slightly
+     cooler --color-paper (6.64:1 against the old warm-ivory value — still
+     comfortably clear of the 4.5:1 text threshold either way). */
   --color-klein-preview: #223bee;
 
   --font-serif: var(--font-garamond), "EB Garamond", "Iowan Old Style",
@@ -124,6 +144,11 @@
     --color-ink-muted: #8891b5;
     --color-accent: #869dff;
     --color-accent-soft: #6478e8;
+    /* Phase 22.1: Dark's own --color-accent/-soft, unchanged, given to the
+       scientific-plot token too — see the @theme block's comment. Dark
+       mode is not part of this phase; this keeps it that way. */
+    --color-plot: #869dff;
+    --color-plot-soft: #6478e8;
     --color-rule: #2e3a66;
     --color-rule-soft: #1f2847;
     --color-chart-extra: #c98f9c;
@@ -145,6 +170,9 @@
   --color-ink-muted: #8891b5;
   --color-accent: #869dff;
   --color-accent-soft: #6478e8;
+  /* Phase 22.1: see the matching comment in the media-query block above. */
+  --color-plot: #869dff;
+  --color-plot-soft: #6478e8;
   --color-rule: #2e3a66;
   --color-rule-soft: #1f2847;
   --color-chart-extra: #c98f9c;

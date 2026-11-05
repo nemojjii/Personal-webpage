@@ -94,7 +94,7 @@ function Exhibit({ node, onOpen }: { node: BoardNode; onOpen: () => void }) {
             aria-label={`${node.title}'s own default curve`}
             preserveAspectRatio="none"
           >
-            <path d={glyph} fill="none" stroke="var(--color-accent)" strokeWidth="1.5" />
+            <path d={glyph} fill="none" stroke="var(--color-plot)" strokeWidth="1.5" />
           </svg>
           {isIllustrative ? (
             <figcaption className="mt-1 font-sans text-[0.6875rem] leading-snug text-ink-muted italic">

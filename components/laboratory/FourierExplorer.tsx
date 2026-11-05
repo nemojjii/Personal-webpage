@@ -159,10 +159,10 @@ export function FourierExplorer() {
               <path key={i} d={path(i)} fill="none" stroke={componentColour} strokeWidth="0.8" opacity="0.55" />
             ))
           : null}
-        <path d={path("sum")} fill="none" stroke="var(--color-accent)" strokeWidth="1.8" strokeLinejoin="round" />
+        <path d={path("sum")} fill="none" stroke="var(--color-plot)" strokeWidth="1.8" strokeLinejoin="round" />
 
         <line x1={sxT(t)} y1={TH - T_PAD.b} x2={sxT(t)} y2={syT(nowValue)} stroke="var(--color-ink-muted)" strokeWidth="0.7" strokeDasharray="2 2" />
-        <circle cx={sxT(t)} cy={syT(nowValue)} r="3.5" fill="var(--color-paper)" stroke="var(--color-accent)" strokeWidth="1.3" />
+        <circle cx={sxT(t)} cy={syT(nowValue)} r="3.5" fill="var(--color-paper)" stroke="var(--color-plot)" strokeWidth="1.3" />
       </svg>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
@@ -171,9 +171,9 @@ export function FourierExplorer() {
             showComponents
               ? [
                   { label: "individual harmonics", color: componentColour },
-                  { label: "f(t), the sum", color: "var(--color-accent)", width: 2 },
+                  { label: "f(t), the sum", color: "var(--color-plot)", width: 2 },
                 ]
-              : [{ label: "f(t), the sum", color: "var(--color-accent)", width: 2 }]
+              : [{ label: "f(t), the sum", color: "var(--color-plot)", width: 2 }]
           }
         />
         <Toggle label="Show individual harmonics" checked={showComponents} onChange={setShowComponents} />
@@ -210,10 +210,10 @@ export function FourierExplorer() {
               y1={syF(0)}
               x2={sxF(l.frequency)}
               y2={syF(l.amplitude)}
-              stroke="var(--color-accent)"
+              stroke="var(--color-plot)"
               strokeWidth="2"
             />
-            <circle cx={sxF(l.frequency)} cy={syF(l.amplitude)} r="3" fill="var(--color-accent)" />
+            <circle cx={sxF(l.frequency)} cy={syF(l.amplitude)} r="3" fill="var(--color-plot)" />
             <text
               x={sxF(l.frequency)}
               y={FH - F_PAD.b + 12}

@@ -120,7 +120,7 @@ function ChirpPreview() {
       aria-label="An illustrative frequency-sweep ('chirp') shape, rising in frequency left to right — not the observed gravitational-wave signal."
     >
       <line x1="0" y1="60" x2="200" y2="60" stroke="var(--color-rule)" strokeWidth="0.75" />
-      <path d={d} fill="none" stroke="var(--color-accent)" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="var(--color-plot)" strokeWidth="1.4" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -141,7 +141,7 @@ function FourierPreview() {
       aria-label="The sum of three sine-wave harmonics, Fourier Explorer's default composition, over two periods."
     >
       <line x1="0" y1="60" x2="200" y2="60" stroke="var(--color-rule)" strokeWidth="0.75" />
-      <path d={d} fill="none" stroke="var(--color-accent)" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="var(--color-plot)" strokeWidth="1.4" strokeLinejoin="round" />
     </svg>
   );
 }

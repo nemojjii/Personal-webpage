@@ -81,7 +81,7 @@ export function ArtifactCaseFile({
         aria-label={`${node.title}'s own default curve`}
         preserveAspectRatio="none"
       >
-        <path d={glyph} fill="none" stroke="var(--color-accent)" strokeWidth="1.5" />
+        <path d={glyph} fill="none" stroke="var(--color-plot)" strokeWidth="1.5" />
       </svg>
       {isIllustrative ? (
         <p className="mt-1 font-sans text-[0.75rem] leading-snug text-ink-muted italic">

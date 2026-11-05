@@ -27,8 +27,8 @@ const Y_MAX = WAVE_LIMITS.a.max * 2;
 
 const COLOUR = {
   y1: "var(--color-ink-soft)",
-  y2: "var(--color-accent-soft)",
-  sum: "var(--color-accent)",
+  y2: "var(--color-plot-soft)",
+  sum: "var(--color-plot)",
 };
 
 const PRESETS: { label: string; params: Partial<WaveParams> }[] = [
@@ -107,7 +107,7 @@ export function WaveSuperposition() {
               <path
                 key={i}
                 d={r.d}
-                fill={r.reinforce ? "var(--color-accent)" : "var(--color-ink)"}
+                fill={r.reinforce ? "var(--color-plot)" : "var(--color-ink)"}
                 opacity={r.reinforce ? 0.12 : 0.07}
               />
             ))

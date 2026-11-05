@@ -106,7 +106,7 @@ export function ReactionKinetics() {
               ))
           : null}
 
-        <path d={curveD} fill="none" stroke="var(--color-accent)" strokeWidth="1.6" />
+        <path d={curveD} fill="none" stroke="var(--color-plot)" strokeWidth="1.6" />
         <line x1={sx(t)} y1={H - PAD.b} x2={sx(t)} y2={sy(now)} stroke="var(--color-ink)" strokeWidth="0.8" />
         <circle cx={sx(t)} cy={sy(now)} r="4" fill="var(--color-paper)" stroke="var(--color-ink)" strokeWidth="1.2" />
       </svg>
@@ -115,7 +115,7 @@ export function ReactionKinetics() {
         <div>
           <Legend
             items={[
-              { label: "[A](t)", color: "var(--color-accent)", width: 1.6 },
+              { label: "[A](t)", color: "var(--color-plot)", width: 1.6 },
               { label: "half-lives", color: "var(--color-ink-muted)", dashed: true },
             ]}
           />
@@ -144,7 +144,7 @@ export function ReactionKinetics() {
                   cx={cx}
                   cy={cy}
                   r="3"
-                  fill={present ? "var(--color-accent)" : "none"}
+                  fill={present ? "var(--color-plot)" : "none"}
                   stroke={present ? "none" : "var(--color-rule)"}
                   strokeWidth="0.8"
                 />

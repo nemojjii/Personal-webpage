@@ -186,9 +186,9 @@ function trajectories(topology: Topology) {
 }
 
 const SERIES_COLOURS = [
-  "var(--color-accent)",
+  "var(--color-plot)",
   "var(--color-ink)",
-  "var(--color-accent-soft)",
+  "var(--color-plot-soft)",
   "var(--color-ink-soft)",
   "var(--color-ink-muted)",
   "var(--color-chart-extra)",
