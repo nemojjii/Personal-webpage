@@ -39,13 +39,25 @@ scale.
 $M_\delta$ of Section 3.3 exactly as stated — $\dot\theta_v = \sum_{u\sim v}
 \Gamma_\delta(\mathrm{wrap}(\theta_u-\theta_v))$ — and, for comparison, the
 identical-oscillator Kuramoto model $\dot\theta_v = \sum_{u\sim v}
-\sin(\theta_u-\theta_v)$. Integration: `scipy.integrate.solve_ivp`,
-`method="DOP853"`, `rtol=1e-10`, `atol=1e-12`, with a terminal event firing
-at $\max_v|\dot\theta_v| < 10^{-9}$ (cap $t=2000$, never reached in
-practice). Classification exactly as agreed: **sync** if
-$\max_e|\Delta_e|<10^{-6}$; **core** if additionally
+\sin(\theta_u-\theta_v)$. Integration for E1 and E3:
+`scipy.integrate.solve_ivp`, `method="DOP853"`, `rtol=1e-10`, `atol=1e-12`,
+with a terminal event firing at $\max_v|\dot\theta_v| < 10^{-9}$ (cap
+$t=2000$, never reached in practice). **E2 uses a different, fixed-step
+RK4 integrator (dt = 0.01)**, not `solve_ivp` — flagged explicitly here
+since it is a real difference between the two scripts, not a typo: E2
+needs many short, identically-spaced trajectories to fit a decay slope by
+linear regression over a chosen time window, for which a fixed step is the
+simpler and more directly controllable choice; it does not affect E1/E3,
+which use the adaptive integrator throughout. Classification exactly as
+agreed: **sync** if $\max_e|\Delta_e|<10^{-6}$; **core** if additionally
 $\max_e|\Delta_e|<\pi-\delta-10^{-6}$ and $\|B\Delta\|_\infty<10^{-8}$;
-else **other** (none occurred in any run below).
+else **other** (none occurred in any run below). One implementation detail
+worth recording: `wrap` is implemented to map into $[-\pi,\pi)$, whereas
+the paper's own convention (Section 3.3) is $(-\pi,\pi]$; this has no
+numerical effect here since $\Gamma_\delta(\pm\pi)=0$ under either
+convention, so the antipodal point is force-free either way, but it would
+matter if the code were reused for something that evaluates $\Delta_e$
+itself at exactly $\pm\pi$.
 
 **Prior work.** No pre-existing certificate file was available in this
 environment (an `icc_R8_certificates.zip` referenced in earlier planning
@@ -55,12 +67,16 @@ split this method finds at n = 9 (141,265 / 52,801) matches a figure already
 anticipated in those same planning notes, which is a useful cross-check but
 not something this run depended on.
 
-**Code and data.** This repository (`academic-site`) carries only the small
-aggregate tables and this write-up. The verification scripts, per-graph raw
-output, and simulation CSVs/figures are presently local-only
-(`~/academic-site`-adjacent scratch files); publish them (GitHub +
-Zenodo DOI is the natural choice, MIT for code / CC-BY 4.0 for data) before
-citing "code available at…" in the manuscript.
+**Code and data.** This repository (`academic-site`) carries the aggregate
+tables, this write-up, all verification/simulation scripts, and — since
+6.4 — the full per-graph Theorem 6.1 certificates (6.4 MB, all 201,726
+non-K4 graphs). Only the bulky, purely-derived simulation CSVs and figures
+(E1's per-seed raw output, E2/E3 plots) stay local-only, since they are
+fully reproducible from the committed scripts and seeds rather than being
+independent evidence in their own right. Before citing "code available
+at…" in the manuscript, push this repository (or extract the
+`verification-data/` directory) to a citable location — GitHub + a Zenodo
+DOI is the natural choice, MIT for code / CC-BY 4.0 for data.
 
 ## 6.2 Finite Verification: Every 2-Connected Graph on 3–9 Vertices
 
@@ -131,7 +147,7 @@ Resolution method at each $n$ (one-edge vs. three-phase colouring):
 | 8 | 5,644 | 1,479 |
 | 9 | 141,265 | 52,801 |
 
-**Runtime.** n = 3–8 (538 graphs, search + exact verification): 25.5 s.
+**Runtime.** n ≤ 8 (search + exact verification of every graph): 25.5 s.
 n = 9 (194,066 graphs): numeric search + exact verification of every
 single graph, 1,033.4 s (≈ 17.2 min) at a sustained throughput of
 ≈ 188 graphs/s.
@@ -158,9 +174,9 @@ Protocol exactly as agreed (Section 6.1): $N=2000$ random seeds per
 | $K_4$ | 0 | 0.0% | 0.0% | 0.0% | 0.0% |
 | $K_5$ | 0.6283 | 36.6% [34.5,38.7] | 31.6% [29.6,33.7] | 29.8% [27.8,31.8] | 19.2% [17.5,21.0] |
 | $K_6$ | 1.0472 | 5.7% [4.7,6.7] | 6.7% [5.6,7.8] | 5.1% [4.2,6.1] | 4.5% [3.7,5.5] |
-| $K_7$ | 0.4488 | 41.9% [39.8,44.1] | 40.1% [37.9,42.2] | 32.9% [30.9,35.0] | 16.5% [14.9,18.2] |
-| $K_8$ | 0.7854 | 12.8% [11.4,14.3] | 12.4% [11.1,14.0] | 12.6% [11.2,14.1] | 8.4% [7.2,9.6] |
-| $K_9$ | 1.0472 | 47.8% [45.6,50.0] | 43.6% [41.4,45.8] | 34.8% [32.8,37.0] | 2.9% [2.3,3.8] |
+| $K_7$ | 0.4488 | 42.0% [39.8,44.1] | 40.1% [37.9,42.2] | 32.9% [30.9,35.0] | 16.5% [14.9,18.2] |
+| $K_8$ | 0.7854 | 12.8% [11.4,14.3] | 12.5% [11.1,14.0] | 12.6% [11.2,14.1] | 8.4% [7.2,9.6] |
+| $K_9$ | 1.0472 | 47.8% [45.6,50.0] | 43.6% [41.4,45.8] | 34.9% [32.8,37.0] | 3.0% [2.3,3.8] |
 
 Cell values are the **core rate** — the fraction of 2,000 random starts
 settling into a non-synchronous core equilibrium — with 95% Wilson
@@ -179,8 +195,12 @@ chosen just above $\delta^*(K_n)$ for each $n$:
 | $K_9$ | 1.0472 | 1.1972 | 0 / 2000 |
 
 The core rate drops to **exactly zero** the moment $\delta$ crosses
-$\delta^*(K_n)$, for every $n$ tested — a sharp empirical confirmation of
-Corollary 3.4's "only if" direction, not just its "if" direction.
+$\delta^*(K_n)$, for every $n$ tested — sharply **consistent with**
+Corollary 3.4's "only if" direction as well as its "if" direction. (Both
+directions are already proven in the paper; what the simulation adds is
+not a new proof but a clean empirical picture of where the cutoff falls
+in practice, and a check that nothing in the implementation contradicts
+it.)
 
 ### E2 — Decay-rate check
 
@@ -240,7 +260,75 @@ gives strong evidence that no non-K₄ graph behaves like K₄, and probing
 ramp-boundary equilibria specifically was judged lower priority than
 completing 6.2 and E1–E3 in full).
 
+## 6.4 Computational Limitations and Verification Scope
+
+**What was and was not checked.** Theorem 6.1 and the search in 6.2 concern
+only *core* equilibria — configurations with every edge strictly inside the
+central linear branch $|\Delta_e|<\pi-\delta$ (Section 3.3). Nothing here
+says anything about equilibria with an edge sitting on the ramp itself; the
+paper is explicit (Section 7) that this case is open, and E4 (not run — see
+6.3) was the planned first probe of it. The 6.2 search is an **existence**
+search, not a minimisation: every certificate shows $\mu(G)<1/2$, not the
+exact value of $\mu(G)$ itself, for the 201,726 non-$K_4$ graphs. Where the
+*exact value* is also claimed (the Appendix), that is stated and checked
+separately, with the box-bound argument above, and only for the 28 rows
+where it was computationally tractable.
+
+**Certificates are archived, not just asserted.** Every one of the 201,726
+witnesses behind the 6.2 table is saved, not merely re-derivable from a
+fixed seed: `verification-data/consensus-dynamics/certificates/` in this
+repository holds one newline-delimited JSON file per $n\in\{3,\dots,9\}$
+(`certificates_n{n}.jsonl`), each line giving a graph's graph6 string and
+the minimal evidence needed to reconstruct its witness exactly — an edge
+index for a one-edge witness, or a 0/1/2 colouring for a three-phase
+witness (K4 is recorded with no witness, by design). Total size 6.4 MB
+across all seven files (194,066 lines for n=9 alone), well within the
+~5 MB ballpark expected for data of this shape. This removes the earlier
+reproducibility gap: the original run stored only aggregate counts, so
+reproducing it exactly depended on numpy's random-number generator
+producing identical draws across versions, which is not guaranteed. The
+archived certificates were generated by a second, independent run
+(`scripts/save_certificates.py`, documented seed 20261110, not the same
+seed as the first run) and gave the identical grand totals — zero
+anomalies, 147,342 one-edge witnesses, 54,384 colouring witnesses — a
+useful consistency check in its own right, in addition to closing the
+archival gap.
+
+**Reproducibility.** Running `scripts/save_certificates.py` (or
+`part2_small.py`/`part2_n9.py`) again, with nauty's `geng` producing the
+same graph lists (deterministic — nauty's enumeration order does not
+depend on any RNG), will find *a* valid witness for every non-K4 graph
+again, but not necessarily the *same* witness per graph, since the search
+is randomised and existence (not a canonical choice) is all that is
+claimed. This is why the certificates are archived directly rather than
+left to regeneration.
+
 ## Appendix: the re-verified closed forms (companion to Table 1)
+
+**On the "constructed+exhaustive min." check.** For 28 of the 35 rows
+below, the table claims not just that the paper's construction gives a
+valid witness of the stated norm (always checked, as in 6.2), but that
+this witness is the *true minimum* $\mu(G)$ — i.e. that no shorter nonzero
+vector exists in $F^*(G)$ at all. That stronger claim needs its own
+justification, since it was checked by a *bounded* search over the
+fundamental-cycle winding-number coordinates $t=C\lambda$ (Lemma 4.4),
+$|t_j|\le b$ for some box bound $b$, and a bounded search can only be
+exhaustive if every vector achieving norm at most the claimed value $x$ is
+guaranteed to lie inside that box. It is: since $t_j=\langle c_j,\lambda\rangle$
+is a sum of $\pm\lambda_e$ over the $\ell_j$ edges on the boundary of face
+$j$ (or, outside the planar-dual cases, over the $\ell_j$ edges of the
+$j$-th fundamental cycle), $|t_j|\le \ell_j\cdot\|\lambda\|_\infty$. So a
+box of radius $b_j=\lceil \ell_j\cdot x\rceil$ on coordinate $j$ provably
+contains every $\lambda$ with $\|\lambda\|_\infty\le x$, and is therefore
+safe to search exhaustively. This bound, $b_j=\lceil\ell_j\cdot x\rceil$
+with $x$ the paper's claimed $\mu(G)$ for that row, was checked directly
+against the box actually used for all 28 rows before trusting the
+"exhaustive min." label; in every case the box used was at least as large
+as this requirement. The remaining 7 rows ($K_n$ for $n\ge8$, and
+$K_{3,3,3}$/$K_{4,4,4}$) have cyclomatic rank too large for this to be
+practical, and are labelled "constructed, membership only" — the witness
+is verified to lie in $F^*(G)$ with the claimed norm, but the true minimum
+was not independently re-confirmed by exhaustive search for those rows.
 
 | Family | Param | n | m | μ(G) | δ*(G) | Theorem | Check |
 |---|---|---|---|---|---|---|---|

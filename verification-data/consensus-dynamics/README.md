@@ -2,10 +2,29 @@
 
 Supporting scripts and small result tables for `section-6-verification-notes.md`
 (project root), the computational-verification pass for *The Geometry of
-Disagreement*. Raw per-graph certificates and the large E1 simulation CSV are
-not kept here (hundreds of MB) — only the aggregate summaries below.
+Disagreement*. The large E1 simulation CSV (per-seed, per-graph, per-δ raw
+output) is not kept here (several MB, pure derived data, fully reproducible
+from `run_E1.py`) — only its aggregate summaries below. The per-graph
+Theorem 6.1 certificates, by contrast, **are** kept here (`certificates/`,
+~6.4 MB) since they are the actual evidence behind "every one of 201,726
+graphs checked out," not just a derived summary of it.
 
 ## Contents
+
+- `certificates/certificates_n{3..9}.jsonl` — one line per 2-connected graph
+  on n vertices (matching `geng -c -C n`, OEIS A002218), giving its graph6
+  string and the minimal evidence needed to reconstruct and re-verify its
+  Theorem 6.1 witness exactly: `{"g6": ..., "e": <edge index>}` for a
+  one-edge witness, `{"g6": ..., "c": [0,1,...]}` for a three-phase
+  colouring witness, or `{"g6": ..., "k4": true}` for K4 (the one graph
+  with no witness, by design — see `scripts/part2_small.py`/`part2_n9.py`
+  for the exhaustive confirmation that none exists below 1/2 for K4).
+  `certificates/manifest.json` records the exact format, the RNG seed used
+  for this archival run (a fresh, documented seed — not the same run as the
+  original aggregate numbers, since a witness only needs to exist, not be
+  reproduced bit-for-bit), and per-n/grand totals (zero anomalies).
+- `scripts/save_certificates.py` — regenerates the files above from
+  `n{3..9}.g6` (nauty output).
 
 - `scripts/lattice.py` — exact (Fraction) lattice machinery: Π = I − BᵀL⁺B,
   dual-lattice membership checks, and the rank-dimensional winding-number

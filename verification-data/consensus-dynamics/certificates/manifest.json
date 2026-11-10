@@ -1,0 +1,70 @@
+{
+  "per_n": {
+    "3": {
+      "total": 1,
+      "k4": 0,
+      "one_edge": 1,
+      "coloring": 0,
+      "anomalies": 0,
+      "time_s": 0.00033211708068847656
+    },
+    "4": {
+      "total": 3,
+      "k4": 1,
+      "one_edge": 2,
+      "coloring": 0,
+      "anomalies": 0,
+      "time_s": 0.0007309913635253906
+    },
+    "5": {
+      "total": 10,
+      "k4": 0,
+      "one_edge": 8,
+      "coloring": 2,
+      "anomalies": 0,
+      "time_s": 0.007030010223388672
+    },
+    "6": {
+      "total": 56,
+      "k4": 0,
+      "one_edge": 44,
+      "coloring": 12,
+      "anomalies": 0,
+      "time_s": 0.06884312629699707
+    },
+    "7": {
+      "total": 468,
+      "k4": 0,
+      "one_edge": 378,
+      "coloring": 90,
+      "anomalies": 0,
+      "time_s": 0.9791650772094727
+    },
+    "8": {
+      "total": 7123,
+      "k4": 0,
+      "one_edge": 5644,
+      "coloring": 1479,
+      "anomalies": 0,
+      "time_s": 23.84445595741272
+    },
+    "9": {
+      "total": 194066,
+      "k4": 0,
+      "one_edge": 141265,
+      "coloring": 52801,
+      "anomalies": 0,
+      "time_s": 1082.6913149356842
+    }
+  },
+  "grand_total": {
+    "graphs": 201727,
+    "k4": 1,
+    "one_edge": 147342,
+    "coloring": 54384,
+    "anomalies": 0
+  },
+  "total_time_s": 1107.6098251342773,
+  "seed": 20261110,
+  "format": "one JSONL file per n: certificates_n{n}.jsonl; each line is {g6, e} (one-edge witness: edge index into the graph's own edge list in the order produced by graph6.decode_graph6, i.e. all pairs (u,v) with u<v in lexicographic order of u then v) or {g6, c} (three-phase coloring witness: length-n list of 0/1/2) or {g6, k4: true} (K4 \u2014 excluded by design, no witness exists below 1/2)."
+}

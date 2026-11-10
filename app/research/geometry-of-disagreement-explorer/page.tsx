@@ -90,11 +90,11 @@ export default function GeometryOfDisagreementExplorerPage() {
               K₄ is the <em>only</em> 2-connected graph with μ(G) ≥ 1/2 — was checked exactly for
               every single 2-connected graph on three to nine vertices: all 201,726 of them other
               than K₄ (enumerated with nauty, matching OEIS A002218). A one-edge witness (Lemma 4.6)
-              resolved 141,265 of them; a three-phase colouring construction (Section 5.2),
-              searched and then exactly re-verified, resolved the remaining 52,801. Every witness
+              resolved 147,342 of them; a three-phase colouring construction (Section 5.2),
+              searched and then exactly re-verified, resolved the remaining 54,384. Every witness
               checked out — zero exceptions. Separately, simulating the model directly (not just
               computing μ) across 2,000 random starts per graph at several regularisation widths
-              confirmed the predicted sharp cutoff: for K₃, K₅&ndash;K₉, a nonzero fraction of runs
+              is consistent with the predicted sharp cutoff: for K₃, K₅&ndash;K₉, a nonzero fraction of runs
               settle into a lasting disagreement whenever δ sits below δ*(G), and that fraction
               drops to exactly zero, out of 2,000, the moment δ crosses above it — while K₄ stays at
               zero throughout. On five dense graphs (K₅, K₆, K₈, and two larger graphs just past the
