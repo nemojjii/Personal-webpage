@@ -303,6 +303,80 @@ is randomised and existence (not a canonical choice) is all that is
 claimed. This is why the certificates are archived directly rather than
 left to regeneration.
 
+## 6.5 Pushing Into the Open Region: Bounded-Degree Graphs and Large δ
+
+Two follow-up checks, run in response to review, go beyond the n≤9
+exhaustive result and beyond the δ≤0.4 range of the original E1–E3. Both
+use exactly the same machinery as 6.2/6.3; nothing new was built.
+
+**Bounded-degree 2-connected graphs beyond n = 9.** The conjecture's open
+region (the graphs not settled by the n≤9 exhaustive check or by the
+density theorem) is the regime of bounded-degree, moderately dense "hard"
+graphs. As a direct, exact probe of that region: every 2-connected
+4-regular graph on 10–14 vertices, and every 2-connected 5-regular graph
+on 10 or 12 vertices, enumerated with `geng -c -C -d{k} -D{k} n`:
+
+| Degree | $n$ | Graphs | One-edge | Colouring | UNRESOLVED |
+|---|---|---|---|---|---|
+| 4 | 10 | 59 | 13 | 46 | 0 |
+| 4 | 11 | 264 | 115 | 149 | 0 |
+| 4 | 12 | 1,542 | 877 | 665 | 0 |
+| 4 | 13 | 10,768 | 7,193 | 3,575 | 0 |
+| 4 | 14 | 88,126 | 66,773 | 21,353 | 0 |
+| 5 | 10 | 60 | 0 | 60 | 0 |
+| 5 | 12 | 7,848 | 4 | 7,844 | 0 |
+| **Total** | | **108,667** | **74,975** | **33,692** | **0** |
+
+Every one of the 108,667 graphs produced an exactly-verified witness with
+$\|\lambda\|_\infty<1/2$ — zero exceptions, zero candidates resisting the
+search (the local-search fallback was never invoked). Runtime: 1,979 s
+(≈33 min) total, almost all of it ($\approx$1,735 s) the 4-regular n = 14
+batch, which is markedly 5-regular-heavier on the "hard" (colouring)
+branch as $n$ grows — a trend worth watching if this is pushed further.
+As with 6.2, these are existence witnesses, not a minimisation, and this
+extends — it does not replace — the n≤9 exhaustive result: it is direct
+computational evidence that $\mu(G)<1/2$ continues to hold throughout this
+part of the bounded-degree region beyond nine vertices, narrowing what is
+left open, though it does not by itself prove the general conjecture.
+Certificates (graph6 + witness) for all 108,667 graphs are archived at
+`verification-data/consensus-dynamics/certificates_bounded_degree/`
+(5.0 MB), in the same format as 6.2's, documented in that directory's own
+`manifest.json`.
+
+**Large-δ search for ramp equilibria.** Every simulation in the original
+E1–E3 used $\delta\le0.4$. To probe the open question of whether a stable
+equilibrium with an edge actually on the ramp can exist (rather than only
+synchronous or core outcomes), E1's protocol was rerun on $K_4$–$K_9$ at
+$\delta\in\{0.8,1.2,1.6,2.0,2.5\}$, $N=2{,}000$ random starts each
+(60,000 runs total):
+
+| Graph | 0.8 | 1.2 | 1.6 | 2.0 | 2.5 |
+|---|---|---|---|---|---|
+| $K_4$ | sync 2000 | sync 2000 | sync 2000 | sync 2000 | sync 2000 |
+| $K_5$ | sync 2000 | sync 2000 | sync 2000 | sync 2000 | sync 2000 |
+| $K_6$ | core 5, sync 1995 | sync 2000 | sync 2000 | sync 2000 | sync 2000 |
+| $K_7$ | sync 2000 | sync 2000 | sync 2000 | sync 2000 | sync 2000 |
+| $K_8$ | sync 2000 | sync 2000 | sync 2000 | sync 2000 | sync 2000 |
+| $K_9$ | core 3, sync 1997 | sync 2000 | sync 2000 | sync 2000 | sync 2000 |
+
+**Zero "other" (ramp) outcomes across all 60,000 runs.** The handful of
+non-zero core counts, all at $\delta=0.8$ for $K_6$ and $K_9$, occur
+exactly where $\delta$ is still below $\delta^*(K_6)=\delta^*(K_9)\approx
+1.0472$ — i.e. they are ordinary core equilibria inside the regime 6.2
+already covers, not a new phenomenon. This is a negative result on a
+genuinely open question (whether the geodesic model ever settles into a
+ramp equilibrium from a generic start): across 60,000 random initial
+conditions at regularisation widths well beyond anything tested before,
+none were found. It does not settle the question — a measure-zero or
+narrow-basin ramp equilibrium could still exist and simply not be hit by
+random sampling at this count — but it is real, reportable evidence
+against their being common, and is consistent with (not a new proof of)
+whatever Section 7's closing discussion of this question already claims.
+Raw per-run data (60,001 rows) is local-only, pure derived output; the
+summary table above and the (empty) list of "other" events are archived
+at `verification-data/consensus-dynamics/E1_largedelta_summary.json` and
+`E1_largedelta_other_events.json`.
+
 ## Appendix: the re-verified closed forms (companion to Table 1)
 
 **On the "constructed+exhaustive min." check.** For 28 of the 35 rows

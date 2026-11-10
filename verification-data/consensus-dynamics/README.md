@@ -44,6 +44,17 @@ graphs checked out," not just a derived summary of it.
 - `scripts/run_E1.py`, `run_E2.py`, `run_E3.py` — the three simulation
   experiments. → `E1_summary.json`, `E1_above_deltastar.json`,
   `E2_results.json`, `E3_results.json`
+- `certificates_bounded_degree/` — Section 6.5's extension of the
+  Theorem 6.1 search beyond n=9: every 2-connected 4-regular graph on
+  10–14 vertices and every 2-connected 5-regular graph on 10 or 12
+  vertices (108,667 graphs, same certificate format as `certificates/`,
+  5.0 MB). `scripts/part3_bounded_degree.py` regenerates it from
+  `d4_n{10..14}.g6`/`d5_n{10,12}.g6` (nauty, `-d{k} -D{k}` for exact
+  k-regularity).
+- `scripts/run_E1_largedelta.py` — Section 6.5's large-δ ramp-equilibrium
+  search ($K_4$–$K_9$, δ∈{0.8,1.2,1.6,2.0,2.5}). →
+  `E1_largedelta_summary.json`, `E1_largedelta_other_events.json` (the
+  raw per-seed CSV is not kept here, same reasoning as E1's).
 
 ## Running it yourself
 

@@ -1,0 +1,72 @@
+{
+  "per_target": {
+    "d4_n10": {
+      "total": 59,
+      "one_edge": 13,
+      "coloring": 46,
+      "local_search": 0,
+      "UNRESOLVED": 0,
+      "time_s": 0.2874119281768799
+    },
+    "d4_n11": {
+      "total": 264,
+      "one_edge": 115,
+      "coloring": 149,
+      "local_search": 0,
+      "UNRESOLVED": 0,
+      "time_s": 1.8986241817474365
+    },
+    "d4_n12": {
+      "total": 1542,
+      "one_edge": 877,
+      "coloring": 665,
+      "local_search": 0,
+      "UNRESOLVED": 0,
+      "time_s": 15.675857067108154
+    },
+    "d4_n13": {
+      "total": 10768,
+      "one_edge": 7193,
+      "coloring": 3575,
+      "local_search": 0,
+      "UNRESOLVED": 0,
+      "time_s": 164.2947382926941
+    },
+    "d4_n14": {
+      "total": 88126,
+      "one_edge": 66773,
+      "coloring": 21353,
+      "local_search": 0,
+      "UNRESOLVED": 0,
+      "time_s": 1734.7788770198822
+    },
+    "d5_n10": {
+      "total": 60,
+      "one_edge": 0,
+      "coloring": 60,
+      "local_search": 0,
+      "UNRESOLVED": 0,
+      "time_s": 0.2938961982727051
+    },
+    "d5_n12": {
+      "total": 7848,
+      "one_edge": 4,
+      "coloring": 7844,
+      "local_search": 0,
+      "UNRESOLVED": 0,
+      "time_s": 61.76316499710083
+    }
+  },
+  "grand_total": {
+    "graphs": 108667,
+    "one_edge": 74975,
+    "coloring": 33692,
+    "local_search": 0,
+    "UNRESOLVED": 0
+  },
+  "total_time_s": 1979.0134880542755,
+  "seed": 31415926,
+  "unresolved": [],
+  "scope": "4-regular 2-connected n=10..14 (100,759 graphs); 5-regular 2-connected n=10,12 (7,908 graphs). Counts from geng -c -C -d{k} -D{k} n, matching the counts quoted in the review that proposed this run.",
+  "format": "same as certificates/manifest.json: {g6,e}, {g6,c}, or, if anything resisted, {g6, UNRESOLVED: true, detail}."
+}

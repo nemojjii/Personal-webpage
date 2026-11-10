@@ -103,6 +103,16 @@ export default function GeometryOfDisagreementExplorerPage() {
               non-vanishing fraction in stable disagreement — the same graph, two coupling laws,
               opposite outcomes.
             </p>
+            <p>
+              Two further checks push past what the theorems settle outright. Every 2-connected
+              4-regular graph on 10&ndash;14 vertices and every 2-connected 5-regular graph on 10 or
+              12 vertices &mdash; 108,667 graphs, beyond the nine-vertex exhaustive range above &mdash;
+              also produced a witness with μ(G) &lt; 1/2, with zero exceptions. And at regularisation
+              widths far beyond anything else tested here (δ up to 2.5, against 0.4 before), 60,000
+              simulated runs on K₄&ndash;K₉ never once settled into an equilibrium with an edge on the
+              ramp itself &mdash; only synchrony or the ordinary core equilibria already described.
+              Neither result is a proof; both narrow what is still genuinely open.
+            </p>
           </Prose>
         </div>
 
