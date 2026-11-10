@@ -94,12 +94,16 @@ dt_all = time.time() - t0_all
 with open(f"{OUT_DIR}/manifest.json", "w") as f:
     json.dump({"per_n": per_n_summary, "grand_total": grand_total, "total_time_s": dt_all,
                "seed": 20261110,
-               "format": "one JSONL file per n: certificates_n{n}.jsonl; each line is "
-                         "{g6, e} (one-edge witness: edge index into the graph's own edge "
-                         "list in the order produced by graph6.decode_graph6, i.e. all "
-                         "pairs (u,v) with u<v in lexicographic order of u then v) or "
-                         "{g6, c} (three-phase coloring witness: length-n list of 0/1/2) "
-                         "or {g6, k4: true} (K4 — excluded by design, no witness exists "
-                         "below 1/2)."}, f, indent=2)
+               "format": "one JSONL file per n: certificates_n{n}.jsonl. Each line is "
+                         "{g6, e}, {g6, c} or {g6, k4: true}. Edges are the pairs (u, v) "
+                         "with u < v in the order produced by graph6.decode_graph6, which "
+                         "is the graph6 bit order: sorted by v, then by u, i.e. (0,1), "
+                         "(0,2), (1,2), (0,3), (1,3), (2,3), ...; each edge is oriented "
+                         "from u to v. {g6, e}: one-edge witness lambda = Pi epsilon_e for "
+                         "the edge with index e in this list. {g6, c}: three-phase "
+                         "colouring witness, a length-n list of 0/1/2, with lambda_c = "
+                         "Pi r_c and r_c(u,v) = wrap((c(v) - c(u))/3) in {0, 1/3, -1/3}. "
+                         "{g6, k4: true}: K4, excluded by design (mu(K4) = 1/2, so no "
+                         "witness below 1/2 exists)."}, f, indent=2)
 
 print(f"\nGRAND TOTAL: {grand_total}  (time: {dt_all:.1f}s)")
