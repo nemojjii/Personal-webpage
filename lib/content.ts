@@ -212,6 +212,27 @@ function parseLinks(value: unknown, where: string): ProjectLink[] {
   return links;
 }
 
+/**
+ * An entry's `instrument:` — a companion interactive page on this site.
+ * Only ever a local path (never an external URL, unlike `links`), since it
+ * is a page this same build produces and can therefore verify exists.
+ */
+function parseInstrument(value: unknown, where: string): { href: string; label: string } | undefined {
+  if (value === undefined || value === null) return undefined;
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const href = optionalString(record.href);
+  const label = optionalString(record.label);
+  if (!href || !label) {
+    warn(where, "`instrument` needs both `href` and `label`");
+    return undefined;
+  }
+  if (!href.startsWith("/")) {
+    warn(where, `instrument href "${href}" must be a local path starting with "/"`);
+    return undefined;
+  }
+  return { href, label };
+}
+
 /* ───────────────────────────── parsing ────────────────────────────────── */
 
 function parseEntry(collection: Collection, filename: string): Entry {
@@ -244,6 +265,7 @@ function parseEntry(collection: Collection, filename: string): Entry {
     wordCount,
     readingMinutes: Math.max(1, Math.round(wordCount / WORDS_PER_MINUTE)),
     pdf: data.pdf ? String(data.pdf) : undefined,
+    instrument: parseInstrument(data.instrument, where),
     references: asArray(data.references),
   } satisfies Omit<Entry, "collection"> & { collection: Collection };
 

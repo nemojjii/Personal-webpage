@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import Link from "next/link";
+
 import { ArticleLayout } from "@/components/content/ArticleLayout";
 import { Mdx } from "@/components/content/mdx";
 import { Prose } from "@/components/content/Prose";
@@ -74,8 +76,34 @@ export default async function ResearchEntryPage({ params }: Params) {
           <dd className="text-ink-soft">{entry.keywords.join(" · ")}</dd>
         </dl>
       ) : null}
-      {entry.pdf ? (
+      {entry.instrument ? (
         <div className="mt-5">
+          <Link
+            href={entry.instrument.href}
+            className="group inline-flex items-center gap-2.5 border border-accent-soft bg-accent-soft/10 px-4 py-2
+                       font-sans text-[0.8125rem] text-accent transition-colors duration-200
+                       hover:border-accent hover:bg-accent-soft/20"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5">
+              <circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" strokeWidth="1.1" />
+              <circle cx="8" cy="8" r="1.3" fill="currentColor" />
+              <path
+                d="M8 1.8v2.1M14.2 8h-2.1M8 14.2v-2.1M1.8 8h2.1"
+                stroke="currentColor"
+                strokeWidth="1.1"
+                strokeLinecap="round"
+              />
+            </svg>
+            {entry.instrument.label}
+            <span aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-0.5">
+              →
+            </span>
+          </Link>
+        </div>
+      ) : null}
+
+      {entry.pdf ? (
+        <div className="mt-3">
           <Attachment href={entry.pdf} label="Download PDF" />
         </div>
       ) : null}

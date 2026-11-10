@@ -102,6 +102,8 @@ export interface EntryBase {
   wordCount: number;
   /** Optional external or local file attachment, e.g. "/papers/notes.pdf". */
   pdf?: string;
+  /** A companion interactive page on this site — e.g. a live model explorer. */
+  instrument?: { href: string; label: string };
   /** Hand-written bibliography lines, rendered as a references list. */
   references: string[];
 }
