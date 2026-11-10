@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "total": 194066,
+    "resolved_numeric": 194066,
+    "exact_ok": 194066,
+    "method_counts": {
+      "one-edge": 141265,
+      "coloring": 52801
+    },
+    "time_s": 1033.4391613006592,
+    "anomaly_count": 0
+  },
+  "anomalies": []
+}

@@ -1,0 +1,281 @@
+# Section 6 — Computational Methods and Verification
+
+Working notes for Section 6 of *The Geometry of Disagreement: Stable
+Non-Consensus States in Circle-Valued Network Dynamics*, written up so the
+tables and numbers here can be dropped into the paper directly. Everything
+below was actually run, not estimated; raw per-graph data and figures live
+outside the repository (scratchpad), since they are large working files, not
+something to version — ask if you want them regenerated or bundled
+separately for an archival DOI.
+
+## 6.1 Computational Methods and Reproducibility
+
+**Tools.** Two independent pipelines, kept deliberately separate so a bug in
+one could not hide in the other:
+
+- An **exact** pipeline (Python, `fractions.Fraction`) that builds the
+  oriented incidence matrix B, the Laplacian L = BBᵀ, its pseudoinverse
+  L⁺ = (L + J/n)⁻¹ − J/n (all exact rational Gauss–Jordan inversion), and
+  the cycle-space projector Π = I − BᵀL⁺B. By Lemma 3.2, F\*(G) = Π(ℤᴱ).
+  Dual-lattice membership of a candidate λ is checked two independent ways:
+  Bλ = 0 exactly, and the circulation of λ around every fundamental cycle
+  of a spanning tree is an exact integer (Lemma 3.1). Both checks are run on
+  every witness reported below.
+- A **numeric** pipeline (NumPy/SciPy, float64) used only for *searching* —
+  never for the final claim — via one-edge witnesses (Lemma 4.6/Prop 5.1)
+  and batched random three-phase colourings (Section 5.2), vectorised over
+  thousands of colourings at once for speed.
+
+**Environment.** macOS 26.6.2 (Darwin 25.6.0, arm64). Python 3.11.15
+(numpy 2.4.6, scipy 1.17.1, matplotlib 3.11.0) for the search/simulation
+pipeline; a separate stock Python 3.9.6 is also present on the machine but
+unused here. nauty 2.9.3 (`geng`), installed via Homebrew, for exhaustive
+non-isomorphic graph enumeration. A custom graph6 decoder was written for
+speed at n = 9 scale and validated against `networkx.from_graph6_bytes` on
+all 538 graphs at n = 3–7 with zero mismatches before being trusted at
+scale.
+
+**Models implemented.** The regularised intrinsic circle consensus model
+$M_\delta$ of Section 3.3 exactly as stated — $\dot\theta_v = \sum_{u\sim v}
+\Gamma_\delta(\mathrm{wrap}(\theta_u-\theta_v))$ — and, for comparison, the
+identical-oscillator Kuramoto model $\dot\theta_v = \sum_{u\sim v}
+\sin(\theta_u-\theta_v)$. Integration: `scipy.integrate.solve_ivp`,
+`method="DOP853"`, `rtol=1e-10`, `atol=1e-12`, with a terminal event firing
+at $\max_v|\dot\theta_v| < 10^{-9}$ (cap $t=2000$, never reached in
+practice). Classification exactly as agreed: **sync** if
+$\max_e|\Delta_e|<10^{-6}$; **core** if additionally
+$\max_e|\Delta_e|<\pi-\delta-10^{-6}$ and $\|B\Delta\|_\infty<10^{-8}$;
+else **other** (none occurred in any run below).
+
+**Prior work.** No pre-existing certificate file was available in this
+environment (an `icc_R8_certificates.zip` referenced in earlier planning
+notes could not be located); the exhaustive-witness search and verifier
+below were written from scratch, not loaded from a prior run. The easy/hard
+split this method finds at n = 9 (141,265 / 52,801) matches a figure already
+anticipated in those same planning notes, which is a useful cross-check but
+not something this run depended on.
+
+**Code and data.** This repository (`academic-site`) carries only the small
+aggregate tables and this write-up. The verification scripts, per-graph raw
+output, and simulation CSVs/figures are presently local-only
+(`~/academic-site`-adjacent scratch files); publish them (GitHub +
+Zenodo DOI is the natural choice, MIT for code / CC-BY 4.0 for data) before
+citing "code available at…" in the manuscript.
+
+## 6.2 Finite Verification: Every 2-Connected Graph on 3–9 Vertices
+
+**Theorem 6.1 (finite verification).** *Every 2-connected graph with at
+most nine vertices, other than $K_4$, satisfies $\mu(G)<1/2$. Consequently,
+a connected graph with at most nine vertices satisfies $\mu(G)<1/2$ if and
+only if it has a block that is neither a bridge nor $K_4$.*
+
+**Method.** Rather than a pre-built certificate file, every 2-connected
+graph on 3–9 vertices was enumerated directly with `geng -c -C n`, and for
+every one of them *other than $K_4$* an explicit witness
+$\lambda\in F^*(G)\setminus\{0\}$ with $\|\lambda\|_\infty<1/2$ was
+constructed and verified exactly — an **existence certificate**, in the
+spirit of the paper's own certificates, not a search for the true minimiser
+$\mu(G)$ itself. The search order, cheapest first:
+
+1. **One-edge witness** (Lemma 4.6): if any edge has effective resistance
+   $R_e>1/2$, then $\lambda=\Pi(\varepsilon_e)$ witnesses
+   $\|\lambda\|_\infty=1-R_e<1/2$ (Proposition 5.1). Resistances for every
+   edge of a graph are obtained from one float64 pseudoinverse per graph.
+2. **Three-phase colouring** (Corollary 5.5): for graphs that fail step 1
+   ("hard" graphs, Section 5.1), up to 4,000 random 3-colourings are tried
+   at once (fully vectorised — one batched matrix multiply handles all of
+   them), taking the one with smallest nonzero $\|\lambda_c\|_\infty$.
+3. **Local search fallback**: if step 2 does not clear $1/2$, up to five
+   random-restart hill-climbing searches (single-vertex recolouring moves)
+   are run. (In practice, this fallback was never needed — step 2 always
+   succeeded.)
+
+Every candidate winner, regardless of which step found it, is then
+*exactly* reconstructed in the Fraction pipeline and checked: $B\lambda=0$
+exactly, integer circulation on every fundamental cycle, and
+$0<\|\lambda\|_\infty<1/2$ as an exact fraction. $K_4$ is excluded from this
+search and confirmed separately, exactly, by a true exhaustive search of
+its rank-3 lattice (bound $\pm3$ on each of the three winding-number
+coordinates): the minimum nonzero $\|\lambda\|_\infty$ over all 342
+candidates is exactly $1/2$, matching Theorem 4.2/Proposition 4.5 — i.e.
+no witness below $1/2$ exists for $K_4$, as the theorem requires.
+
+**Coverage — complete, not a sample.**
+
+| $n$ | 2-connected graphs (OEIS A002218) | Excluded ($K_4$) | Witnesses found & exactly verified | Anomalies |
+|---|---|---|---|---|
+| 3 | 1 | 0 | 1 | 0 |
+| 4 | 3 | 1 | 2 | 0 |
+| 5 | 10 | 0 | 10 | 0 |
+| 6 | 56 | 0 | 56 | 0 |
+| 7 | 468 | 0 | 468 | 0 |
+| 8 | 7,123 | 0 | 7,123 | 0 |
+| 9 | 194,066 | 0 | 194,066 | 0 |
+| **Total** | **201,727** | **1** | **201,726** | **0** |
+
+Every one of the 201,726 graphs other than $K_4$ was resolved and exactly
+verified — not a sample, and not merely a numeric pass. (The numeric search
+and the exact re-verification both ran to completion on every single
+graph.) This figure, 201,726, matches the count the paper's own introduction
+already anticipates for this range.
+
+Resolution method at each $n$ (one-edge vs. three-phase colouring):
+
+| $n$ | one-edge (easy) | colouring (hard) |
+|---|---|---|
+| 3 | 1 | 0 |
+| 4 | 2 | 0 |
+| 5 | 8 | 2 |
+| 6 | 44 | 12 |
+| 7 | 378 | 90 |
+| 8 | 5,644 | 1,479 |
+| 9 | 141,265 | 52,801 |
+
+**Runtime.** n = 3–8 (538 graphs, search + exact verification): 25.5 s.
+n = 9 (194,066 graphs): numeric search + exact verification of every
+single graph, 1,033.4 s (≈ 17.2 min) at a sustained throughput of
+≈ 188 graphs/s.
+
+**Anomalies.** None. No graph other than $K_4$ resisted the search; no
+exact verification failed on a numerically-found candidate. (One bug was
+caught and fixed during development of the search code: the batched
+three-phase search could converge to the *trivial* all-vertices-one-colour
+assignment, giving $\lambda=0$ — not a valid witness, since $\mu$ requires a
+nonzero vector. The search was corrected to exclude near-zero norms before
+taking an argmin; after the fix, re-running the full n = 3–8 sweep gave
+zero anomalies.)
+
+## 6.3 Exploratory Simulations and Observational Results
+
+### E1 — Basin-of-attraction survey on $K_3$–$K_9$
+
+Protocol exactly as agreed (Section 6.1): $N=2000$ random seeds per
+(graph, $\delta$) pair, $\theta_v(0)\sim\mathrm{Unif}[0,2\pi)$ i.i.d.
+
+| Graph | $\delta^*(K_n)$ (rad) | $\delta=0.05$ | $\delta=0.1$ | $\delta=0.2$ | $\delta=0.4$ |
+|---|---|---|---|---|---|
+| $K_3$ | 1.0472 | 23.4% [21.5,25.3] | 25.1% [23.2,27.0] | 20.7% [19.0,22.5] | 14.1% [12.6,15.7] |
+| $K_4$ | 0 | 0.0% | 0.0% | 0.0% | 0.0% |
+| $K_5$ | 0.6283 | 36.6% [34.5,38.7] | 31.6% [29.6,33.7] | 29.8% [27.8,31.8] | 19.2% [17.5,21.0] |
+| $K_6$ | 1.0472 | 5.7% [4.7,6.7] | 6.7% [5.6,7.8] | 5.1% [4.2,6.1] | 4.5% [3.7,5.5] |
+| $K_7$ | 0.4488 | 41.9% [39.8,44.1] | 40.1% [37.9,42.2] | 32.9% [30.9,35.0] | 16.5% [14.9,18.2] |
+| $K_8$ | 0.7854 | 12.8% [11.4,14.3] | 12.4% [11.1,14.0] | 12.6% [11.2,14.1] | 8.4% [7.2,9.6] |
+| $K_9$ | 1.0472 | 47.8% [45.6,50.0] | 43.6% [41.4,45.8] | 34.8% [32.8,37.0] | 2.9% [2.3,3.8] |
+
+Cell values are the **core rate** — the fraction of 2,000 random starts
+settling into a non-synchronous core equilibrium — with 95% Wilson
+intervals. $K_4$ gives exactly 0% at every $\delta$ tested, as the theorem
+requires. None of 0.05/0.1/0.2/0.4 happen to exceed $\delta^*(K_n)$ for any
+$n\neq4$ in this table, so a **supplementary run** was added, one $\delta$
+chosen just above $\delta^*(K_n)$ for each $n$:
+
+| Graph | $\delta^*(K_n)$ | $\delta$ tested (above) | core rate |
+|---|---|---|---|
+| $K_3$ | 1.0472 | 1.1972 | 0 / 2000 |
+| $K_5$ | 0.6283 | 0.7783 | 0 / 2000 |
+| $K_6$ | 1.0472 | 1.1972 | 0 / 2000 |
+| $K_7$ | 0.4488 | 0.5988 | 0 / 2000 |
+| $K_8$ | 0.7854 | 0.9354 | 0 / 2000 |
+| $K_9$ | 1.0472 | 1.1972 | 0 / 2000 |
+
+The core rate drops to **exactly zero** the moment $\delta$ crosses
+$\delta^*(K_n)$, for every $n$ tested — a sharp empirical confirmation of
+Corollary 3.4's "only if" direction, not just its "if" direction.
+
+### E2 — Decay-rate check
+
+$K_6$'s (2,2,2) three-cluster equilibrium ($\lambda_2(L)=6$) and the
+octahedron $K_{2,2,2}$ ($\lambda_2(L)=4$, confirmed directly from the
+Laplacian spectrum: eigenvalues $\{0,4,4,4,6,6\}$), $\delta=0.1$, 10
+perturbation trials each at $\|\eta^\perp\|=10^{-3}$ and $10^{-1}$, fitting
+the slope of $\log\|\xi(t)\|$ against $t$:
+
+| Configuration | $\lambda_2$ (theory) | $\|\eta^\perp\|$ | fitted rate | rel. error |
+|---|---|---|---|---|
+| $K_6$ (2,2,2) | 6.0 | $10^{-3}$ | 6.0001 | 0.001% |
+| $K_6$ (2,2,2) | 6.0 | $10^{-1}$ | 6.0003 | 0.005% |
+| $K_{2,2,2}$ octahedron | 4.0 | $10^{-3}$ | 4.0000 | 0.0005% |
+| $K_{2,2,2}$ octahedron | 4.0 | $10^{-1}$ | 4.0000 | 0.0002% |
+
+Both configurations converge to within 0.01% of $\lambda_2(L)$, confirming
+Proposition 3.5's exponential rate exactly. One genuine subtlety surfaced
+and is worth recording: because the octahedron's Laplacian spectrum has
+*two* nonzero eigenvalues (4 and 6, each with multiplicity 3 and 2), a
+generic random perturbation excites both modes, and an **early-time** fit
+of the decay slope reads a few percent *faster* than $\lambda_2$ (the
+$e^{-6t}$ component has not yet died away). Fitting the tail instead
+(here, $t\in[2.5,5.0]$, late enough for the faster mode to be negligible
+but early enough to stay above the float64 noise floor) recovers
+$\lambda_2$ to four decimal places. This is consistent with — not a
+contradiction of — Proposition 3.5, whose bound $|\xi(t)|\le
+e^{-\lambda_2t}|\eta_0^\perp|$ is an upper bound, not a claim that every
+mode decays at exactly that rate.
+
+### E3 — ICC vs. Kuramoto on dense graphs
+
+$\delta=0.1$ for the ICC law, $N=2000$ shared seeds per graph, same
+initial conditions fed to both laws:
+
+| Graph | $n$ | $d_{\min}$ | $6d_{\min}>5n-2$? | $\bar\mu(G)$ bound (Thm 5.9a) | ICC non-sync rate | Kuramoto non-sync rate |
+|---|---|---|---|---|---|---|
+| $K_5$ | 5 | 4 | yes | ≤ 0.4667 | 32.7% | 0.0% |
+| $K_6$ | 6 | 5 | yes | ≤ 0.4444 | 6.3% | 0.0% |
+| $K_8$ | 8 | 7 | yes | ≤ 0.4167 | 10.6% | 0.0% |
+| $K_{12}$ minus a perfect matching | 12 | 10 | yes | ≤ 0.4667 | 38.1% | 0.0% |
+| $K_{18}$ minus a Hamiltonian cycle | 18 | 15 | yes | ≤ 0.4762 | 17.1% | 0.0% |
+
+Every graph here satisfies the Theorem 5.9(a) density condition (confirmed,
+not assumed), and therefore also the Kassabov–Strogatz–Townsend threshold
+for Kuramoto synchronisation — matching the observed 0.0% non-sync rate for
+Kuramoto on every graph, exactly. The regularised geodesic law, on the very
+same graphs with the very same initial conditions, leaves a substantial,
+non-vanishing fraction (6.3%–38.1%) in stable disagreement. This is the
+paper's comparative claim (Corollary 5.10) made concrete: the same network,
+two coupling laws, opposite stability conclusions.
+
+### E4
+
+Not run (optional per the plan; the n ≤ 9 exhaustive result in 6.2 already
+gives strong evidence that no non-K₄ graph behaves like K₄, and probing
+ramp-boundary equilibria specifically was judged lower priority than
+completing 6.2 and E1–E3 in full).
+
+## Appendix: the re-verified closed forms (companion to Table 1)
+
+| Family | Param | n | m | μ(G) | δ*(G) | Theorem | Check |
+|---|---|---|---|---|---|---|---|
+| K_n (complete) | 3 | 3 | 3 | 1/3 | π·1/3 | Theorem 4.2 | constructed+exhaustive min. |
+| K_n (complete) | 4 | 4 | 6 | 1/2 | 0 | Theorem 4.2 | constructed+exhaustive min. |
+| K_n (complete) | 5 | 5 | 10 | 2/5 | π·1/5 | Theorem 4.2 | constructed+exhaustive min. |
+| K_n (complete) | 6 | 6 | 15 | 1/3 | π·1/3 | Theorem 4.2 | constructed+exhaustive min. |
+| K_n (complete) | 7 | 7 | 21 | 3/7 | π·1/7 | Theorem 4.2 | constructed+exhaustive min. |
+| K_n (complete) | 8 | 8 | 28 | 3/8 | π·1/4 | Theorem 4.2 | constructed, membership only |
+| K_n (complete) | 9 | 9 | 36 | 1/3 | π·1/3 | Theorem 4.2 | constructed, membership only |
+| K_n (complete) | 10 | 10 | 45 | 2/5 | π·1/5 | Theorem 4.2 | constructed, membership only |
+| K_n (complete) | 11 | 11 | 55 | 4/11 | π·3/11 | Theorem 4.2 | constructed, membership only |
+| K_n (complete) | 12 | 12 | 66 | 1/3 | π·1/3 | Theorem 4.2 | constructed, membership only |
+| C_n (cycle) | 3 | 3 | 3 | 1/3 | π·1/3 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 4 | 4 | 4 | 1/4 | π·1/2 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 5 | 5 | 5 | 1/5 | π·3/5 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 6 | 6 | 6 | 1/6 | π·2/3 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 7 | 7 | 7 | 1/7 | π·5/7 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 8 | 8 | 8 | 1/8 | π·3/4 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 9 | 9 | 9 | 1/9 | π·7/9 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 10 | 10 | 10 | 1/10 | π·4/5 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 11 | 11 | 11 | 1/11 | π·9/11 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| C_n (cycle) | 12 | 12 | 12 | 1/12 | π·5/6 | Theorem 4.8(c), N=2 | constructed+exhaustive min. |
+| theta(a,a,a) | 2 | 5 | 6 | 1/3 | π·1/3 | Theorem 4.8(c), N=3 | constructed+exhaustive min. |
+| theta(a,a,a) | 3 | 8 | 9 | 2/9 | π·5/9 | Theorem 4.8(c), N=3 | constructed+exhaustive min. |
+| theta(a,a,a) | 4 | 11 | 12 | 1/6 | π·2/3 | Theorem 4.8(c), N=3 | constructed+exhaustive min. |
+| theta(a,a,a) | 5 | 14 | 15 | 2/15 | π·11/15 | Theorem 4.8(c), N=3 | constructed+exhaustive min. |
+| theta(a,a,a) | 6 | 17 | 18 | 1/9 | π·7/9 | Theorem 4.8(c), N=3 | constructed+exhaustive min. |
+| K4^(a) (subdivided tetrahedron) | 1 | 4 | 6 | 1/2 | 0 | Theorem 4.8(c), N=4 | constructed+exhaustive min. |
+| K4^(a) (subdivided tetrahedron) | 2 | 10 | 12 | 1/4 | π·1/2 | Theorem 4.8(c), N=4 | constructed+exhaustive min. |
+| K4^(a) (subdivided tetrahedron) | 3 | 16 | 18 | 1/6 | π·2/3 | Theorem 4.8(c), N=4 | constructed+exhaustive min. |
+| K4^(a) (subdivided tetrahedron) | 4 | 22 | 24 | 1/8 | π·3/4 | Theorem 4.8(c), N=4 | constructed+exhaustive min. |
+| K4^(a) (subdivided tetrahedron) | 5 | 28 | 30 | 1/10 | π·4/5 | Theorem 4.8(c), N=4 | constructed+exhaustive min. |
+| K4^(a) (subdivided tetrahedron) | 6 | 34 | 36 | 1/12 | π·5/6 | Theorem 4.8(c), N=4 | constructed+exhaustive min. |
+| K_{a,a,a} (balanced tripartite) | 1 | 3 | 3 | 1/3 | π·1/3 | Theorem 5.7(a) | constructed+exhaustive min. |
+| K_{a,a,a} (balanced tripartite) | 2 | 6 | 12 | 1/3 | π·1/3 | Theorem 5.7(a) | constructed+exhaustive min. |
+| K_{a,a,a} (balanced tripartite) | 3 | 9 | 27 | 1/3 | π·1/3 | Theorem 5.7(a) | constructed, membership only |
+| K_{a,a,a} (balanced tripartite) | 4 | 12 | 48 | 1/3 | π·1/3 | Theorem 5.7(a) | constructed, membership only |

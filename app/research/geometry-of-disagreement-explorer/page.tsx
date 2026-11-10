@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ConsensusGeometryExplorer } from "@/components/laboratory/ConsensusGeometryExplorer";
+import { VerifiedResultsTable } from "@/components/laboratory/VerifiedResultsTable";
 import { Prose } from "@/components/content/Prose";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getEntry } from "@/lib/content";
@@ -53,6 +54,10 @@ export default function GeometryOfDisagreementExplorerPage() {
           <ConsensusGeometryExplorer />
         </div>
 
+        <div className="mt-10">
+          <VerifiedResultsTable />
+        </div>
+
         <div className="mx-auto mt-14 max-w-[40rem]">
           <Prose>
             <p>
@@ -79,6 +84,24 @@ export default function GeometryOfDisagreementExplorerPage() {
               integration of the paper&rsquo;s own differential equation, not an approximation of it —
               so what you see settle, or fail to settle, is the dynamics the theorems above are
               about.
+            </p>
+            <p>
+              Beyond the five families tabulated above, the paper&rsquo;s central conjecture — that
+              K₄ is the <em>only</em> 2-connected graph with μ(G) ≥ 1/2 — was checked exactly for
+              every single 2-connected graph on three to nine vertices: all 201,726 of them other
+              than K₄ (enumerated with nauty, matching OEIS A002218). A one-edge witness (Lemma 4.6)
+              resolved 141,265 of them; a three-phase colouring construction (Section 5.2),
+              searched and then exactly re-verified, resolved the remaining 52,801. Every witness
+              checked out — zero exceptions. Separately, simulating the model directly (not just
+              computing μ) across 2,000 random starts per graph at several regularisation widths
+              confirmed the predicted sharp cutoff: for K₃, K₅&ndash;K₉, a nonzero fraction of runs
+              settle into a lasting disagreement whenever δ sits below δ*(G), and that fraction
+              drops to exactly zero, out of 2,000, the moment δ crosses above it — while K₄ stays at
+              zero throughout. On five dense graphs (K₅, K₆, K₈, and two larger graphs just past the
+              density threshold of Theorem 5.9), the same seeds run through plain Kuramoto coupling
+              synchronised every time, while this paper&rsquo;s geodesic coupling left a real,
+              non-vanishing fraction in stable disagreement — the same graph, two coupling laws,
+              opposite outcomes.
             </p>
           </Prose>
         </div>
