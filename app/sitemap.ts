@@ -49,5 +49,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.3,
   }));
 
-  return [...staticRoutes, ...collectionRoutes, ...laboratoryRoutes, ...entryRoutes, ...tagRoutes];
+  // A standalone instrument, companion to a research entry rather than a
+  // laboratory experiment or a content-collection entry — listed by hand.
+  const extraRoutes = [
+    {
+      url: `${base}/research/geometry-of-disagreement-explorer`,
+      lastModified: now,
+      changeFrequency: "yearly" as const,
+      priority: 0.6,
+    },
+  ];
+
+  return [...staticRoutes, ...collectionRoutes, ...laboratoryRoutes, ...entryRoutes, ...tagRoutes, ...extraRoutes];
 }
