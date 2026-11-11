@@ -444,7 +444,8 @@ export function OrbitalMechanicsExplorer() {
           </span>{" "}
           Three questions, one integrator: whether a trajectory hits the surface or escapes, what speed holds a
           circular orbit, and whether an elliptical orbit&apos;s shape and period match the closed-form two-body
-          solution for the same initial condition.
+          solution for the same initial condition. Built to check predictions for Rutgers Physics 275&apos;s
+          Classical Physics Lab 9, &ldquo;Gravitation.&rdquo;
         </>
       }
     >

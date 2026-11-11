@@ -394,7 +394,9 @@ form directly: it integrates that equation numerically, with a
 fourth-order Runge-Kutta step — the same kind of approach a
 \`NDSolveValue\` call takes in Mathematica, and the reason a trajectory
 here is computed up front, once per change of initial condition, rather
-than evaluated pointwise like the others' curves.
+than evaluated pointwise like the others' curves. It was built to check
+predictions for Rutgers Physics 275's Classical Physics Lab 9,
+"Gravitation."
 
 **A. Impact & Escape** sets a position and velocity near Earth and either
 watches it strike the surface or sends it on its way. Energy conservation
