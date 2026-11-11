@@ -1,5 +1,8 @@
 # Consensus dynamics — verification data
 
+Licensed separately from the rest of this repository — see
+[`LICENSE.md`](./LICENSE.md) (MIT for `scripts/`, CC BY 4.0 for the data).
+
 Supporting scripts and small result tables for `section-6-verification-notes.md`
 (project root), the computational-verification pass for *The Geometry of
 Disagreement*. The large E1 simulation CSV (per-seed, per-graph, per-δ raw

@@ -68,15 +68,31 @@ anticipated in those same planning notes, which is a useful cross-check but
 not something this run depended on.
 
 **Code and data.** This repository (`academic-site`) carries the aggregate
-tables, this write-up, all verification/simulation scripts, and — since
-6.4 — the full per-graph Theorem 6.1 certificates (6.4 MB, all 201,726
-non-K4 graphs). Only the bulky, purely-derived simulation CSVs and figures
-(E1's per-seed raw output, E2/E3 plots) stay local-only, since they are
-fully reproducible from the committed scripts and seeds rather than being
-independent evidence in their own right. Before citing "code available
-at…" in the manuscript, push this repository (or extract the
-`verification-data/` directory) to a citable location — GitHub + a Zenodo
-DOI is the natural choice, MIT for code / CC-BY 4.0 for data.
+tables, this write-up, all verification/simulation scripts, and the full
+per-graph certificates for both Theorem 6.1 (6.4 MB, all 201,726 non-K4
+graphs, n≤9) and its Section 6.5 extension (5.0 MB, 108,667 bounded-degree
+graphs beyond n=9). Only the bulky, purely-derived simulation CSVs and
+figures (E1's per-seed raw output, E2/E3 plots) stay local-only, since
+they are fully reproducible from the committed scripts and seeds rather
+than being independent evidence in their own right. The repository is
+public on GitHub, and `verification-data/consensus-dynamics/` carries its
+own `LICENSE.md` (MIT for `scripts/`, CC BY 4.0 for the certificates and
+result data) — a gap an earlier reviewer caught, since "public" is not
+the same as "licensed for reuse." The citable URL in the manuscript
+should point at the tagged commit, not a moving branch:
+
+```
+https://github.com/nemojjii/Personal-webpage/tree/paper-v1/verification-data/consensus-dynamics
+```
+
+(`paper-v1` is a tag on the commit this write-up corresponds to, so the
+cited data cannot silently change under the manuscript later; moving the
+tag forward, or cutting `paper-v2`, is fine if the data is meaningfully
+revised, but the manuscript should then say so explicitly.) A full
+Zenodo DOI, extracting just this directory, remains the better option
+before final submission, since a DOI is permanent in a way a GitHub tag
+technically is not (tags can be force-moved or a repository deleted) —
+but the tag closes the gap for now.
 
 ## 6.2 Finite Verification: Every 2-Connected Graph on 3–9 Vertices
 
