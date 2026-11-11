@@ -1,9 +1,10 @@
 import type { EntryRef, RelationKind } from "./types";
 
 /**
- * The Little Laboratory's five experiments: what the landing page lists,
+ * The Little Laboratory's six experiments: what the landing page lists,
  * what the sitemap includes, and the model notes each page sets beneath its
- * instrument. The mathematics itself lives in lib/laboratory/*.ts.
+ * instrument. The mathematics itself lives in lib/laboratory/*.ts — except
+ * for the sixth, which is hosted externally; see its own entry below.
  */
 
 /**
@@ -21,7 +22,7 @@ export interface ExperimentRelation {
 
 export interface Experiment {
   slug: string;
-  numeral: "I" | "II" | "III" | "IV" | "V";
+  numeral: "I" | "II" | "III" | "IV" | "V" | "VI";
   title: string;
   /** The question the instrument lets you put to the model. */
   question: string;
@@ -34,6 +35,12 @@ export interface Experiment {
   notes: string;
   /** Hand-written relations to entries. Empty is the honest default. */
   related: ExperimentRelation[];
+  /**
+   * Set only for an experiment that is not built into this site: the page
+   * at `href` explains what it is and links out to this instead of hosting
+   * an inline instrument.
+   */
+  externalHref?: string;
 }
 
 export const experiments: Experiment[] = [
@@ -366,6 +373,62 @@ in Mode C is an idealized rectangle, not any particular physical junction.
 "Measurement" in Mode D means sampling the Born-rule distribution; it says
 nothing about the physical process of measurement itself, a question this
 instrument does not take a position on.
+`,
+    related: [],
+  },
+  {
+    slug: "gravitation-orbit-console",
+    numeral: "VI",
+    title: "Gravitation Orbit Console",
+    question: "Worked out from F = ma, what does a satellite's orbit around Earth actually look like?",
+    description:
+      "A numerical two-body simulator built to check predictions for a classical mechanics lab. Set a position and velocity near Earth and compare the integrated trajectory — impact, escape, a circular orbit, or an ellipse — against the closed-form prediction for the same initial condition.",
+    href: "/laboratory/gravitation-orbit-console",
+    summary:
+      "A numerical two-body orbit simulator: impact and escape velocity, circular orbits, and Kepler's first and third laws, each compared against the closed-form prediction for the same initial condition.",
+    externalHref: "https://claude.ai/artifact/4mGLZAwZwixoFdVsD4isov",
+    notes: String.raw`
+## What this is
+
+Unlike the five instruments above, this one is not a closed-form model
+evaluated in a dependency-free TypeScript module and drawn as inline SVG.
+It numerically integrates the two-body equations of motion,
+
+$$
+\ddot{\mathbf r} = -\frac{GM}{r^3}\,\mathbf r,
+$$
+
+with a fourth-order Runge–Kutta step — the same kind of approach
+(\`NDSolveValue\`, in Mathematica) used in the classical mechanics lab this
+console was built to check predictions against. It is hosted outside this
+site, as a published Claude artifact, and opens in a new tab rather than
+running inline on this page.
+
+## The model
+
+A point mass $m \ll M$ moves under a fixed Earth of mass $M$ and radius
+$R$. Three regimes are worth comparing against the analytic prediction for
+the same initial condition:
+
+- **Impact or escape** — energy conservation gives the impact speed
+  $v_{\text{impact}} = \sqrt{v_0^2 + 2GM(1/R - 1/r_0)}$ and the escape
+  speed at a given radius $v_{\text{esc}} = \sqrt{2GM/r}$, independent of
+  direction.
+- **Circular orbits** — $v_{\text{circ}} = \sqrt{GM/r}$; the console reports
+  (max $r$ − min $r$)/$r_0$ as a direct read on how close the simulated
+  orbit actually comes to a circle.
+- **Kepler's laws** — eccentricity, semi-major axis and period are computed
+  two ways for the same orbit: once from the exact two-body solution (via
+  the Laplace–Runge–Lenz vector and the vis-viva equation), and once
+  measured directly off the simulated trajectory, so the two can be
+  compared rather than assumed to agree.
+
+## What this does not claim
+
+It is coursework infrastructure, not a research instrument, and nothing on
+it is calibrated beyond Earth's own $G$, $M$ and $R$. Numerical integration
+drifts; the console reports the simulated and theoretical values side by
+side rather than asserting that they match.
 `,
     related: [],
   },

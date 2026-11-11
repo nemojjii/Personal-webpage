@@ -89,7 +89,7 @@ export function ExperimentGlyph({ slug, className = "" }: { slug: string; classN
               );
             })}
           </>
-        ) : (
+        ) : slug === "quantum-mechanics-explorer" ? (
           <>
             {/* psi_3(x) = sin(3*pi*x/L) in an infinite well: the walls, and a
                 standing wave that is exactly zero at both of them and at its
@@ -106,6 +106,19 @@ export function ExperimentGlyph({ slug, className = "" }: { slug: string; classN
                 return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
               }).join(" ")}
               strokeWidth="1.1"
+            />
+          </>
+        ) : (
+          <>
+            {/* An ellipse with Earth at one focus, not its center — the shape
+                Kepler's first law actually describes, not a generic oval. */}
+            <path d={`M104,38 A46,24 0 1,0 12,38 A46,24 0 1,0 104,38`} strokeWidth="0.9" />
+            <circle
+              cx={58 - Math.sqrt(46 * 46 - 24 * 24)}
+              cy="38"
+              r="3"
+              fill="currentColor"
+              stroke="none"
             />
           </>
         )}

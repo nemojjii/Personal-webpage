@@ -1,7 +1,7 @@
 ---
 title: "Little Laboratory — Interactive Scientific Explorations"
 subtitle: "Mathematical models, numerical methods, and visual intuition"
-summary: "A small set of interactive experiments built into this site — wave superposition, gradient descent, reaction kinetics, Fourier synthesis and a one-dimensional quantum particle — each turning one textbook model into something to move, read off and test."
+summary: "A small set of interactive experiments, five built into this site and one hosted externally — wave superposition, gradient descent, reaction kinetics, Fourier synthesis, a one-dimensional quantum particle, and a numerical two-body orbit simulator — each turning one textbook model into something to move, read off and test."
 stage: ongoing
 area: "Scientific Computing & Interactive Visualization"
 # The day this entry joined the site. The laboratory itself opened in October 2026.
@@ -18,6 +18,8 @@ keywords:
   - reaction kinetics
   - fourier synthesis
   - quantum mechanics
+  - orbital mechanics
+  - numerical integration
   - scientific computing
 tags: [simulation, mathematics]
 related: []
@@ -27,21 +29,25 @@ references: []
 The [Little Laboratory](/laboratory) is a small space on this site where
 equations become something to explore. It exists because a model one has only
 read is not yet understood; the moment of understanding usually comes from
-moving a parameter and seeing what changes. Each of its five instruments takes
+moving a parameter and seeing what changes. Each of its six instruments takes
 one standard model — a textbook result, not a research finding — writes it down
 exactly, and puts its parameters under the visitor's hand.
 
 ## The approach
 
-Every experiment is built the same way. The mathematics lives in a small,
-dependency-free TypeScript module that evaluates the model in closed form; a
-page component draws it as inline SVG and exposes its parameters as sliders and
-buttons; readouts print the quantities the model defines; and notes beneath the
-instrument state the equations, the assumptions and what to look for. A shared
-clock advances time for the animated experiments, re-rendering about thirty
-times a second, pausing while the tab is hidden, and never starting on its own
-for a visitor who prefers reduced motion. The sliders are native range inputs
-that announce their values, so the instruments work from the keyboard.
+Five of the six experiments are built the same way. The mathematics lives in
+a small, dependency-free TypeScript module that evaluates the model in closed
+form; a page component draws it as inline SVG and exposes its parameters as
+sliders and buttons; readouts print the quantities the model defines; and
+notes beneath the instrument state the equations, the assumptions and what to
+look for. A shared clock advances time for the animated experiments,
+re-rendering about thirty times a second, pausing while the tab is hidden,
+and never starting on its own for a visitor who prefers reduced motion. The
+sliders are native range inputs that announce their values, so the
+instruments work from the keyboard. The sixth, a numerical orbit simulator
+built for a classical mechanics lab, breaks that pattern on purpose — it
+integrates rather than evaluates in closed form, and it is hosted outside
+this site rather than built into it; its own entry below says why.
 
 What a visitor can investigate is bounded by the model, deliberately. Nothing
 is measured, fitted or simulated beyond the equation on the page, and the notes
@@ -132,9 +138,26 @@ measurements, rejection-sampled directly from $|\psi_n(x)|^2$, compared
 against the theoretical curve as the sample count grows.
 [Open Quantum Mechanics Explorer](/laboratory/quantum-mechanics-explorer).
 
+### VI. Gravitation Orbit Console
+
+A numerical two-body simulator built to check predictions for a classical
+mechanics lab on gravitation, integrating
+$\ddot{\mathbf r} = -GM\mathbf r/r^3$ with a fourth-order Runge–Kutta step —
+the same kind of approach (`NDSolveValue`, in Mathematica) the lab itself
+uses. Set a position and velocity near Earth and compare the simulated
+trajectory against the closed-form prediction for the same initial
+condition: impact or escape velocity, the speed needed for a circular orbit,
+and an elliptical orbit's eccentricity, semi-major axis and period — the
+last of these computed two ways, once from the exact two-body solution and
+once measured off the simulated path, so they can be checked against each
+other rather than assumed to agree. Unlike the other five, it runs outside
+this site, as a published Claude artifact that opens in a new tab.
+[Open Gravitation Orbit Console](/laboratory/gravitation-orbit-console).
+
 ## Where it stands
 
-Five instruments, open and working. The laboratory is meant to grow slowly,
-one well-understood model at a time, and only when there is something true and
+Six instruments, open and working, five of them native to this site and one
+hosted externally. The laboratory is meant to grow slowly, one
+well-understood model at a time, and only when there is something true and
 small enough to put under a slider. It is a way of thinking, not a research
 output: nothing here is new, and that is the point.
