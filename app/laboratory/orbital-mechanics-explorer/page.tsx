@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
 import { ExperimentPage } from "@/components/laboratory/ExperimentPage";
-import { GravitationOrbitConsole } from "@/components/laboratory/GravitationOrbitConsole";
+import { OrbitalMechanicsExplorer } from "@/components/laboratory/OrbitalMechanicsExplorer";
 import { getExperiment } from "@/lib/laboratory";
 
-const experiment = getExperiment("gravitation-orbit-console")!;
+const experiment = getExperiment("orbital-mechanics-explorer")!;
 
 export const metadata: Metadata = {
   title: `${experiment.title} — Little Laboratory`,
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <ExperimentPage experiment={experiment}>
-      <GravitationOrbitConsole />
+      <OrbitalMechanicsExplorer />
     </ExperimentPage>
   );
 }

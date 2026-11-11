@@ -3,8 +3,7 @@ import type { EntryRef, RelationKind } from "./types";
 /**
  * The Little Laboratory's six experiments: what the landing page lists,
  * what the sitemap includes, and the model notes each page sets beneath its
- * instrument. The mathematics itself lives in lib/laboratory/*.ts — except
- * for the sixth, which is hosted externally; see its own entry below.
+ * instrument. The mathematics itself lives in lib/laboratory/*.ts.
  */
 
 /**
@@ -35,12 +34,6 @@ export interface Experiment {
   notes: string;
   /** Hand-written relations to entries. Empty is the honest default. */
   related: ExperimentRelation[];
-  /**
-   * Set only for an experiment that is not built into this site: the page
-   * at `href` explains what it is and links out to this instead of hosting
-   * an inline instrument.
-   */
-  externalHref?: string;
 }
 
 export const experiments: Experiment[] = [
@@ -377,58 +370,64 @@ instrument does not take a position on.
     related: [],
   },
   {
-    slug: "gravitation-orbit-console",
+    slug: "orbital-mechanics-explorer",
     numeral: "VI",
-    title: "Gravitation Orbit Console",
-    question: "Worked out from F = ma, what does a satellite's orbit around Earth actually look like?",
+    title: "Orbital Mechanics Explorer",
+    question: "Worked out from F = ma alone, what does a satellite's orbit around Earth actually look like?",
     description:
-      "A numerical two-body simulator built to check predictions for a classical mechanics lab. Set a position and velocity near Earth and compare the integrated trajectory — impact, escape, a circular orbit, or an ellipse — against the closed-form prediction for the same initial condition.",
-    href: "/laboratory/gravitation-orbit-console",
+      "A satellite near Earth, put to three tests: whether a trajectory hits the surface or escapes, what speed holds a circular orbit, and whether an elliptical orbit's own shape and period match the closed-form two-body solution for the same initial condition.",
+    href: "/laboratory/orbital-mechanics-explorer",
     summary:
-      "A numerical two-body orbit simulator: impact and escape velocity, circular orbits, and Kepler's first and third laws, each compared against the closed-form prediction for the same initial condition.",
-    externalHref: "https://claude.ai/artifact/4mGLZAwZwixoFdVsD4isov",
+      "An interactive two-body orbit simulator, numerically integrated: impact and escape velocity, circular orbits, and Kepler's first and third laws, each checked against the closed-form two-body prediction for the same initial condition.",
     notes: String.raw`
-## What this is
-
-Unlike the five instruments above, this one is not a closed-form model
-evaluated in a dependency-free TypeScript module and drawn as inline SVG.
-It numerically integrates the two-body equations of motion,
-
-$$
-\ddot{\mathbf r} = -\frac{GM}{r^3}\,\mathbf r,
-$$
-
-with a fourth-order Runge–Kutta step — the same kind of approach
-(\`NDSolveValue\`, in Mathematica) used in the classical mechanics lab this
-console was built to check predictions against. It is hosted outside this
-site, as a published Claude artifact, and opens in a new tab rather than
-running inline on this page.
-
 ## The model
 
 A point mass $m \ll M$ moves under a fixed Earth of mass $M$ and radius
-$R$. Three regimes are worth comparing against the analytic prediction for
-the same initial condition:
+$R$, obeying Newton's second law under the inverse-square force alone,
 
-- **Impact or escape** — energy conservation gives the impact speed
-  $v_{\text{impact}} = \sqrt{v_0^2 + 2GM(1/R - 1/r_0)}$ and the escape
-  speed at a given radius $v_{\text{esc}} = \sqrt{2GM/r}$, independent of
-  direction.
-- **Circular orbits** — $v_{\text{circ}} = \sqrt{GM/r}$; the console reports
-  (max $r$ − min $r$)/$r_0$ as a direct read on how close the simulated
-  orbit actually comes to a circle.
-- **Kepler's laws** — eccentricity, semi-major axis and period are computed
-  two ways for the same orbit: once from the exact two-body solution (via
-  the Laplace–Runge–Lenz vector and the vis-viva equation), and once
-  measured directly off the simulated trajectory, so the two can be
-  compared rather than assumed to agree.
+$$
+\ddot{\mathbf r} = -\frac{GM}{r^3}\,\mathbf r.
+$$
+
+Unlike the other five instruments, this one does not evaluate a closed
+form directly: it integrates that equation numerically, with a
+fourth-order Runge-Kutta step — the same kind of approach a
+\`NDSolveValue\` call takes in Mathematica, and the reason a trajectory
+here is computed up front, once per change of initial condition, rather
+than evaluated pointwise like the others' curves.
+
+**A. Impact & Escape** sets a position and velocity near Earth and either
+watches it strike the surface or sends it on its way. Energy conservation
+alone gives the impact speed,
+$v_{\text{impact}} = \sqrt{v_0^2 + 2GM(1/R - 1/r_0)}$, and the escape speed
+at a given radius, $v_{\text{esc}} = \sqrt{2GM/r}$ — independent of
+direction, since only the speed's magnitude enters the specific energy
+$\varepsilon = \tfrac12 v^2 - GM/r$ that decides bound from unbound.
+
+**B. Circular Orbit** sets $v(0) = \sqrt{GM/r_0}$, the unique speed for a
+given radius that keeps the two-body force exactly centripetal, and reports
+$(\max r - \min r)/r_0$ as a direct read on how close the integrated orbit
+actually comes to the circle that speed predicts; moving $v(0)$ away from
+that value turns the circle into an ellipse with $r_0$ at its perigee or
+apogee, depending on which way.
+
+**C. Kepler's Laws** computes an orbit's eccentricity, semi-major axis and
+period two ways for the same initial condition — once from the exact
+two-body solution, via the Laplace-Runge-Lenz vector and the vis-viva
+equation, and once measured directly off the integrated trajectory, apogee
+and perigee read as the path's own extremes in $r$ and the period as the
+time for its polar angle to sweep a full $2\pi$ — so the two can be
+compared rather than assumed to agree. Collecting a few orbits of
+different size into a table and fitting $T^2$ against $a^3$ through the
+origin recovers Kepler's third law's own constant, $4\pi^2/GM$, independent
+of any orbit's shape.
 
 ## What this does not claim
 
-It is coursework infrastructure, not a research instrument, and nothing on
-it is calibrated beyond Earth's own $G$, $M$ and $R$. Numerical integration
-drifts; the console reports the simulated and theoretical values side by
-side rather than asserting that they match.
+Nothing here is calibrated beyond Earth's own $G$, $M$ and $R$; numerical
+integration drifts, which is exactly why the instrument reports the
+integrated and theoretical values side by side instead of asserting that
+they match.
 `,
     related: [],
   },
