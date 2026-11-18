@@ -1,7 +1,7 @@
 import type { EntryRef, RelationKind } from "./types";
 
 /**
- * The Little Laboratory's six experiments: what the landing page lists,
+ * The Little Laboratory's seven experiments: what the landing page lists,
  * what the sitemap includes, and the model notes each page sets beneath its
  * instrument. The mathematics itself lives in lib/laboratory/*.ts.
  */
@@ -21,7 +21,7 @@ export interface ExperimentRelation {
 
 export interface Experiment {
   slug: string;
-  numeral: "I" | "II" | "III" | "IV" | "V" | "VI";
+  numeral: "I" | "II" | "III" | "IV" | "V" | "VI" | "VII";
   title: string;
   /** The question the instrument lets you put to the model. */
   question: string;
@@ -430,6 +430,83 @@ Nothing here is calibrated beyond Earth's own $G$, $M$ and $R$; numerical
 integration drifts, which is exactly why the instrument reports the
 integrated and theoretical values side by side instead of asserting that
 they match.
+`,
+    related: [],
+  },
+  {
+    slug: "standing-waves",
+    numeral: "VII",
+    title: "Standing Waves",
+    question: "Where does a driven string or air column actually resonate, and why there?",
+    description:
+      "A string driven at one end and clamped at the other, and the same mathematics applied to a sealed air column. Set the hanging mass and vibrating length, or the frequency, column length and temperature, and watch the response stay small everywhere except at the lengths where it resonates.",
+    href: "/laboratory/standing-waves",
+    summary:
+      "An interactive standing-wave instrument built for Rutgers 275's Classical Physics Lab 10: a driven, clamped string's resonant lengths from its tension and linear density, and a sealed air column's pressure and displacement patterns a quarter wavelength apart.",
+    notes: String.raw`
+## The model
+
+Both setups share one boundary-value problem: a sinusoidal driver of small,
+fixed amplitude at $x=0$ (the buzzer; the loudspeaker, sealed into the
+tube) and a rigid, clamped boundary at $x=L$ (the fret; the plunger). The
+steady forced solution of the wave equation for *any* $L$ — not only a
+resonant one — is
+
+$$
+u(x,t) = A_0\,\frac{\sin\!\big(k(L-x)\big)}{\sin(kL)}\,\cos(\omega t),
+$$
+
+which satisfies $u(L,t)=0$ for every $L$ (the clamped end) and
+$u(0,t)=A_0\cos(\omega t)$ exactly — a small, fixed amplitude, independent
+of $L$, matching the handout's "the buzzer end is a good approximation of
+a node." As $kL \to n\pi$ this diverges for an undamped, idealized string:
+**resonance**, and exactly the condition $L = n\lambda/2$ the handout
+gives. The instrument renders a floor under $|\sin(kL)|$ so the curve stays
+finite on screen; that floor is a rendering choice, not a claim about real
+damping, which this model does not include.
+
+**Part I.** $c=\sqrt{F/\rho}$ from the hanging mass's tension
+$F=mg$ and the handout's linear density, $\rho = (2.0\pm0.2)\times10^{-4}$
+kg/m; the buzzer frequency is fixed at 120 Hz. $k$ and $\lambda$ follow
+from $c$ and $f$, and the nearest resonant length, $L_n = n\lambda/2$, is
+read off directly.
+
+**Part II.** The same shape, with $c$ from the handout's
+$c_{\mathrm{th}} = 331.4 + 0.6T$ (°C) rather than a string's tension, and
+$f$ set by the function generator instead of fixed. Pressure in a sound
+wave is proportional to $-\partial u/\partial x$; differentiating the
+shape above swaps the sine for a cosine in the same denominator —
+**the pressure pattern is the displacement pattern's own
+quarter-wavelength-shifted companion**, not an independent curve. A node
+of one is exactly an antinode of the other. The microphone measures
+pressure, never displacement directly, which is why both curves are drawn
+and labelled rather than just one.
+
+## On the loudspeaker: node or antinode?
+
+Both tube ends here are sealed, rigid boundaries — the plunger plainly,
+and the speaker too, since it drives a *closed* tube rather than sitting
+open to the room. Treating the speaker the same way as the buzzer in Part
+I — a small, fixed driving amplitude, not a free end — already forces
+resonances at $\ell = n\lambda/2$ starting from $n=1$, the spacing the
+handout's own method measures (successive maxima $\lambda/2$ apart), and
+not the $n=1,3,5,\dots$ quarter-wave series an open end would give instead.
+A small, forced displacement there reads as close to a displacement
+*node*; since pressure and displacement are a quarter wavelength apart,
+that makes the loudspeaker end close to a pressure *antinode* — consistent
+with what a microphone, which reads pressure, would find there.
+
+## What this does not claim
+
+Nothing here is a measurement. $\rho$, $f$, $T$ and the resonance
+conditions are exactly the handout's own; the hanging mass, column length
+and temperature are set by hand, not read off any apparatus. Both panels
+animate at a fixed, slow, arbitrary display rate, decoupled from the real
+120 Hz (or chosen audio frequency) driving the physics itself — which
+still sets every quantity shown — since animating at the true frequency
+would either alias against the screen's own frame rate or simply look
+frozen. This instrument is built to be checked against tomorrow's actual
+apparatus, not to stand in for it.
 `,
     related: [],
   },

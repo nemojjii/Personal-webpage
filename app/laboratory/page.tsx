@@ -8,7 +8,7 @@ import { experiments } from "@/lib/laboratory";
 export const metadata: Metadata = {
   title: "Little Laboratory",
   description:
-    "A small space for mathematical curiosity — six interactive experiments in wave superposition, gradient descent, reaction kinetics, Fourier synthesis, quantum mechanics and orbital mechanics.",
+    "A small space for mathematical curiosity — seven interactive experiments in wave superposition, gradient descent, reaction kinetics, Fourier synthesis, quantum mechanics, orbital mechanics and standing waves.",
   alternates: { canonical: "/laboratory" },
 };
 
@@ -21,7 +21,7 @@ export default function LaboratoryPage() {
         intro={
           <>
             <em>A small space for mathematical curiosity — where equations become something to
-            explore.</em> Six instruments, each built on one standard model, each yours to move.
+            explore.</em> Seven instruments, each built on one standard model, each yours to move.
           </>
         }
       />

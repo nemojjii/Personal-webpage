@@ -108,7 +108,7 @@ export function ExperimentGlyph({ slug, className = "" }: { slug: string; classN
               strokeWidth="1.1"
             />
           </>
-        ) : (
+        ) : slug === "orbital-mechanics-explorer" ? (
           <>
             {/* An ellipse with Earth at one focus, not its center — the shape
                 Kepler's first law actually describes, not a generic oval. */}
@@ -120,6 +120,26 @@ export function ExperimentGlyph({ slug, className = "" }: { slug: string; classN
               fill="currentColor"
               stroke="none"
             />
+          </>
+        ) : (
+          <>
+            {/* A string clamped at both ends, n=3: a standing wave that is
+                exactly zero at the walls and at its two interior nodes. */}
+            <line x1="8" y1="8" x2="8" y2="64" strokeWidth="1.2" />
+            <line x1={W - 8} y1="8" x2={W - 8} y2="64" strokeWidth="1.2" />
+            <line x1="8" y1="36" x2={W - 8} y2="36" strokeWidth="0.6" opacity="0.3" />
+            <path
+              d={Array.from({ length: 61 }, (_, i) => {
+                const xi = i / 60;
+                const x = 8 + xi * (W - 16);
+                const y = 36 - 24 * Math.sin(3 * Math.PI * xi);
+                return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ")}
+              strokeWidth="1.1"
+            />
+            {[1 / 3, 2 / 3].map((f) => (
+              <circle key={f} cx={8 + f * (W - 16)} cy="36" r="1.6" fill="currentColor" stroke="none" />
+            ))}
           </>
         )}
       </g>
