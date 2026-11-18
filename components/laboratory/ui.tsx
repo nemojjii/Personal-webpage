@@ -1,8 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 /* The laboratory's few controls, styled from the site's own tokens. */
+
+function clamp(v: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, v));
+}
 
 export function Slider({
   label,
@@ -23,25 +27,70 @@ export function Slider({
   format?: (value: number) => string;
   unit?: string;
 }) {
-  const text = `${format(value)}${unit ? ` ${unit}` : ""}`;
+  const valueText = `${format(value)}${unit ? ` ${unit}` : ""}`;
+
+  // A free-typed field alongside the slider: its own text while focused (so
+  // partial entries like "-" or "1." aren't clobbered by reformatting on
+  // every keystroke), the formatted value otherwise.
+  const [text, setText] = useState(format(value));
+  const [editing, setEditing] = useState(false);
+
+  function commit() {
+    setEditing(false);
+    const parsed = Number(text);
+    if (text.trim() !== "" && Number.isFinite(parsed)) {
+      onChange(clamp(parsed, min, max));
+    } else {
+      setText(format(value));
+    }
+  }
+
   return (
-    <label className="block">
+    <div>
       <span className="flex items-baseline justify-between gap-3">
         {/* Not the site's small-caps label: uppercasing would turn k into K and η into H. */}
         <span className="font-sans text-[0.6875rem] font-medium tracking-[0.06em] text-ink-soft">{label}</span>
-        <span className="font-mono text-[0.75rem] text-ink tnum">{text}</span>
+        <span className="flex items-baseline gap-1">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={editing ? text : format(value)}
+            onFocus={(e) => {
+              setEditing(true);
+              setText(format(value));
+              e.currentTarget.select();
+            }}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+              if (e.key === "Escape") {
+                setText(format(value));
+                setEditing(false);
+                e.currentTarget.blur();
+              }
+            }}
+            aria-label={typeof label === "string" ? `${label}, typed exactly` : "Type a value"}
+            style={{ width: `${Math.max(3, text.length) + 1}ch` }}
+            className="border-b border-rule-soft bg-transparent text-right font-mono text-[0.75rem] text-ink tnum focus:border-accent focus:outline-none"
+          />
+          {unit ? <span className="font-mono text-[0.75rem] text-ink-muted">{unit}</span> : null}
+        </span>
       </span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        aria-valuetext={text}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="lab-range mt-1 w-full"
-      />
-    </label>
+      <label className="block">
+        <span className="sr-only">{label}</span>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          aria-valuetext={valueText}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="lab-range mt-1 w-full"
+        />
+      </label>
+    </div>
   );
 }
 
