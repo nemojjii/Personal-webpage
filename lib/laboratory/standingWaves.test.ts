@@ -5,8 +5,11 @@ import {
   drivenDisplacement,
   drivenPressure,
   nearestMode,
+  percentDifference,
   resonanceGain,
   resonantLength,
+  speedFromDeltaX,
+  speedFromResonantLength,
   speedOfSound,
   stringSpeed,
   tension,
@@ -70,4 +73,27 @@ test("speedOfSound: c(22C) matches the handout's room-temperature figure", () =>
 
 test("wavelengthOf: c = f*lambda, inverted", () => {
   assert.ok(Math.abs(wavelengthOf(340, 1000) - 0.34) < 1e-9);
+});
+
+test("speedFromResonantLength: a measured length at mode n recovers c exactly when L = resonantLength(n, lambda)", () => {
+  const f = 120;
+  const c = 173; // an arbitrary speed
+  const lambda = c / f;
+  for (const n of [1, 2, 3, 5]) {
+    const L = resonantLength(n, lambda);
+    assert.ok(Math.abs(speedFromResonantLength(n, L, f) - c) < 1e-9);
+  }
+});
+
+test("speedFromDeltaX: a measured half-wavelength spacing recovers c exactly", () => {
+  const f = 1000;
+  const c = 344.6;
+  const deltaX = c / f / 2; // lambda/2
+  assert.ok(Math.abs(speedFromDeltaX(deltaX, f) - c) < 1e-9);
+});
+
+test("percentDifference: sign and magnitude relative to the theoretical value", () => {
+  assert.ok(Math.abs(percentDifference(110, 100) - 10) < 1e-9);
+  assert.ok(Math.abs(percentDifference(90, 100) - -10) < 1e-9);
+  assert.equal(percentDifference(100, 100), 0);
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 /* The laboratory's few controls, styled from the site's own tokens. */
 
@@ -91,6 +91,90 @@ export function Slider({
         />
       </label>
     </div>
+  );
+}
+
+/**
+ * A free numeric entry for a value the instrument doesn't control — a
+ * measurement taken elsewhere (tomorrow's apparatus) that the instrument
+ * only compares against. No external `value` to stay in sync with: nothing
+ * else ever sets this field, so it only needs to parse itself as the person
+ * types and report the latest valid number upward (or null while empty or
+ * mid-edit, e.g. "-" or "1.").
+ */
+export function NumberField({
+  label,
+  onChange,
+  unit,
+  placeholder,
+}: {
+  label: ReactNode;
+  onChange: (value: number | null) => void;
+  unit?: string;
+  placeholder?: string;
+}) {
+  const [text, setText] = useState("");
+
+  function handleChange(next: string) {
+    setText(next);
+    if (next.trim() === "") {
+      onChange(null);
+      return;
+    }
+    const parsed = Number(next);
+    if (Number.isFinite(parsed)) onChange(parsed);
+  }
+
+  return (
+    <label className="block">
+      <span className="font-sans text-[0.6875rem] font-medium tracking-[0.06em] text-ink-soft">{label}</span>
+      <span className="mt-1 flex items-baseline gap-1.5 border-b border-rule-soft pb-1">
+        <input
+          type="text"
+          inputMode="decimal"
+          placeholder={placeholder}
+          value={text}
+          onChange={(e) => handleChange(e.target.value)}
+          className="w-full bg-transparent font-mono text-[0.8125rem] text-ink placeholder:text-ink-muted/60 focus:outline-none"
+        />
+        {unit ? <span className="font-mono text-[0.75rem] text-ink-muted">{unit}</span> : null}
+      </span>
+    </label>
+  );
+}
+
+/** Copies a small table of plain-text readouts to the clipboard, for pasting into a report. */
+export function CopyTableButton({
+  rows,
+  label = "Copy table",
+}: {
+  rows: { term: string; value: string }[];
+  label?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const id = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(id);
+  }, [copied]);
+
+  async function handleCopy() {
+    const text = ["| Quantity | Value |", "| --- | --- |", ...rows.map((r) => `| ${r.term} | ${r.value} |`)].join(
+      "\n",
+    );
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      // Clipboard access can be denied (permissions, insecure context) — nothing to recover into.
+    }
+  }
+
+  return (
+    <LabButton onClick={handleCopy} pressed={copied}>
+      {copied ? "Copied ✓" : label}
+    </LabButton>
   );
 }
 

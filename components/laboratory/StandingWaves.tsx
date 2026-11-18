@@ -18,8 +18,11 @@ import {
   drivenPressure,
   isNearResonance,
   nearestMode,
+  percentDifference,
   resonanceGain,
   resonantLength,
+  speedFromDeltaX,
+  speedFromResonantLength,
   speedOfSound,
   stringSpeed,
   tension,
@@ -27,7 +30,7 @@ import {
   wavelengthOf,
 } from "@/lib/laboratory/standingWaves";
 
-import { ButtonRow, Controls, LabButton, LabFrame, Legend, Note, Readout, Slider } from "./ui";
+import { ButtonRow, Controls, CopyTableButton, LabButton, LabFrame, Legend, NumberField, Note, Readout, Slider } from "./ui";
 import { useClock } from "./useClock";
 
 type Mode = "string" | "air";
@@ -68,11 +71,16 @@ function samplePoints(domainMax: number, n = 161): number[] {
   return Array.from({ length: n }, (_, i) => (i / (n - 1)) * domainMax);
 }
 
+function signed(n: number, decimals = 1): string {
+  return `${n >= 0 ? "+" : ""}${n.toFixed(decimals)}`;
+}
+
 /* ──────────────────────────────── I. String ─────────────────────────────── */
 
 function StringMode() {
   const [mass, setMass] = useState(0.12);
   const [L, setL] = useState(0.5);
+  const [measuredL, setMeasuredL] = useState<number | null>(null);
   const clock = useClock({ autoplay: true });
 
   const c = stringSpeed(mass);
@@ -82,6 +90,9 @@ function StringMode() {
   const Ln = resonantLength(n, lambda);
   const gain = resonanceGain(L, k);
   const near = isNearResonance(L, k);
+
+  const cExp = measuredL !== null ? speedFromResonantLength(n, measuredL, STRING_FREQUENCY_HZ) : null;
+  const diffPct = cExp !== null ? percentDifference(cExp, c) : null;
 
   const domainMax = STRING_LENGTH_LIMITS.max;
   const sx = (x: number) => PAD.l + (x / domainMax) * plotW;
@@ -107,6 +118,21 @@ function StringMode() {
   const envBottom = pathFrom(xs, envelopeUp.map((v) => -v), sx, sy);
 
   const modes = [n - 1, n, n + 1].filter((m) => m >= 1);
+
+  const readoutItems = [
+    { term: "F = mg", value: `${tension(mass).toFixed(3)} N (g = ${GRAVITY} m/s²)` },
+    { term: "c = √(F/ρ)", value: `${c.toFixed(2)} m/s` },
+    { term: "λ = c/f, f = 120 Hz", value: `${lambda.toFixed(3)} m` },
+    { term: "nearest mode n", value: `${n}, resonant at L = ${Ln.toFixed(3)} m` },
+    { term: "L − Lₙ", value: `${signed(L - Ln, 3)} m` },
+    { term: "relative amplitude", value: `×${gain.toFixed(1)}` },
+    ...(cExp !== null && diffPct !== null
+      ? [
+          { term: "c_exp = 2fL/n (measured)", value: `${cExp.toFixed(2)} m/s` },
+          { term: "% difference from c_th", value: `${signed(diffPct)}%` },
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -162,16 +188,26 @@ function StringMode() {
         ))}
       </ButtonRow>
 
-      <Readout
-        items={[
-          { term: "F = mg", value: `${tension(mass).toFixed(3)} N (g = ${GRAVITY} m/s²)` },
-          { term: "c = √(F/ρ)", value: `${c.toFixed(2)} m/s` },
-          { term: "λ = c/f, f = 120 Hz", value: `${lambda.toFixed(3)} m` },
-          { term: "nearest mode n", value: `${n}, resonant at L = ${Ln.toFixed(3)} m` },
-          { term: "L − Lₙ", value: `${(L - Ln >= 0 ? "+" : "") + (L - Ln).toFixed(3)} m` },
-          { term: "relative amplitude", value: `×${gain.toFixed(1)}` },
-        ]}
-      />
+      <Readout items={readoutItems} />
+
+      <div className="mt-6 border-t border-rule-soft pt-5">
+        <NumberField
+          label={`Measured resonant length at n = ${n}`}
+          unit="m"
+          placeholder="e.g. 0.624"
+          onChange={setMeasuredL}
+        />
+        {cExp !== null && diffPct !== null ? (
+          <p className="mt-2 font-mono text-[0.75rem] text-ink tnum">
+            c_exp = 2fL/n = {cExp.toFixed(2)} m/s ({signed(diffPct)}% from c_th)
+          </p>
+        ) : null}
+      </div>
+
+      <ButtonRow>
+        <CopyTableButton rows={readoutItems} />
+      </ButtonRow>
+
       <Note>
         ρ is taken as ({(STRING_LINEAR_DENSITY * 1e4).toFixed(1)} ± {(STRING_LINEAR_DENSITY_UNCERTAINTY * 1e4).toFixed(1)})×10⁻⁴ kg/m,
         the handout&rsquo;s value, with its stated 10% uncertainty — not something this
@@ -193,12 +229,15 @@ function AirColumnMode() {
   const [freq, setFreq] = useState(1000);
   const [length, setLength] = useState(0.4);
   const [tempC, setTempC] = useState(DEFAULT_TEMPERATURE_C);
+  const [measuredDeltaX, setMeasuredDeltaX] = useState<number | null>(null);
   const clock = useClock({ autoplay: true });
 
   const c = speedOfSound(tempC);
   const k = waveNumber(c, freq);
   const lambda = wavelengthOf(c, freq);
   const n = nearestMode(length, lambda);
+  const cExp = measuredDeltaX !== null ? speedFromDeltaX(measuredDeltaX, freq) : null;
+  const diffPct = cExp !== null ? percentDifference(cExp, c) : null;
   const Ln = resonantLength(n, lambda);
   const gain = resonanceGain(length, k);
   const near = isNearResonance(length, k);
@@ -226,6 +265,21 @@ function AirColumnMode() {
   const pCurve = pathFrom(xs, py, sx, sy);
   const deltaX = lambda / 2;
   const modes = [n - 1, n, n + 1].filter((m) => m >= 1);
+
+  const readoutItems = [
+    { term: "c_th = 331.4 + 0.6T", value: `${c.toFixed(1)} m/s` },
+    { term: "λ = c/f", value: `${lambda.toFixed(3)} m` },
+    { term: "nearest mode n", value: `${n}, resonant at ℓ = ${Ln.toFixed(3)} m` },
+    { term: "ℓ − ℓₙ", value: `${signed(length - Ln, 3)} m` },
+    { term: "Δx between successive maxima", value: `λ/2 = ${deltaX.toFixed(3)} m` },
+    { term: "relative amplitude", value: `×${gain.toFixed(1)}` },
+    ...(cExp !== null && diffPct !== null
+      ? [
+          { term: "c_exp = f·(2Δx) (measured)", value: `${cExp.toFixed(1)} m/s` },
+          { term: "% difference from c_th", value: `${signed(diffPct)}%` },
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -276,22 +330,32 @@ function AirColumnMode() {
         ))}
       </ButtonRow>
 
-      <Readout
-        items={[
-          { term: "c_th = 331.4 + 0.6T", value: `${c.toFixed(1)} m/s` },
-          { term: "λ = c/f", value: `${lambda.toFixed(3)} m` },
-          { term: "nearest mode n", value: `${n}, resonant at ℓ = ${Ln.toFixed(3)} m` },
-          { term: "ℓ − ℓₙ", value: `${(length - Ln >= 0 ? "+" : "") + (length - Ln).toFixed(3)} m` },
-          { term: "Δx between successive maxima", value: `λ/2 = ${deltaX.toFixed(3)} m` },
-          { term: "relative amplitude", value: `×${gain.toFixed(1)}` },
-        ]}
-      />
+      <Readout items={readoutItems} />
+
+      <div className="mt-6 border-t border-rule-soft pt-5">
+        <NumberField
+          label="Measured Δx between successive pressure maxima"
+          unit="m"
+          placeholder="e.g. 0.172"
+          onChange={setMeasuredDeltaX}
+        />
+        {cExp !== null && diffPct !== null ? (
+          <p className="mt-2 font-mono text-[0.75rem] text-ink tnum">
+            c_exp = f·(2Δx) = {cExp.toFixed(1)} m/s ({signed(diffPct)}% from c_th)
+          </p>
+        ) : null}
+      </div>
+
+      <ButtonRow>
+        <CopyTableButton rows={readoutItems} />
+      </ButtonRow>
+
       <Note>
         If tomorrow&rsquo;s plunger positions for two successive microphone maxima really are
         {" "}
         {deltaX.toFixed(3)} m apart at this frequency and temperature, then c_exp = f·(2Δx) will
-        land near {c.toFixed(1)} m/s — that is the check this instrument predicts, not a
-        substitute for taking the measurement.
+        land near {c.toFixed(1)} m/s — type the Δx you actually measure above to check it against
+        this prediction directly, rather than doing the arithmetic by hand.
       </Note>
       <Note>
         <span className="font-medium text-ink">On Question 2:</span> both ends here are sealed,

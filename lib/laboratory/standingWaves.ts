@@ -77,3 +77,14 @@ export const TEMPERATURE_LIMITS = { min: 0, max: 35, step: 0.5 };
 
 /** c = 331.4 + 0.6T, T in degrees Celsius. */
 export const speedOfSound = (tempC: number) => 331.4 + 0.6 * tempC;
+
+/** c implied by a measured resonant length at mode n on the string: c = 2fL/n. */
+export const speedFromResonantLength = (n: number, measuredLength: number, f: number) =>
+  (2 * f * measuredLength) / n;
+
+/** c implied by a measured spacing between successive pressure maxima: λ = 2Δx, c = fλ. */
+export const speedFromDeltaX = (measuredDeltaX: number, f: number) => 2 * f * measuredDeltaX;
+
+/** Signed percent difference of a measured value from its theoretical prediction. */
+export const percentDifference = (measured: number, theoretical: number) =>
+  ((measured - theoretical) / theoretical) * 100;
