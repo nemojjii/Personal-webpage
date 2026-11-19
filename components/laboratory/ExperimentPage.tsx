@@ -5,7 +5,7 @@ import { Mdx } from "@/components/content/mdx";
 import { Prose } from "@/components/content/Prose";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { experimentConnections } from "@/lib/content";
-import { type Experiment, experiments } from "@/lib/laboratory";
+import { type Experiment, experiments, sourceFileUrl } from "@/lib/laboratory";
 import { type Collection, collectionMeta, relationKinds } from "@/lib/types";
 
 /**
@@ -52,6 +52,25 @@ export function ExperimentPage({ experiment, children }: { experiment: Experimen
         </header>
 
         <div className="mt-10">{children}</div>
+
+        {experiment.sourceFiles.length ? (
+          <div className="no-print mx-auto mt-6 flex max-w-[40rem] flex-wrap items-baseline gap-x-5 gap-y-2 border-t border-rule-soft pt-4">
+            <span className="font-sans text-[0.6875rem] font-medium tracking-[0.06em] text-ink-muted">
+              View the code
+            </span>
+            {experiment.sourceFiles.map((path) => (
+              <a
+                key={path}
+                href={sourceFileUrl(path)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-quiet font-mono text-[0.75rem]"
+              >
+                {path.split("/").pop()}
+              </a>
+            ))}
+          </div>
+        ) : null}
 
         <div className="mx-auto mt-14 max-w-[40rem]">
           <Prose>
