@@ -30,8 +30,6 @@ export interface Experiment {
   href: string;
   /** Short metadata description. */
   summary: string;
-  /** Repo-relative paths to the files that actually implement this experiment. */
-  sourceFiles: string[];
   /** MDX: the model, its assumptions, and things worth trying. */
   notes: string;
   /** Hand-written relations to entries. Empty is the honest default. */
@@ -47,13 +45,6 @@ export const experiments: Experiment[] = [
     description:
       "Two travelling sine waves and their sum, drawn on the same string. Set each amplitude and wavelength and the phase between them, then watch where the displacements reinforce one another and where they cancel.",
     href: "/laboratory/wave-superposition",
-    sourceFiles: [
-      "app/laboratory/wave-superposition/page.tsx",
-      "components/laboratory/WaveSuperposition.tsx",
-      "components/laboratory/useClock.ts",
-      "components/laboratory/ui.tsx",
-      "lib/laboratory/wave.ts",
-    ],
     summary:
       "An interactive superposition of two travelling sine waves: amplitudes, wave numbers, relative phase, and the constructive and destructive regions of their sum.",
     notes: String.raw`
@@ -112,12 +103,6 @@ Units are arbitrary. Nothing here is measured; it is the equations, drawn.
     description:
       "A point on a bowl-shaped surface, moved downhill one step at a time against the gradient. Choose where it starts, how steep the bowl is and how large each step is, and see it settle, overshoot, or run away.",
     href: "/laboratory/gradient-descent",
-    sourceFiles: [
-      "app/laboratory/gradient-descent/page.tsx",
-      "components/laboratory/GradientDescent.tsx",
-      "components/laboratory/ui.tsx",
-      "lib/laboratory/gradient.ts",
-    ],
     summary:
       "An interactive gradient descent on a quadratic surface: starting point, learning rate and curvature, with the path, the iteration count and the objective value, and the conditions for convergence, oscillation and divergence.",
     notes: String.raw`
@@ -175,13 +160,6 @@ whether it reaches even that depends on the function and the learning rate.
     description:
       "An idealised first-order reaction, A → products. Set the starting concentration and the rate constant, then follow the exponential decay, its half-life, and the moment-by-moment rate.",
     href: "/laboratory/reaction-kinetics",
-    sourceFiles: [
-      "app/laboratory/reaction-kinetics/page.tsx",
-      "components/laboratory/ReactionKinetics.tsx",
-      "components/laboratory/useClock.ts",
-      "components/laboratory/ui.tsx",
-      "lib/laboratory/kinetics.ts",
-    ],
     summary:
       "An interactive first-order decay, [A](t) = [A]₀e^(−kt): initial concentration, rate constant and elapsed time, with the concentration curve, a moving time indicator and the half-life.",
     notes: String.raw`
@@ -231,14 +209,6 @@ is the fraction of A remaining, rounded to one in a hundred.
     description:
       "A finite sum of sine waves, built one harmonic at a time. Set how many harmonics are active, their common fundamental frequency, and each one's own amplitude and phase, then watch the sum in time and its discrete amplitude spectrum update together.",
     href: "/laboratory/fourier-explorer",
-    sourceFiles: [
-      "app/laboratory/fourier-explorer/page.tsx",
-      "components/laboratory/FourierExplorer.tsx",
-      "components/laboratory/useClock.ts",
-      "components/laboratory/ui.tsx",
-      "lib/laboratory/fourier.ts",
-      "lib/laboratory/fourier.test.ts",
-    ],
     summary:
       "An interactive finite Fourier series: harmonic count, fundamental frequency, and per-harmonic amplitude and phase, with the time-domain sum, its individual components, and the discrete amplitude spectrum shown side by side.",
     notes: String.raw`
@@ -322,14 +292,6 @@ frequency is in hertz and time in seconds.
     description:
       "One particle in a one-dimensional box, put to four tests: its stationary states, a superposition of them evolving in time, its odds of crossing a barrier it classically couldn't, and what repeated measurement of its position actually samples.",
     href: "/laboratory/quantum-mechanics-explorer",
-    sourceFiles: [
-      "app/laboratory/quantum-mechanics-explorer/page.tsx",
-      "components/laboratory/QuantumExplorer.tsx",
-      "components/laboratory/useClock.ts",
-      "components/laboratory/ui.tsx",
-      "lib/laboratory/quantum.ts",
-      "lib/laboratory/quantum.test.ts",
-    ],
     summary:
       "An interactive one-dimensional quantum particle: infinite-well eigenstates and their energies, a time-evolving superposition of a few of them, exact transmission and reflection off a finite rectangular barrier, and seeded, reproducible position measurements compared against the theoretical probability density.",
     notes: String.raw`
@@ -415,14 +377,6 @@ instrument does not take a position on.
     description:
       "A satellite near Earth, put to three tests: whether a trajectory hits the surface or escapes, what speed holds a circular orbit, and whether an elliptical orbit's own shape and period match the closed-form two-body solution for the same initial condition.",
     href: "/laboratory/orbital-mechanics-explorer",
-    sourceFiles: [
-      "app/laboratory/orbital-mechanics-explorer/page.tsx",
-      "components/laboratory/OrbitalMechanicsExplorer.tsx",
-      "components/laboratory/useClock.ts",
-      "components/laboratory/ui.tsx",
-      "lib/laboratory/gravitation.ts",
-      "lib/laboratory/gravitation.test.ts",
-    ],
     summary:
       "An interactive two-body orbit simulator, numerically integrated: impact and escape velocity, circular orbits, and Kepler's first and third laws, each checked against the closed-form two-body prediction for the same initial condition.",
     notes: String.raw`
@@ -487,14 +441,6 @@ they match.
     description:
       "A string driven at one end and clamped at the other, and the same mathematics applied to a sealed air column. Set the hanging mass and vibrating length, or the frequency, column length and temperature, and watch the response stay small everywhere except at the lengths where it resonates.",
     href: "/laboratory/standing-waves",
-    sourceFiles: [
-      "app/laboratory/standing-waves/page.tsx",
-      "components/laboratory/StandingWaves.tsx",
-      "components/laboratory/useClock.ts",
-      "components/laboratory/ui.tsx",
-      "lib/laboratory/standingWaves.ts",
-      "lib/laboratory/standingWaves.test.ts",
-    ],
     summary:
       "An interactive standing-wave instrument built for Rutgers 275's Classical Physics Lab 10: a driven, clamped string's resonant lengths from its tension and linear density, and a sealed air column's pressure and displacement patterns a quarter wavelength apart.",
     notes: String.raw`
@@ -572,7 +518,3 @@ export const experimentForRef = (ref: string) =>
   isLaboratoryRef(ref) ? getExperiment(ref.slice(LABORATORY_PREFIX.length)) : undefined;
 
 export const getExperiment = (slug: string) => experiments.find((e) => e.slug === slug);
-
-/** The public repo every experiment's sourceFiles are relative to. */
-export const SOURCE_REPO = "https://github.com/nemojjii/Personal-webpage";
-export const sourceFileUrl = (path: string) => `${SOURCE_REPO}/blob/main/${path}`;
